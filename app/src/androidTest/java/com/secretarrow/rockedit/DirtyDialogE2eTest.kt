@@ -5,6 +5,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.pressBack
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -35,7 +36,7 @@ class DirtyDialogE2eTest {
         val scenario = ActivityScenario.launch<EditorActivity>(intent)
 
         onView(withId(R.id.editor)).check(matches(withText("seed")))
-        onView(withId(R.id.editor)).perform(click(), typeText("dirty"))
+        onView(withId(R.id.editor)).perform(click(), typeText("dirty"), closeSoftKeyboard())
         onView(withId(R.id.editor)).perform(pressBack())
 
         onView(withText(R.string.discard_changes_title)).check(matches(isDisplayed()))
