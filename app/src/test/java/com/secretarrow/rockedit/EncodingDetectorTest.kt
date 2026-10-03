@@ -24,7 +24,9 @@ class EncodingDetectorTest {
     fun detectsShiftJis() {
         // "こんにちは" (hello in Japanese) encoded in Shift_JIS.
         val shiftJis = byteArrayOf(
-            0x82, 0xB1, 0x82, 0xF1, 0x82, 0xC9, 0x82, 0xBF, 0x82, 0xCD
+            0x82.toByte(), 0xB1.toByte(), 0x82.toByte(), 0xF1.toByte(),
+            0x82.toByte(), 0xC9.toByte(), 0x82.toByte(), 0xBF.toByte(),
+            0x82.toByte(), 0xCD.toByte()
         )
         assertEquals("SHIFT_JIS", EncodingDetector.detectName(shiftJis))
     }
