@@ -49,7 +49,8 @@ android {
     lint {
         abortOnError = true
         checkReleaseBuilds = false
-        disable += listOf("GradleDependency")
+        // AppLinkUrlError: false positive for our text/* open-with filter (no web app links by design).
+        disable += listOf("GradleDependency", "AppLinkUrlError")
     }
     packaging {
         resources {
