@@ -11,12 +11,13 @@ echo ">> jobs summary:"
 curl -sf -H "Authorization: token $GITHUB_TOKEN" \
   "https://api.github.com/repos/$REPO/actions/runs/$RUN_ID/jobs" \
   | python3 -c '
-import json,sys
+import json, sys
 for j in json.load(sys.stdin)["jobs"]:
-    print(f"- {j[\"name\"]}: {j[\"conclusion\"]}")
+    name = j["name"]; conc = j["conclusion"]
+    print("- %s: %s" % (name, conc))
     for s in j["steps"]:
         if s["conclusion"] not in ("success", "skipped", None):
-            print(f"    x {s[\"name\"]}: {s[\"conclusion\"]}")
+            print("    x %s: %s" % (s["name"], s["conclusion"]))
 '
 echo ">> downloading logs to $OUT.zip"
 curl -sfL -H "Authorization: token $GITHUB_TOKEN" \

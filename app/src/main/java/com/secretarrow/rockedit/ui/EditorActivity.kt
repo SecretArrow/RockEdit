@@ -4,8 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
-import android.text.KeyListener
 import android.text.TextWatcher
+import android.text.method.KeyListener
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -50,6 +50,7 @@ class EditorActivity : AppCompatActivity() {
     private var applyingUndoRedo = false
     private var loading = true
     private var readOnly = false
+    private var wordWrapEnabled = false
     private var pendingFinishAfterSave = false
     private var searchStart = 0
     private var originalKeyListener: KeyListener? = null
@@ -89,7 +90,7 @@ class EditorActivity : AppCompatActivity() {
         originalKeyListener = binding.editor.keyListener
 
         binding.editor.addTextChangedListener(EditorWatcher())
-        binding.editor.setOnScrollChangeListener { _, _, scrollY, _ ->
+        binding.editor.setOnScrollChangeListener { _, _, scrollY, _, _ ->
             binding.gutter.scrollTo(0, scrollY)
         }
 
@@ -410,6 +411,7 @@ class EditorActivity : AppCompatActivity() {
     // ------------------------------------------------------------------ toggles
 
     private fun applyWordWrap(enabled: Boolean) {
+        wordWrapEnabled = enabled
         binding.editor.setHorizontallyScrolling(!enabled)
         if (enabled) {
             binding.gutter.visibility = View.GONE
@@ -452,7 +454,7 @@ class EditorActivity : AppCompatActivity() {
         menu.findItem(R.id.action_undo)?.isEnabled = undoStack.canUndo()
         menu.findItem(R.id.action_redo)?.isEnabled = undoStack.canRedo()
         menu.findItem(R.id.action_save)?.isEnabled = isDirty() && !readOnly
-        menu.findItem(R.id.action_wrap)?.isChecked = !binding.editor.isHorizontallyScrolling
+        menu.findItem(R.id.action_wrap)?.isChecked = wordWrapEnabled
         menu.findItem(R.id.action_line_numbers)?.isChecked = binding.gutter.visibility == View.VISIBLE
         menu.findItem(R.id.action_read_only)?.isChecked = readOnly
         return super.onPrepareOptionsMenu(menu)
@@ -472,7 +474,7 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_stats -> showStatsDialog()
             R.id.action_share -> shareText()
             R.id.action_wrap -> {
-                val enable = binding.editor.isHorizontallyScrolling
+                val enable = !wordWrapEnabled
                 applyWordWrap(enable)
                 item.isChecked = enable
             }
