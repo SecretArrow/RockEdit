@@ -19,7 +19,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(property("rockedit.storeFile") as String)
+            storeFile = rootProject.file(property("rockedit.storeFile") as String)
             storePassword = property("rockedit.storePassword") as String
             keyAlias = property("rockedit.keyAlias") as String
             keyPassword = property("rockedit.keyPassword") as String
