@@ -4,4 +4,7 @@
     <color name="brand_accent">#F59E0B</color>
     <color name="gutter_background">#F1F5F9</color>
     <color name="gutter_text">#64748B</color>
+
+    <color name="black_amoled">#000000</color>
+    <color name="black_elevated">#121212</color>
 </resources>

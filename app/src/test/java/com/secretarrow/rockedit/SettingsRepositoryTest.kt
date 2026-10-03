@@ -15,7 +15,26 @@ class SettingsRepositoryTest {
         assertEquals(SettingsRepository.THEME_SYSTEM, s.theme)
         assertTrue(s.lineNumbers)
         assertFalse(s.wordWrap)
+        assertFalse(s.fullScreen)
         assertEquals(SettingsRepository.LINE_BREAK_AUTO, s.lineBreakDefault)
+    }
+
+    @Test
+    fun blackThemeFlag() {
+        val store = InMemoryKeyValueStore()
+        val s = SettingsRepository(store)
+        assertFalse(s.isBlackTheme())
+        store.putString(SettingsRepository.KEY_THEME, SettingsRepository.THEME_BLACK)
+        assertTrue(s.isBlackTheme())
+    }
+
+    @Test
+    fun fullScreenRoundTrip() {
+        val store = InMemoryKeyValueStore()
+        val s = SettingsRepository(store)
+        assertFalse(s.fullScreen)
+        s.fullScreen = true
+        assertTrue(SettingsRepository(store).fullScreen)
     }
 
     @Test

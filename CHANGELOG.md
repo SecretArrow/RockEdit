@@ -12,6 +12,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Folder drawer, bookmark folder, backup/restore JSON
 - Preview HTML/Markdown/AsciiDoc
 
+## [0.2.0] - 2026-10-03
+
+### Added
+- Operasi baris: duplikat baris, hapus baris, naik/turunkan baris (mendukung LF/CR/CRLF,
+  terminator tetap utuh saat swap; tercatat di undo)
+- Bookmark per-baris per-file: tandai/hapus dari menu, daftar penanda dengan lompat-ke-baris
+- Pemulihan posisi: kursor + scroll per file tersimpan dan dipulihkan saat file dibuka ulang
+- Tema Hitam (AMOLED) sebagai pilihan tema baru
+- Mode layar penuh editor (sembunyikan status bar & navigation bar)
+- Target & compile SDK 36; AGP 8.9.1; Gradle 8.11.1
+
+### Changed
+- Bump dependensi: core-ktx 1.19.1, material 1.14.0, coroutines 1.11.0, androidx.test 1.7.0/1.3.0
+- Bump GitHub Actions: checkout v7, setup-java v6, gradle/actions v6, upload-artifact v7, gh-release v3
+
 ## [0.1.0] - 2026-10-03
 
 ### Added

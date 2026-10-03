@@ -19,6 +19,12 @@ object App {
     fun recents(context: Context): RecentFilesStore =
         RecentFilesStore(keyValueStore(context))
 
+    fun sessions(context: Context): SessionStore =
+        SessionStore(keyValueStore(context))
+
+    fun bookmarks(context: Context): BookmarkStore =
+        BookmarkStore(keyValueStore(context))
+
     private fun android.content.SharedPreferences.toKeyValueStore(): KeyValueStore =
         object : KeyValueStore {
             override fun getString(key: String, defValue: String?): String? =

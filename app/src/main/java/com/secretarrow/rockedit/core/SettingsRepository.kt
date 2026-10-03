@@ -17,16 +17,24 @@ class SettingsRepository(private val kv: KeyValueStore) {
         androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
             when (theme) {
                 THEME_LIGHT -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
-                THEME_DARK -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+                THEME_DARK, THEME_BLACK -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
                 else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
             }
         )
     }
 
+    /** True when the pure-black AMOLED overlay should be applied to activities. */
+    fun isBlackTheme(): Boolean = theme == THEME_BLACK
+
     // ---- Editor defaults --------------------------------------------------
     var lineNumbers: Boolean
         get() = kv.getBoolean(KEY_LINE_NUMBERS, true)
         set(value) = kv.putBoolean(KEY_LINE_NUMBERS, value)
+
+    /** Hides the system bars to maximize editing space (roadmap: full screen). */
+    var fullScreen: Boolean
+        get() = kv.getBoolean(KEY_FULL_SCREEN, false)
+        set(value) = kv.putBoolean(KEY_FULL_SCREEN, value)
 
     var wordWrap: Boolean
         get() = kv.getBoolean(KEY_WORD_WRAP, false)
@@ -49,10 +57,12 @@ class SettingsRepository(private val kv: KeyValueStore) {
         const val KEY_LINE_NUMBERS = "line_numbers"
         const val KEY_WORD_WRAP = "word_wrap"
         const val KEY_LINE_BREAK = "line_break"
+        const val KEY_FULL_SCREEN = "full_screen"
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"
         const val THEME_DARK = "dark"
+        const val THEME_BLACK = "black"
 
         const val LINE_BREAK_AUTO = "auto"
         const val LINE_BREAK_LF = "lf"

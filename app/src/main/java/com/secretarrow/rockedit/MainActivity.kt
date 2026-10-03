@@ -42,7 +42,9 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        App.settings(this).applyTheme()
+        val settings = App.settings(this)
+        if (settings.isBlackTheme()) setTheme(R.style.Theme_RockEdit_Black)
+        settings.applyTheme()
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

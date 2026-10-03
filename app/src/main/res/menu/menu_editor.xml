@@ -28,6 +28,31 @@
         android:title="@string/goto_line"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_duplicate_line"
+        android:title="@string/duplicate_line"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_delete_line"
+        android:title="@string/delete_line"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_move_line_up"
+        android:title="@string/move_line_up"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_move_line_down"
+        android:title="@string/move_line_down"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_bookmark_toggle"
+        android:checkable="true"
+        android:title="@string/bookmark_line"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_bookmarks"
+        android:title="@string/bookmarks"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_stats"
         android:title="@string/statistics"
         app:showAsAction="never" />

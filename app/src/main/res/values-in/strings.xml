@@ -56,6 +56,7 @@
     <string name="pref_theme_system">Ikuti sistem</string>
     <string name="pref_theme_light">Terang</string>
     <string name="pref_theme_dark">Gelap</string>
+    <string name="pref_theme_black">Hitam (AMOLED)</string>
     <string name="pref_editor">Editor</string>
     <string name="pref_line_numbers">Tampilkan nomor baris</string>
     <string name="pref_word_wrap">Word wrap secara default</string>
@@ -63,6 +64,15 @@
     <string name="pref_line_break_auto">Otomatis (ikuti file)</string>
     <string name="pref_line_break_lf">LF (\\n, Unix)</string>
     <string name="pref_line_break_crlf">CRLF (\\r\\n, Windows)</string>
+    <string name="pref_full_screen">Editor layar penuh</string>
+
+    <string name="duplicate_line">Duplikat baris</string>
+    <string name="delete_line">Hapus baris</string>
+    <string name="move_line_up">Naikkan baris</string>
+    <string name="move_line_down">Turunkan baris</string>
+    <string name="bookmark_line">Tandai baris ini</string>
+    <string name="bookmarks">Penanda</string>
+    <string name="no_bookmarks">Belum ada penanda di file ini</string>
 
     <string name="about_title">Tentang Rock Edit</string>
     <string name="about_body">Rock Edit %1$s\n\nEditor teks cepat dan stabil untuk Android. 100%% perangkat lunak bebas di bawah GPL-3.0 — tanpa iklan, tanpa pelacakan, tanpa izin berbahaya. File Anda tidak pernah meninggalkan perangkat.\n\nKode sumber: github.com/SecretArrow/RockEdit</string>

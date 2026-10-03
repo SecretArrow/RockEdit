@@ -4,4 +4,14 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
+
+    <!-- Pure-black AMOLED overlay; used when the theme setting is "black". -->
+    <style name="Theme.RockEdit.Black" parent="Theme.RockEdit">
+        <item name="android:windowBackground">@color/black_amoled</item>
+        <item name="colorSurface">@color/black_amoled</item>
+        <item name="colorSurfaceContainer">@color/black_amoled</item>
+        <item name="colorSurfaceContainerLow">@color/black_elevated</item>
+        <item name="colorSurfaceContainerHigh">@color/black_elevated</item>
+        <item name="colorSurfaceContainerHighest">@color/black_elevated</item>
+    </style>
 </resources>

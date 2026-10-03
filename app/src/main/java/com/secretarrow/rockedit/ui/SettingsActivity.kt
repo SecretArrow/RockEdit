@@ -11,7 +11,9 @@ import com.secretarrow.rockedit.databinding.ActivitySettingsBinding
 class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        App.settings(this).applyTheme()
+        val settings = App.settings(this)
+        if (settings.isBlackTheme()) setTheme(R.style.Theme_RockEdit_Black)
+        settings.applyTheme()
         super.onCreate(savedInstanceState)
         val binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)

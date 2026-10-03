@@ -15,6 +15,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
@@ -22,6 +25,7 @@ import com.secretarrow.rockedit.core.CursorNav
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
 import com.secretarrow.rockedit.core.LineBreak
+import com.secretarrow.rockedit.core.LineOps
 import com.secretarrow.rockedit.core.SearchEngine
 import com.secretarrow.rockedit.core.SettingsRepository
 import com.secretarrow.rockedit.core.TextStats
@@ -77,10 +81,12 @@ class EditorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         settings = App.settings(this)
+        if (settings.isBlackTheme()) setTheme(R.style.Theme_RockEdit_Black)
         settings.applyTheme()
         super.onCreate(savedInstanceState)
         binding = ActivityEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applyFullScreen()
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -156,6 +162,7 @@ class EditorActivity : AppCompatActivity() {
             displayName = DisplayNames.resolve(this@EditorActivity, uri)
             savedText = text
             setTextInternal(text)
+            restoreCursorFor(uri)
             showBinaryHintIfNeeded(maybeBinary)
             updateUiState()
         }
@@ -170,6 +177,43 @@ class EditorActivity : AppCompatActivity() {
         } catch (_: Exception) {
             null
         }
+    }
+
+    // -------------------------------------------------------- session restore
+
+    override fun onPause() {
+        super.onPause()
+        val uri = fileUri ?: return
+        val start = binding.editor.selectionStart
+        val end = binding.editor.selectionEnd
+        if (start < 0 || end < 0) return
+        App.sessions(this).saveCursor(uri.toString(), start, end, binding.editor.scrollY)
+    }
+
+    /** Restores the last caret/scroll of [uri], if this file was opened before. */
+    private fun restoreCursorFor(uri: Uri) {
+        val saved = App.sessions(this).loadCursor(uri.toString()) ?: return
+        val len = binding.editor.text?.length ?: 0
+        if (len == 0) return
+        val s = saved.selStart.coerceIn(0, len)
+        val e = saved.selEnd.coerceIn(0, len)
+        binding.editor.setSelection(minOf(s, e), maxOf(s, e))
+        if (saved.scrollY > 0) {
+            binding.editor.post {
+                binding.editor.scrollTo(0, saved.scrollY)
+                binding.gutter.scrollTo(0, saved.scrollY)
+            }
+        }
+    }
+
+    /** Hides system bars when the full screen setting is enabled. */
+    private fun applyFullScreen() {
+        if (!settings.fullScreen) return
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, binding.root)
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     private fun showBinaryHintIfNeeded(maybeBinary: Boolean) {
@@ -400,6 +444,83 @@ class EditorActivity : AppCompatActivity() {
             .show()
     }
 
+    // -------------------------------------------------------- line operations
+
+    /**
+     * Applies a pure [LineOps] transform to the whole text. The edit goes
+     * through the text watcher, so it automatically lands on the undo stack.
+     */
+    private fun applyLineOp(op: (String, Int, Int) -> LineOps.Result) {
+        val editable = binding.editor.text ?: return
+        val text = editable.toString()
+        val start = binding.editor.selectionStart
+        val end = binding.editor.selectionEnd
+        if (start < 0 || end < start) return
+        val result = op(text, start, end)
+        if (result.text == text) return
+        applyingUndoRedo = false
+        editable.replace(0, text.length, result.text)
+        binding.editor.setSelection(
+            result.selStart.coerceIn(0, result.text.length),
+            result.selEnd.coerceIn(0, result.text.length)
+        )
+        updateGutter()
+        dirtyChanged()
+    }
+
+    // -------------------------------------------------------------- bookmarks
+
+    private fun currentLine(): Int {
+        val text = binding.editor.text?.toString().orEmpty()
+        val sel = binding.editor.selectionStart.coerceAtLeast(0)
+        return CursorNav.lineForOffset(text, sel)
+    }
+
+    private fun toggleBookmark() {
+        val uri = fileUri ?: return
+        val line = currentLine()
+        val text = binding.editor.text?.toString().orEmpty()
+        val ls = LineOps.lineStart(text, binding.editor.selectionStart.coerceAtLeast(0))
+        val le = LineOps.lineEnd(text, binding.editor.selectionStart.coerceAtLeast(0))
+        val label = text.substring(ls, le).trim().take(60)
+        val added = App.bookmarks(this).toggle(uri.toString(), line, label)
+        toast(
+            if (added) getString(R.string.bookmark_line) + " " + line
+            else getString(R.string.bookmarks) + " " + line + " \u2717"
+        )
+    }
+
+    private fun showBookmarksDialog() {
+        val uri = fileUri
+        if (uri == null) {
+            toast(getString(R.string.no_bookmarks))
+            return
+        }
+        val items = App.bookmarks(this).list(uri.toString())
+        if (items.isEmpty()) {
+            toast(getString(R.string.no_bookmarks))
+            return
+        }
+        val text = binding.editor.text?.toString().orEmpty()
+        val labels = items.map { b ->
+            val lineText = if (text.isEmpty()) "" else {
+                val ls = LineOps.lineStart(text, CursorNav.offsetForLine(text, b.line))
+                val le = LineOps.lineEnd(text, CursorNav.offsetForLine(text, b.line))
+                text.substring(ls, le).trim().take(40)
+            }
+            "${b.line}: ${b.label.ifEmpty { lineText }}"
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle(R.string.bookmarks)
+            .setItems(labels) { _, which ->
+                val offset = CursorNav.offsetForLine(text, items[which].line)
+                binding.editor.setSelection(offset)
+                binding.editor.requestFocus()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
     private fun shareText() {
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -457,6 +578,10 @@ class EditorActivity : AppCompatActivity() {
         menu.findItem(R.id.action_wrap)?.isChecked = wordWrapEnabled
         menu.findItem(R.id.action_line_numbers)?.isChecked = binding.gutter.visibility == View.VISIBLE
         menu.findItem(R.id.action_read_only)?.isChecked = readOnly
+        fileUri?.let { uri ->
+            menu.findItem(R.id.action_bookmark_toggle)?.isChecked =
+                App.bookmarks(this).has(uri.toString(), currentLine())
+        }
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -471,6 +596,16 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_redo -> performRedo()
             R.id.action_find -> showFindDialog()
             R.id.action_goto -> showGotoDialog()
+            R.id.action_duplicate_line -> applyLineOp(LineOps::duplicateLine)
+            R.id.action_delete_line -> applyLineOp(LineOps::deleteLine)
+            R.id.action_move_line_up -> applyLineOp(LineOps::moveLineUp)
+            R.id.action_move_line_down -> applyLineOp(LineOps::moveLineDown)
+            R.id.action_bookmark_toggle -> {
+                toggleBookmark()
+                item.isChecked = fileUri != null &&
+                    App.bookmarks(this).has(fileUri.toString(), currentLine())
+            }
+            R.id.action_bookmarks -> showBookmarksDialog()
             R.id.action_stats -> showStatsDialog()
             R.id.action_share -> shareText()
             R.id.action_wrap -> {

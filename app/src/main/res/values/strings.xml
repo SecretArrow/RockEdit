@@ -27,6 +27,15 @@
     <string name="untitled">Untitled</string>
     <string name="open_with">Edit with Rock Edit</string>
 
+    <!-- Line operations & bookmarks -->
+    <string name="duplicate_line">Duplicate line</string>
+    <string name="delete_line">Delete line</string>
+    <string name="move_line_up">Move line up</string>
+    <string name="move_line_down">Move line down</string>
+    <string name="bookmark_line">Bookmark this line</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="no_bookmarks">No bookmarks in this file</string>
+
     <!-- Dialogs -->
     <string name="find_hint">Find</string>
     <string name="replace_hint">Replace with</string>
@@ -60,6 +69,7 @@
     <string name="pref_theme_system">Follow system</string>
     <string name="pref_theme_light">Light</string>
     <string name="pref_theme_dark">Dark</string>
+    <string name="pref_theme_black">Black (AMOLED)</string>
     <string name="pref_editor">Editor</string>
     <string name="pref_line_numbers">Show line numbers</string>
     <string name="pref_word_wrap">Word wrap by default</string>
@@ -67,6 +77,7 @@
     <string name="pref_line_break_auto">Auto (follow file)</string>
     <string name="pref_line_break_lf">LF (\\n, Unix)</string>
     <string name="pref_line_break_crlf">CRLF (\\r\\n, Windows)</string>
+    <string name="pref_full_screen">Full screen editor</string>
 
     <!-- About -->
     <string name="about_title">About Rock Edit</string>
