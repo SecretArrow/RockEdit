@@ -23,13 +23,15 @@ class SearchEngineTest {
 
     @Test
     fun indexOfFromIndex() {
-        assertEquals(5, SearchEngine.indexOf("ababab", "ab", 2, cs))
+        // "ababab" has matches at 0, 2, 4 -> searching from 2 finds 2.
+        assertEquals(2, SearchEngine.indexOf("ababab", "ab", 2, cs))
     }
 
     @Test
     fun indexOfWrapsAround() {
-        assertEquals(0, SearchEngine.indexOf("abab", "ab", 2, cs, wrapAround = true))
-        assertEquals(-1, SearchEngine.indexOf("abab", "ab", 2, cs, wrapAround = false))
+        // From index 3 there is no full match; wrap-around finds the one at 0.
+        assertEquals(0, SearchEngine.indexOf("abab", "ab", 3, cs, wrapAround = true))
+        assertEquals(-1, SearchEngine.indexOf("abab", "ab", 3, cs, wrapAround = false))
     }
 
     @Test
@@ -41,7 +43,9 @@ class SearchEngineTest {
     @Test
     fun countMatches() {
         assertEquals(3, SearchEngine.countMatches("ababab", "ab", cs))
-        assertEquals(2, SearchEngine.countMatches("aXaXa", "ax", cs))
+        // Case-sensitive: "aXaXa" contains no lowercase "ax".
+        assertEquals(0, SearchEngine.countMatches("aXaXa", "ax", cs))
+        // Case-insensitive: lowercase haystack matches twice.
         assertEquals(2, SearchEngine.countMatches("aXaXa", "ax", ci))
         assertEquals(0, SearchEngine.countMatches("abc", "", cs))
     }

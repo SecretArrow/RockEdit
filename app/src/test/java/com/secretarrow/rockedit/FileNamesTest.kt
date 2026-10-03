@@ -11,7 +11,8 @@ class FileNamesTest {
     @Test
     fun splitBasic() {
         assertEquals("notes" to "txt", FileNames.split("notes.txt"))
-        assertEquals("archive" to "tar", FileNames.split("archive.tar.gz"))
+        // Only the LAST dot separates the extension.
+        assertEquals("archive.tar" to "gz", FileNames.split("archive.tar.gz"))
         assertEquals("Makefile" to "", FileNames.split("Makefile"))
     }
 
@@ -24,7 +25,7 @@ class FileNamesTest {
 
     @Test
     fun sanitizeRemovesPathSeparators() {
-        assertEquals(".._etc_passwd", FileNames.sanitize("../../etc/passwd"))
+        assertEquals(".._.._etc_passwd", FileNames.sanitize("../../etc/passwd"))
         assertEquals("a_b", FileNames.sanitize("a/b"))
         assertEquals("a_b", FileNames.sanitize("a\\b"))
     }

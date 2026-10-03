@@ -35,7 +35,6 @@ class UndoStackTest {
         stack.commit("b")
         assertEquals("b", stack.undo("c"))
         assertEquals("c", stack.redo("b"))
-        assertEquals("b", stack.redo("a"))
         assertFalse(stack.canRedo())
     }
 
