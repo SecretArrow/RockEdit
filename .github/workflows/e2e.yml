@@ -8,6 +8,10 @@ on:
       - "LICENSE"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write
+
 concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
@@ -16,7 +20,7 @@ jobs:
   emulator:
     name: Instrumented E2E (emulator)
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,9 +46,19 @@ jobs:
         with:
           api-level: 30
           arch: x86_64
+          target: google_apis
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew --no-daemon :app:connectedDebugAndroidTest --stacktrace
+          script: |
+            adb shell input keyevent KEYCODE_WAKEUP || true
+            adb shell wm dismiss-keyguard || true
+            sleep 5
+            ./gradlew --no-daemon :app:connectedDebugAndroidTest --stacktrace || {
+              echo ">> tests failed - dumping diagnostics"
+              adb shell dumpsys window windows | head -80 || true
+              adb logcat -d > /tmp/e2e-logcat.txt || true
+              exit 1
+            }
 
       - name: Auto-retry flaky run once
         if: failure() && github.run_attempt < 2
@@ -58,6 +72,7 @@ jobs:
         with:
           name: e2e-failure-diagnostics
           path: |
+            /tmp/e2e-logcat.txt
             app/build/outputs/androidTest-results/
             app/build/reports/androidTests/
           if-no-files-found: ignore
