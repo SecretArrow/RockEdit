@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_save"
+        android:icon="@drawable/ic_save"
+        android:title="@string/save"
+        app:iconTint="?attr/colorOnSurface"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_save_as"
+        android:title="@string/save_as"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_undo"
+        android:title="@string/undo"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_redo"
+        android:title="@string/redo"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_find"
+        android:title="@string/find"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_goto"
+        android:title="@string/goto_line"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_stats"
+        android:title="@string/statistics"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_share"
+        android:title="@string/share"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_wrap"
+        android:checkable="true"
+        android:title="@string/word_wrap"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_line_numbers"
+        android:checkable="true"
+        android:title="@string/line_numbers"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_read_only"
+        android:checkable="true"
+        android:title="@string/read_only"
+        app:showAsAction="never" />
+</menu>

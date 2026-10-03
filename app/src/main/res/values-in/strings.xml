@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rock Edit</string>
+
+    <string name="recent_files">File terbaru</string>
+    <string name="no_recent_files">Belum ada file terbaru.\nBuka atau buat file untuk memulai.</string>
+    <string name="open_file">Buka file</string>
+    <string name="new_file">File baru</string>
+    <string name="settings">Pengaturan</string>
+    <string name="about">Tentang</string>
+    <string name="remove_from_recents">Hapus dari daftar terbaru</string>
+    <string name="removed_from_recents">Dihapus dari daftar terbaru</string>
+
+    <string name="save">Simpan</string>
+    <string name="save_as">Simpan sebagai</string>
+    <string name="undo">Urungkan</string>
+    <string name="redo">Ulangi</string>
+    <string name="find">Cari / Ganti</string>
+    <string name="goto_line">Ke baris</string>
+    <string name="statistics">Statistik</string>
+    <string name="share">Bagikan</string>
+    <string name="word_wrap">Word wrap</string>
+    <string name="line_numbers">Nomor baris</string>
+    <string name="read_only">Baca-saja</string>
+    <string name="untitled">Tanpa judul</string>
+    <string name="open_with">Edit dengan Rock Edit</string>
+
+    <string name="find_hint">Cari</string>
+    <string name="replace_hint">Ganti dengan</string>
+    <string name="case_sensitive">Peka huruf besar/kecil</string>
+    <string name="find_next">Berikutnya</string>
+    <string name="replace_one">Ganti</string>
+    <string name="replace_all">Ganti semua</string>
+    <string name="not_found">Tidak ditemukan</string>
+    <string name="replaced_count">%1$d kecocokan diganti</string>
+    <string name="goto_hint">Nomor baris (1–%1$d)</string>
+    <string name="go">Lompat</string>
+    <string name="invalid_line">Nomor baris tidak valid</string>
+    <string name="stats_title">Statistik</string>
+    <string name="stats_chars">Karakter: %1$d</string>
+    <string name="stats_words">Kata: %1$d</string>
+    <string name="stats_lines">Baris: %1$d</string>
+    <string name="stats_encoding">Encoding: %1$s</string>
+    <string name="discard_changes_title">Perubahan belum disimpan</string>
+    <string name="discard_changes_msg">Simpan perubahan sebelum menutup?</string>
+    <string name="discard">Buang</string>
+    <string name="cancel">Batal</string>
+    <string name="saved_toast">Tersimpan</string>
+    <string name="save_failed">Gagal menyimpan: %1$s</string>
+    <string name="open_failed">Gagal membuka file: %1$s</string>
+    <string name="binary_warning">File mungkin bukan teks biasa. Menampilkan karakter pengganti.</string>
+    <string name="read_only_toast">Mode baca-saja aktif</string>
+
+    <string name="pref_appearance">Tampilan</string>
+    <string name="pref_theme_title">Tema</string>
+    <string name="pref_theme_system">Ikuti sistem</string>
+    <string name="pref_theme_light">Terang</string>
+    <string name="pref_theme_dark">Gelap</string>
+    <string name="pref_editor">Editor</string>
+    <string name="pref_line_numbers">Tampilkan nomor baris</string>
+    <string name="pref_word_wrap">Word wrap secara default</string>
+    <string name="pref_line_break">Line break saat menyimpan</string>
+    <string name="pref_line_break_auto">Otomatis (ikuti file)</string>
+    <string name="pref_line_break_lf">LF (\\n, Unix)</string>
+    <string name="pref_line_break_crlf">CRLF (\\r\\n, Windows)</string>
+
+    <string name="about_title">Tentang Rock Edit</string>
+    <string name="about_body">Rock Edit %1$s\n\nEditor teks cepat dan stabil untuk Android. 100%% perangkat lunak bebas di bawah GPL-3.0 — tanpa iklan, tanpa pelacakan, tanpa izin berbahaya. File Anda tidak pernah meninggalkan perangkat.\n\nKode sumber: github.com/SecretArrow/RockEdit</string>
+</resources>
