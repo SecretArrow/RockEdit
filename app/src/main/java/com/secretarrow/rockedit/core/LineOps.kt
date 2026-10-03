@@ -27,9 +27,16 @@ object LineOps {
         val leBr = lineEndIncludingBreak(text, safe)
         val content = text.substring(ls, le)
         val breakSeq = text.substring(le, leBr)
-        val copy = content + (if (breakSeq.isEmpty()) "\n" else breakSeq)
-        val newText = text.substring(0, leBr) + copy + text.substring(leBr)
-        val caret = leBr + (safe - ls)
+        val newText: String
+        val caret: Int
+        if (le == text.length) {
+            // Last line has no terminator: put a fresh break before the copy.
+            newText = text + "\n" + content
+            caret = le + 1 + (safe - ls)
+        } else {
+            newText = text.substring(0, leBr) + content + breakSeq + text.substring(leBr)
+            caret = leBr + (safe - ls)
+        }
         return Result(newText, caret, caret + (selEnd - selStart))
     }
 
@@ -72,9 +79,10 @@ object LineOps {
         val bs = breakStartBefore(text, ls) // start of the break between prev line and this one
         val prevStart = lineStart(text, bs)
         val myContent = text.substring(ls, le)
+        val myTerm = text.substring(le, leBr) // this line's own terminator must survive the move
         val prevContent = text.substring(prevStart, bs)
         val term = text.substring(bs, ls)
-        val newText = text.substring(0, prevStart) + myContent + term + prevContent +
+        val newText = text.substring(0, prevStart) + myContent + term + prevContent + myTerm +
             text.substring(leBr)
         val caret = clampToLine(newText, CursorNav.offsetForLine(newText, line - 1) + (safe - ls))
         return Result(newText, caret, caret + (selEnd - selStart))

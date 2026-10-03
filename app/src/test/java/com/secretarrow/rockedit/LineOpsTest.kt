@@ -146,7 +146,7 @@ class LineOpsTest {
     @Test
     fun helpersHandleBoundaries() {
         assertEquals(0, LineOps.lineStart("abc", 0))
-        assertEquals(0, LineOps.lineStart("a\nb", 2))
+        assertEquals(2, LineOps.lineStart("a\nb", 2))
         assertEquals(3, LineOps.lineEnd("abc", 0))
         assertEquals(1, LineOps.lineEnd("a\nb", 0))
         assertEquals(2, LineOps.lineEndIncludingBreak("a\nb", 0))
