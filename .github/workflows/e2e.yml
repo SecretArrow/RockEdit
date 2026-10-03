@@ -51,26 +51,7 @@ jobs:
           target: google_apis
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: |
-            adb shell input keyevent KEYCODE_WAKEUP || true
-            adb shell wm dismiss-keyguard || true
-            sleep 3
-            set +e
-            for attempt in 1 2 3; do
-              echo ">> connectedDebugAndroidTest - attempt $attempt"
-              ./gradlew --no-daemon :app:connectedDebugAndroidTest --stacktrace
-              if [ $? -eq 0 ]; then
-                echo ">> e2e green on attempt $attempt"
-                exit 0
-              fi
-              echo ">> attempt $attempt failed; restarting test state"
-              adb shell pm clear com.secretarrow.rockedit || true
-              sleep 5
-            done
-            echo ">> e2e failed after 3 attempts - dumping diagnostics"
-            adb shell dumpsys window windows | head -60 || true
-            adb logcat -d > /tmp/e2e-logcat.txt || true
-            exit 1
+          script: adb shell input keyevent KEYCODE_WAKEUP; adb shell wm dismiss-keyguard; sleep 3; ./gradlew --no-daemon :app:connectedDebugAndroidTest --stacktrace || (adb shell pm clear com.secretarrow.rockedit; sleep 2; ./gradlew --no-daemon :app:connectedDebugAndroidTest --stacktrace) || (adb logcat -d > /tmp/e2e-logcat.txt; exit 1)
 
       - name: Upload E2E failure diagnostics
         if: failure()
