@@ -13,6 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.lifecycle.Lifecycle
 import com.secretarrow.rockedit.ui.EditorActivity
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -42,8 +43,16 @@ class DirtyDialogE2eTest {
         onView(withText(R.string.discard_changes_title)).check(matches(isDisplayed()))
         onView(withText(R.string.discard)).perform(click())
 
-        scenario.onActivity { activity ->
-            assertTrue("Activity should be finishing after Discard", activity.isFinishing)
+        // Discard calls finish(); poll until the scenario reports DESTROYED.
+        val deadline = System.currentTimeMillis() + 4000
+        var destroyed = false
+        while (System.currentTimeMillis() < deadline) {
+            if (scenario.state == Lifecycle.State.DESTROYED) {
+                destroyed = true
+                break
+            }
+            Thread.sleep(100)
         }
+        assertTrue("Activity should be destroyed after Discard", destroyed)
     }
 }
