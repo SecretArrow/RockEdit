@@ -82,9 +82,9 @@ class FolderBrowserActivity : AppCompatActivity() {
         outState.putStringArrayList(STATE_PATH, ArrayList(path))
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        val saved = savedInstanceState?.getStringArrayList(STATE_PATH).orEmpty()
+        val saved = savedInstanceState.getStringArrayList(STATE_PATH).orEmpty()
         if (saved.isNotEmpty() && rootTree != null) {
             path = saved
             refresh()

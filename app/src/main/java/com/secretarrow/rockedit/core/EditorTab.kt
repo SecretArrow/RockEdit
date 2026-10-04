@@ -90,8 +90,9 @@ class TabManager(private val maxTabs: Int = MAX_TABS) {
      * Returns the activated index, or -1 when the tab bar is full.
      */
     fun add(tab: EditorTab): Int {
-        if (tab.uri != null) {
-            val existing = indexOfUri(tab.uri)
+        val uri = tab.uri
+        if (uri != null) {
+            val existing = indexOfUri(uri)
             if (existing >= 0) {
                 activeIndex = existing
                 return existing

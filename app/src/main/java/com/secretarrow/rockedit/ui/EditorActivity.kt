@@ -469,9 +469,10 @@ class EditorActivity : AppCompatActivity() {
         super.onPause()
         captureActiveState()
         for (tab in tabManager.tabs()) {
-            if (tab.loaded && tab.uri != null && tab.caretStart >= 0) {
+            val uri = tab.uri
+            if (tab.loaded && uri != null && tab.caretStart >= 0) {
                 App.sessions(this).saveCursor(
-                    tab.uri, tab.caretStart, tab.caretEnd, tab.scrollY
+                    uri, tab.caretStart, tab.caretEnd, tab.scrollY
                 )
             }
         }
