@@ -12,6 +12,9 @@
 -dontwarn org.ietf.jgss.**
 -dontwarn java.naming.**
 -dontwarn javax.naming.**
+-dontwarn javax.security.auth.**
+-dontwarn javax.security.auth.login.**
+-dontwarn javax.security.sasl.**
 -dontwarn com.jcraft.jzlib.**
 -dontwarn org.apache.sshd.**
 -keep class net.schmizz.sshj.** { *; }
