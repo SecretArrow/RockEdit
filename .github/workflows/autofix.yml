@@ -48,7 +48,8 @@ jobs:
       - name: Apply ktlint format
         # A parse-level failure on one file must not block formatting of the
         # rest; the CI build is the authority on compilability.
-        run: "$RUNNER_TEMP/ktlint" --format "app/src/**/*.kt" || true
+        run: |
+          "$RUNNER_TEMP/ktlint" --format "app/src/**/*.kt" || true
 
       - name: Commit and push fixes
         run: |
