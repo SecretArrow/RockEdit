@@ -9,6 +9,45 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
 - USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
 
+## [0.10.0] - 2026-10-04
+
+### Added
+- **Code Formatter diperluas ke semua bahasa utama + smart contract** —
+  arsitektur berjenjang (correctness first):
+  - **BraceFormatter**: Kotlin, Java, C, C++, C#, Objective-C, Swift, Dart,
+    JavaScript, TypeScript, Go, Rust, PHP, Scala, Groovy, Zig, R, PowerShell,
+    Protobuf, GraphQL, **Solidity, Move, Cairo, Cadence, Motoko, Aiken, Leo,
+    Fe** + alias ink!/CosmWasm/Soroban (→Rust) dan `sol` (→Solidity)
+  - **IndentFormatter**: Python & Vyper (re-indent aman semantik: unit
+    indentasi dideteksi via GCD lalu di-rescale — struktur tidak pernah
+    diturunkan ulang; docstring dipertahankan verbatim) + Ruby, Lua, Elixir,
+    Julia, LaTeX (struktur kata kunci `def…end` / `\begin{…}`)
+  - **LispFormatter**: Clarity (Stacks), Michelson (Tezos), Clojure,
+    ClojureScript, Scheme, Racket, Common Lisp (kedalaman kurung)
+  - **YamlFormatter**: trim trailing di luar block scalar; block scalar
+    (`|`/`>`) dipertahankan byte-per-byte; tab indentasi ditolak dengan
+    nomor baris
+- **Penyorotan sintaks +11 bahasa smart contract** (Solidity, Vyper, Move,
+  Cairo, Clarity, Cadence, Motoko, Aiken, Leo, Fe, Michelson) dengan
+  deteksi ekstensi `.sol .vy .move .cairo .clar .cdc .mo .aiken .leo .fe .tz`
+- Opsi **lenient** pada FormatOptions: melanjutkan format best-effort
+  ketika validasi struktural gagal (default tetap strict)
+- 84 unit test baru: BraceFormatterTest (26), IndentFormatterTest (23),
+  LispFormatterTest (11), YamlFormatterTest (9), SmartContractFormatterTest
+  (15) — per-cabang, termasuk kasus batas, error berposisi, dan
+  idempotensi format(format(x)) == format(x) untuk setiap bahasa kontrak
+
+### Changed
+- formatValidated kini menerima id bahasa (formatter tetap stateless dan
+  thread-safe; konfigurasi per bahasa lewat parameter, bukan field mutable)
+- applyFinalTouches mendapat parameter trimTrailing agar isi string
+  multi-baris, komentar blok, dan block scalar tidak pernah diubah
+
+### Verified
+- Port Python 1:1 dari seluruh engine (scripts/formatter_verify_v2.py,
+  64 kasus = kasus test JUnit yang sama) hijau penuh sebelum push —
+  menemukan & memperbaiki 3 bug algoritma sebelum CI
+
 ## [0.9.0] - 2026-10-04
 
 ### Added

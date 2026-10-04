@@ -17,7 +17,12 @@ class JsonFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
     override val id: String = "json"
     override val supportedLanguages: Set<String> = setOf("json")
 
-    override fun formatValidated(text: String, options: FormatOptions, deadline: Deadline): FormatResult {
+    override fun formatValidated(
+        language: String,
+        text: String,
+        options: FormatOptions,
+        deadline: Deadline
+    ): FormatResult {
         val value = try {
             JsonLexer(text, deadline).parseTopLevel()
         } catch (e: JsonLexer.PositionError) {

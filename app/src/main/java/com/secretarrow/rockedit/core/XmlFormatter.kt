@@ -31,7 +31,12 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
     override val id: String = "xml"
     override val supportedLanguages: Set<String> = setOf("xml", "svg", "plist")
 
-    override fun formatValidated(text: String, options: FormatOptions, deadline: Deadline): FormatResult {
+    override fun formatValidated(
+        language: String,
+        text: String,
+        options: FormatOptions,
+        deadline: Deadline
+    ): FormatResult {
         // PRIMARY XXE GUARD — reject DTDs before touching the parser.
         if (DTD_REGEX.containsMatchIn(text.take(DTD_SCAN_CHARS))) {
             return FormatResult.Failure(

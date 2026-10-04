@@ -743,12 +743,184 @@ object SyntaxRegistry {
         blockComments = listOf("/*" to "*/")
     )
 
+    // ------------------------------------------------------------- smart contracts
+
+    private val solidity = SyntaxLanguage(
+        id = "solidity",
+        displayName = "Solidity",
+        keywords = setOf(
+            "pragma", "solidity", "import", "from", "as", "contract", "interface",
+            "library", "abstract", "is", "function", "constructor", "receive",
+            "fallback", "modifier", "event", "error", "enum", "struct", "using",
+            "for", "returns", "return", "public", "private", "internal", "external",
+            "pure", "view", "payable", "virtual", "override", "constant",
+            "immutable", "storage", "memory", "calldata", "mapping", "if", "else",
+            "for", "while", "do", "break", "continue", "try", "catch", "require",
+            "revert", "assert", "emit", "new", "delete", "this", "super", "selfdestruct",
+            "assembly", "unchecked", "indexed", "anonymous", "global", "true", "false"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val vyper = SyntaxLanguage(
+        id = "vyper",
+        displayName = "Vyper",
+        keywords = setOf(
+            "pragma", "version", "implements", "interface", "event", "enum",
+            "struct", "struct", "constant", "external", "internal", "pure",
+            "view", "payable", "nonpayable", "public", "private", "immutable",
+            "deploy", "def", "return", "if", "elif", "else", "for", "in", "while",
+            "break", "continue", "pass", "raise", "assert", "log", "send", "raw_call",
+            "create_forwarder_to", "self", "msg", "block", "chain", "tx", "empty",
+            "MAX_UINT256", "zero_address", "True", "False", "None", "and", "or", "not"
+        ),
+        lineComments = listOf("#")
+    )
+
+    private val move = SyntaxLanguage(
+        id = "move",
+        displayName = "Move",
+        keywords = setOf(
+            "module", "script", "address", "public", "entry", "friend", "use",
+            "fun", "native", "inline", "const", "struct", "ability", "has", "copy",
+            "drop", "store", "key", "resource", "acquires", "let", "mut", "move",
+            "copy", "borrow", "return", "if", "else", "while", "loop", "break",
+            "continue", "abort", "assert", "vector", "signer", "true", "false"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val cairo = SyntaxLanguage(
+        id = "cairo",
+        displayName = "Cairo",
+        keywords = setOf(
+            "mod", "use", "fn", "let", "mut", "const", "struct", "enum", "trait",
+            "impl", "type", "match", "if", "else", "loop", "while", "for", "in",
+            "return", "break", "continue", "assert", "panic", "nop", "with", "implicits",
+            "felt252", "u8", "u16", "u32", "u64", "u128", "u256", "bool", "ContractState",
+            "storage", "event", "constructor", "external", "view", "ref", "self",
+            "pub", "as", "true", "false"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val clarity = SyntaxLanguage(
+        id = "clarity",
+        displayName = "Clarity",
+        keywords = setOf(
+            "define-constant", "define-data-var", "define-map", "define-fungible-token",
+            "define-non-fungible-token", "define-public", "define-read-only",
+            "define-private", "define-trait", "impl-trait", "use-trait", "let",
+            "begin", "if", "match", "unwrap", "unwrap-panic", "unwrap-err",
+            "try", "asserts", "ok", "err", "some", "none", "is-eq", "is-none",
+            "map-get", "map-set", "map-delete", "var-get", "var-set", "ft-transfer",
+            "ft-mint", "ft-burn", "ft-get-balance", "nft-get-owner", "nft-mint",
+            "nft-transfer", "contract-call", "principal-construct", "as-contract",
+            "at-block", "get-block-info", "print", "tuple", "list", "true", "false", "none"
+        ),
+        lineComments = listOf(";;")
+    )
+
+    private val cadence = SyntaxLanguage(
+        id = "cadence",
+        displayName = "Cadence",
+        keywords = setOf(
+            "access", "contract", "contractinterface", "resource", "struct",
+            "event", "enum", "transaction", "prepare", "execute", "pre", "post",
+            "init", "destroy", "fun", "let", "var", "return", "if", "else", "while",
+            "for", "in", "emit", "create", "destroy", "import", "pub", "priv",
+            "account", "available", "all", "self", "auth", "mapping", "attachment",
+            "entitlement", "view", "native", "static", "require", "as", "true", "false", "nil"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val motoko = SyntaxLanguage(
+        id = "motoko",
+        displayName = "Motoko",
+        keywords = setOf(
+            "actor", "module", "object", "class", "import", "shared", "query",
+            "composite", "public", "private", "system", "func", "let", "var",
+            "type", "async", "await", "async*", "return", "if", "else", "switch",
+            "case", "while", "loop", "for", "in", "break", "continue", "label",
+            "try", "catch", "throw", "assert", "debug_show", "Null", "Bool", "Nat",
+            "Int", "Text", "Blob", "Principal", "Error", "stable", "flexible",
+            "and", "or", "not", "true", "false", "null"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val aiken = SyntaxLanguage(
+        id = "aiken",
+        displayName = "Aiken",
+        keywords = setOf(
+            "use", "pub", "fn", "const", "type", "let", "assert", "expect",
+            "when", "is", "if", "else", "todo", "error", "trace", "validator",
+            "opaque", "as", "match", "else", "and", "or", "not", "True", "False",
+            "Void", "Option", "Some", "None", "G1Element", "G2Element"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val leo = SyntaxLanguage(
+        id = "leo",
+        displayName = "Leo",
+        keywords = setOf(
+            "program", "import", "mapping", "record", "struct", "transition",
+            "inline", "function", "async", "function", "const", "let", "for",
+            "if", "else", "else if", "return", "assert", "assert_eq", "input",
+            "main", "public", "private", "constant", "u8", "u16", "u32", "u64",
+            "u128", "i8", "i16", "i32", "i64", "i128", "field", "group", "scalar",
+            "signature", "address", "bool", "final", "true", "false"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val fe = SyntaxLanguage(
+        id = "fe",
+        displayName = "Fe",
+        keywords = setOf(
+            "contract", "struct", "enum", "type", "event", "emit", "fn", "pub",
+            "const", "let", "mut", "if", "else", "match", "for", "in", "while",
+            "return", "revert", "assert", "break", "continue", "emboss", "self",
+            "msg", "chain", "block", "tx", "create", "call", "u8", "u16", "u32",
+            "u64", "u128", "u256", "i8", "i256", "bool", "address", "true", "false"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val michelson = SyntaxLanguage(
+        id = "michelson",
+        displayName = "Michelson",
+        keywords = setOf(
+            "parameter", "storage", "code", "PUSH", "DROP", "DUP", "SWAP",
+            "DIG", "DUG", "PAIR", "UNPAIR", "CAR", "CDR", "IF", "IF_LEFT",
+            "IF_CONS", "IF_NONE", "IF_SOME", "NIL", "CONS", "SOME", "NONE",
+            "LAMBDA", "EXEC", "APPLY", "ADD", "SUB", "MUL", "EDIV", "COMPARE",
+            "EQ", "NEQ", "LT", "GT", "LE", "GE", "OR", "AND", "XOR", "NOT",
+            "CONTRACT", "TRANSFER_TOKENS", "SET_DELEGATE", "BALANCE", "AMOUNT",
+            "SENDER", "SOURCE", "SELF", "IMPLICIT_ACCOUNT", "MAP", "EMPTY_MAP",
+            "BIG_MAP", "GET", "UPDATE", "ITER", "LOOP", "LOOP_LEFT", "FAILWITH"
+        ),
+        lineComments = listOf("//", "#")
+    )
+
     private val languages: List<SyntaxLanguage> = listOf(
         kotlin, java, c, cpp, csharp, go, rust, javascript, typescript, python,
         ruby, php, swift, shell, sql, json, yaml, xml, html, css,
         lua, perl, r, objc, dart, scala, groovy, haskell, erlang, elixir,
         clojure, fsharp, visualbasic, assembly, toml, ini, makefile, cmake,
-        batch, powershell, vue, graphql, julia, nim, ocaml, latex, zig, protobuf
+        batch, powershell, vue, graphql, julia, nim, ocaml, latex, zig, protobuf,
+        solidity, vyper, move, cairo, clarity, cadence, motoko, aiken, leo,
+        fe, michelson
     )
 
     /** Files without (or with misleading) extensions that map by exact name. */
@@ -815,6 +987,18 @@ object SyntaxRegistry {
         link(latex, "tex", "latex")
         link(zig, "zig")
         link(protobuf, "proto")
+        // Smart contracts (v0.10.0)
+        link(solidity, "sol")
+        link(vyper, "vy")
+        link(move, "move")
+        link(cairo, "cairo")
+        link(clarity, "clar")
+        link(cadence, "cdc")
+        link(motoko, "mo")
+        link(aiken, "aiken")
+        link(leo, "leo")
+        link(fe, "fe")
+        link(michelson, "tz")
     }
 
     /** Number of built-in languages (useful for tests and About dialogs). */

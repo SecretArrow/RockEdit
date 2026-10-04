@@ -16,7 +16,14 @@ data class FormatOptions(
     val lineBreak: LineBreak = LineBreak.LF,
     val trimTrailingWhitespace: Boolean = true,
     val insertFinalNewline: Boolean = true,
-    val minify: Boolean = false
+    val minify: Boolean = false,
+    /**
+     * Lenient mode: when structural validation fails (unbalanced braces,
+     * unclosed strings, non-multiple indentation), still produce a
+     * best-effort result instead of a PARSE_ERROR. Default is strict:
+     * suspicious input is rejected with a specific error and line number.
+     */
+    val lenient: Boolean = false
 ) {
     init {
         require(indentSize in MIN_INDENT_SIZE..MAX_INDENT_SIZE) {

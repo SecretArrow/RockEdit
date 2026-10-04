@@ -66,7 +66,7 @@ abstract class AbstractCodeFormatter(
 
         val deadline = Deadline.fromBudget(request.timeBudgetMs, nowMs)
         return try {
-            when (val result = formatValidated(request.text, request.options, deadline)) {
+            when (val result = formatValidated(request.language, request.text, request.options, deadline)) {
                 is FormatResult.Failure -> result
                 is FormatResult.Skipped -> result
                 is FormatResult.Success ->
@@ -98,8 +98,14 @@ abstract class AbstractCodeFormatter(
         }
     }
 
-    /** Subclass work. Input is guaranteed non-empty, within size cap; deadline is live. */
+    /**
+     * Subclass work. Input is guaranteed non-empty and within the size cap;
+     * deadline is live. [language] is the trimmed, lowercased request id so
+     * multi-language formatters can pick a per-language configuration while
+     * staying stateless (no mutable formatter fields, hence thread safe).
+     */
     protected abstract fun formatValidated(
+        language: String,
         text: String,
         options: FormatOptions,
         deadline: Deadline
@@ -133,11 +139,20 @@ abstract class AbstractCodeFormatter(
      * before trimming, otherwise a CR from CRLF input would block the
      * trailing-space trim. Renderers always emit '\n' internally, so this
      * is the ONLY place line breaks are converted.
+     *
+     * [trimTrailing] can be passed as false by structural formatters that
+     * must preserve content verbatim inside multiline strings, block
+     * comments or block scalars (trailing spaces there can be semantically
+     * significant). Those formatters trim normal lines themselves.
      */
-    protected fun applyFinalTouches(out: CharSequence, options: FormatOptions): String {
+    protected fun applyFinalTouches(
+        out: CharSequence,
+        options: FormatOptions,
+        trimTrailing: Boolean = true
+    ): String {
         var s = out.toString()
         s = LineBreak.normalize(s, options.lineBreak)
-        if (options.trimTrailingWhitespace) {
+        if (options.trimTrailingWhitespace && trimTrailing) {
             s = s.split('\n').joinToString("\n") { it.trimEnd(' ', '\t') }
         }
         if (options.insertFinalNewline && !s.endsWith(options.lineBreak.value)) {
@@ -223,13 +238,21 @@ class FormatterRegistry(formatters: List<CodeFormatter>) {
     }
 
     companion object {
-        /** Standard registry: JSON, XML, CSS + universal whitespace fallback. */
+        /**
+         * Standard registry: structural formatters for the mainstream and
+         * smart-contract languages plus the universal whitespace fallback.
+         * Language coverage lives in [FormatterLanguages].
+         */
         fun default(nowMs: () -> Long = System::currentTimeMillis): FormatterRegistry =
             FormatterRegistry(
                 listOf(
                     JsonFormatter(nowMs),
                     XmlFormatter(nowMs),
                     CssFormatter(nowMs),
+                    BraceFormatter(nowMs),
+                    IndentFormatter(nowMs),
+                    LispFormatter(nowMs),
+                    YamlFormatter(nowMs),
                     WhitespaceFormatter(nowMs)
                 )
             )

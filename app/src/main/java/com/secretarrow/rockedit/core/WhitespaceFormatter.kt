@@ -20,7 +20,12 @@ class WhitespaceFormatter(nowMs: () -> Long = System::currentTimeMillis) : Abstr
     override val supportedLanguages: Set<String> = setOf(WILDCARD)
     override val isFallback: Boolean = true
 
-    override fun formatValidated(text: String, options: FormatOptions, deadline: Deadline): FormatResult {
+    override fun formatValidated(
+        language: String,
+        text: String,
+        options: FormatOptions,
+        deadline: Deadline
+    ): FormatResult {
         if (deadline.isExpired()) return timeoutResult(deadline.budgetMs)
         val formatted = applyFinalTouches(text, options)
         return FormatResult.Success(formatted, formatted != text, 0L)

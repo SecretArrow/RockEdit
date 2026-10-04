@@ -26,7 +26,12 @@ class CodeFormatterTest {
         private val result: FormatResult,
         override val isFallback: Boolean = false
     ) : AbstractCodeFormatter() {
-        override fun formatValidated(text: String, options: FormatOptions, deadline: Deadline): FormatResult {
+        override fun formatValidated(
+            language: String,
+            text: String,
+            options: FormatOptions,
+            deadline: Deadline
+        ): FormatResult {
             if (deadline.isExpired()) return timeoutResult(deadline.budgetMs)
             return result
         }
@@ -53,7 +58,7 @@ class CodeFormatterTest {
     @Test
     fun registryFallsBackForUnknownLanguage() {
         val registry = FormatterRegistry.default()
-        assertEquals("whitespace", registry.formatterFor("python")?.id)
+        assertEquals("indent", registry.formatterFor("python")?.id)
         assertEquals("whitespace", registry.formatterFor("txt")?.id)
     }
 
@@ -92,7 +97,12 @@ class CodeFormatterTest {
         val bomb = object : AbstractCodeFormatter() {
             override val id = "bomb"
             override val supportedLanguages = setOf("bomb")
-            override fun formatValidated(text: String, options: FormatOptions, deadline: Deadline): FormatResult {
+            override fun formatValidated(
+                language: String,
+                text: String,
+                options: FormatOptions,
+                deadline: Deadline
+            ): FormatResult {
                 error("exploded")
             }
         }

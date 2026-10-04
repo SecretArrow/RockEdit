@@ -26,7 +26,12 @@ class CssFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
     private fun StringBuilder.endsWithNewline(): Boolean =
         isNotEmpty() && this[length - 1] == '\n'
 
-    override fun formatValidated(text: String, options: FormatOptions, deadline: Deadline): FormatResult {
+    override fun formatValidated(
+        language: String,
+        text: String,
+        options: FormatOptions,
+        deadline: Deadline
+    ): FormatResult {
         val out = StringBuilder(text.length + 32)
         var state = State.CODE
         var braceDepth = 0

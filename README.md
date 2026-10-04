@@ -8,22 +8,28 @@
 terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
 menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.9.0)
+## Fitur (v0.10.0)
 
 - Buka & simpan file teks apa pun lewat Storage Access Framework (tanpa izin storage!)
 - **Editor multi-tab** (maks 10): indikator perubahan, tutup per tab / tutup lainnya,
   pemulihan set tab terbuka antar-sesi (muat isi secara lazy), undo/bookmark/encoding per-tab
-- **Penyorotan sintaks 48 bahasa** (Kotlin, Java, C/C++, C#, Go, Rust, JS/TS, Python, Ruby,
+- **Penyorotan sintaks 59 bahasa** (Kotlin, Java, C/C++, C#, Go, Rust, JS/TS, Python, Ruby,
   PHP, Swift, Shell, SQL, JSON, YAML, XML, HTML, CSS, Lua, Perl, R, ObjC, Dart, Scala,
   Groovy, Haskell, Elixir, Clojure, F#, VB, Assembly, TOML, INI, Makefile, CMake, Batch,
-  PowerShell, Vue, GraphQL, Julia, Nim, OCaml, LaTeX, Zig, Protobuf) + nama populer
-  tanpa ekstensi (Makefile, Dockerfile, Gemfile) — palet terang/gelap/AMOLED
+  PowerShell, Vue, GraphQL, Julia, Nim, OCaml, LaTeX, Zig, Protobuf + **11 bahasa smart
+  contract: Solidity, Vyper, Move, Cairo, Clarity, Cadence, Motoko, Aiken, Leo, Fe,
+  Michelson**) + nama populer tanpa ekstensi (Makefile, Dockerfile, Gemfile) — palet
+  terang/gelap/AMOLED
 - **Buka ulang dengan encoding** & **simpan dengan encoding** (UTF-8/16/32, Shift_JIS, GBK,
   Big5, EUC-KR, dan lainnya) di atas deteksi otomatis
-- **Code Formatter** (v0.9.0): JSON (angka verbatim, error berposisi),
-  XML/SVG (proteksi XXE berlapis), CSS (string & data-URI aman, error
-  berbaris), fallback whitespace untuk bahasa apa pun — hasil masuk undo
-  stack, gagal = dokumen tidak pernah berubah
+- **Code Formatter** (v0.10.0 — semua bahasa utama + smart contract, 100% offline):
+  JSON (angka verbatim, error berposisi), XML/SVG (proteksi XXE berlapis), CSS
+  (string & data-URI aman), **C-family + smart contract** (Solidity, Move, Cairo,
+  Cadence, Motoko, Aiken, Leo, Fe, ink!/CosmWasm/Soroban), **Python & Vyper**
+  (re-indent aman semantik), Ruby/Lua/Elixir/Julia/LaTeX (struktur kata kunci),
+  **Clarity & Michelson** (struktur kurung), YAML (block scalar aman) — fallback
+  whitespace untuk bahasa lain; strict/lenient; hasil masuk undo stack,
+  gagal = dokumen tidak pernah berubah
 - **Buka folder** (peramban SAF: breadcrumb, folder di atas, filter file tersembunyi,
   folder terakhir diingat) — file langsung menjadi tab
 - **Storage Manager: FTP, FTPS, SFTP, WebDAV** — file remote dibuka seperti file lokal,

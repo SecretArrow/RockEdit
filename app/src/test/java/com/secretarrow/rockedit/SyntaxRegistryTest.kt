@@ -49,7 +49,9 @@ class SyntaxRegistryTest {
             "lua", "perl", "r", "objc", "dart", "scala", "groovy", "haskell",
             "erlang", "elixir", "clojure", "fsharp", "vb", "assembly", "toml",
             "ini", "makefile", "cmake", "batch", "powershell", "vue", "graphql",
-            "julia", "nim", "ocaml", "latex", "zig", "protobuf"
+            "julia", "nim", "ocaml", "latex", "zig", "protobuf",
+            "solidity", "vyper", "move", "cairo", "clarity", "cadence",
+            "motoko", "aiken", "leo", "fe", "michelson"
         )) {
             val language = SyntaxRegistry.languageById(id)
             assertTrue("missing language $id", language != null)
