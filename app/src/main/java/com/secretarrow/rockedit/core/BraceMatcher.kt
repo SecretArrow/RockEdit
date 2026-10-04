@@ -45,7 +45,6 @@ package com.secretarrow.rockedit.core
  *   programming error, not runtime input).
  */
 object BraceMatcher {
-
     /** Default scan budget: 1 MiB of characters per match attempt. */
     const val DEFAULT_MAX_SCAN = 1_048_576
 
@@ -55,29 +54,30 @@ object BraceMatcher {
      * The bracket vocabulary for matching. Characters must be unique across
      * every opener and closer, and an opener may never equal its closer.
      */
-    data class BracePairs(val pairs: List<Pair<Char, Char>>) {
-
+    data class BracePairs(
+        val pairs: List<Pair<Char, Char>>,
+    ) {
         init {
             if (pairs.size < MIN_REASONABLE_PAIRS) {
                 throw IllegalArgumentException(
-                    "BracePairs needs at least one (opener, closer) pair, got ${pairs.size}"
+                    "BracePairs needs at least one (opener, closer) pair, got ${pairs.size}",
                 )
             }
             val seen = HashSet<Char>(pairs.size * 2)
             for ((open, close) in pairs) {
                 if (open == close) {
                     throw IllegalArgumentException(
-                        "invalid brace pair '$open$close': opener and closer must differ"
+                        "invalid brace pair '$open$close': opener and closer must differ",
                     )
                 }
                 if (!seen.add(open)) {
                     throw IllegalArgumentException(
-                        "duplicate bracket character '$open': each bracket may appear only once"
+                        "duplicate bracket character '$open': each bracket may appear only once",
                     )
                 }
                 if (!seen.add(close)) {
                     throw IllegalArgumentException(
-                        "duplicate bracket character '$close': each bracket may appear only once"
+                        "duplicate bracket character '$close': each bracket may appear only once",
                     )
                 }
             }
@@ -98,14 +98,16 @@ object BraceMatcher {
         data class Matched(
             val partnerIndex: Int,
             val isOpener: Boolean,
-            val bracket: Char
+            val bracket: Char,
         ) : MatchResult
 
         /** The cursor is not on any configured bracket. */
         object NoBracketAtCursor : MatchResult
 
         /** No partner (or none reachable): [reason] says what failed and why. */
-        data class Unmatched(val reason: String) : MatchResult
+        data class Unmatched(
+            val reason: String,
+        ) : MatchResult
     }
 
     /**
@@ -117,7 +119,7 @@ object BraceMatcher {
         text: String,
         index: Int,
         pairs: BracePairs = BracePairs.DEFAULT,
-        maxScan: Int = DEFAULT_MAX_SCAN
+        maxScan: Int = DEFAULT_MAX_SCAN,
     ): MatchResult = matchAtWithLimit(text, index, pairs, maxScan)
 
     /** Test-visible worker behind [matchAt] so a tiny scan limit is unit-testable. */
@@ -125,7 +127,7 @@ object BraceMatcher {
         text: String,
         index: Int,
         pairs: BracePairs,
-        maxScan: Int
+        maxScan: Int,
     ): MatchResult {
         if (maxScan < 0) {
             throw IllegalArgumentException("maxScan is $maxScan, must be >= 0")
@@ -136,7 +138,7 @@ object BraceMatcher {
         if (index < 0 || index >= text.length) {
             return MatchResult.Unmatched(
                 "index out of bounds: index is $index, valid range is 0..${text.length - 1} " +
-                    "for text of length ${text.length}"
+                    "for text of length ${text.length}",
             )
         }
         val openerToCloser = HashMap<Char, Char>(pairs.pairs.size * 2)
@@ -149,13 +151,25 @@ object BraceMatcher {
         val ourClose = openerToCloser[cursor]
         if (ourClose != null) {
             return scanForward(
-                text, index, cursor, ourClose, openerToCloser, closerToOpener, maxScan
+                text,
+                index,
+                cursor,
+                ourClose,
+                openerToCloser,
+                closerToOpener,
+                maxScan,
             )
         }
         val ourOpen = closerToOpener[cursor]
         if (ourOpen != null) {
             return scanBackward(
-                text, index, ourOpen, cursor, openerToCloser, closerToOpener, maxScan
+                text,
+                index,
+                ourOpen,
+                cursor,
+                openerToCloser,
+                closerToOpener,
+                maxScan,
             )
         }
         return MatchResult.NoBracketAtCursor
@@ -170,7 +184,7 @@ object BraceMatcher {
         ourClose: Char,
         openerToCloser: Map<Char, Char>,
         closerToOpener: Map<Char, Char>,
-        maxScan: Int
+        maxScan: Int,
     ): MatchResult {
         var state = State.CODE
         var depth = 0
@@ -181,77 +195,83 @@ object BraceMatcher {
             if (scanned >= maxScan) {
                 return MatchResult.Unmatched(
                     "scan limit reached: no closing '$ourClose' found within $maxScan " +
-                        "characters of index $start"
+                        "characters of index $start",
                 )
             }
             val c = text[i]
             scanned++
             when (state) {
-                State.CODE -> when {
-                    c == '"' && !isEscaped(text, i) -> state = State.STRING
-                    c == '\'' && !isEscaped(text, i) -> state = State.CHAR
-                    c == '/' && i + 1 < text.length && text[i + 1] == '/' -> {
-                        state = State.LINE_COMMENT
-                        i++
-                    }
-                    c == '/' && i + 1 < text.length && text[i + 1] == '*' -> {
-                        state = State.BLOCK_COMMENT
-                        i++
-                    }
-                    c == ourOpen -> depth++
-                    c == ourClose -> when {
-                        depth > 0 -> depth--
-                        others.isEmpty() -> return MatchResult.Matched(i, true, ourOpen)
-                        else -> return MatchResult.Unmatched(
-                            "unbalanced text: '$ourClose' at index $i would close " +
-                                "'$ourOpen' at index $start, but ${others.size} inner " +
-                                "bracket(s) opened after it are still open"
-                        )
-                    }
-                    openerToCloser.containsKey(c) -> others.add(c)
-                    closerToOpener.containsKey(c) -> {
-                        val expectedOpen = closerToOpener.getValue(c)
-                        if (others.isNotEmpty() && others.last() == expectedOpen) {
-                            others.removeAt(others.lastIndex)
+                State.CODE ->
+                    when {
+                        c == '"' && !isEscaped(text, i) -> state = State.STRING
+                        c == '\'' && !isEscaped(text, i) -> state = State.CHAR
+                        c == '/' && i + 1 < text.length && text[i + 1] == '/' -> {
+                            state = State.LINE_COMMENT
+                            i++
                         }
-                        // else: stray closer of another type, tolerated and ignored.
+                        c == '/' && i + 1 < text.length && text[i + 1] == '*' -> {
+                            state = State.BLOCK_COMMENT
+                            i++
+                        }
+                        c == ourOpen -> depth++
+                        c == ourClose ->
+                            when {
+                                depth > 0 -> depth--
+                                others.isEmpty() -> return MatchResult.Matched(i, true, ourOpen)
+                                else -> return MatchResult.Unmatched(
+                                    "unbalanced text: '$ourClose' at index $i would close " +
+                                        "'$ourOpen' at index $start, but ${others.size} inner " +
+                                        "bracket(s) opened after it are still open",
+                                )
+                            }
+                        openerToCloser.containsKey(c) -> others.add(c)
+                        closerToOpener.containsKey(c) -> {
+                            val expectedOpen = closerToOpener.getValue(c)
+                            if (others.isNotEmpty() && others.last() == expectedOpen) {
+                                others.removeAt(others.lastIndex)
+                            }
+                            // else: stray closer of another type, tolerated and ignored.
+                        }
+                        else -> {
+                            // Plain text character.
+                        }
                     }
-                    else -> {
-                        // Plain text character.
+                State.STRING ->
+                    when {
+                        c == '\\' -> i++
+                        c == '"' -> state = State.CODE
+                        c == '\n' -> state = State.CODE
+                        else -> {
+                            // String content.
+                        }
                     }
-                }
-                State.STRING -> when {
-                    c == '\\' -> i++
-                    c == '"' -> state = State.CODE
-                    c == '\n' -> state = State.CODE
-                    else -> {
-                        // String content.
+                State.CHAR ->
+                    when {
+                        c == '\\' -> i++
+                        c == '\'' -> state = State.CODE
+                        c == '\n' -> state = State.CODE
+                        else -> {
+                            // Char literal content.
+                        }
                     }
-                }
-                State.CHAR -> when {
-                    c == '\\' -> i++
-                    c == '\'' -> state = State.CODE
-                    c == '\n' -> state = State.CODE
-                    else -> {
-                        // Char literal content.
+                State.LINE_COMMENT ->
+                    if (c == '\n') {
+                        state = State.CODE
+                    } else {
+                        // Comment content: quotes and brackets are literal here.
                     }
-                }
-                State.LINE_COMMENT -> if (c == '\n') {
-                    state = State.CODE
-                } else {
-                    // Comment content: quotes and brackets are literal here.
-                }
-                State.BLOCK_COMMENT -> if (c == '*' && i + 1 < text.length && text[i + 1] == '/') {
-                    state = State.CODE
-                    i++
-                } else {
-                    // Comment content, spans newlines.
-                }
+                State.BLOCK_COMMENT ->
+                    if (c == '*' && i + 1 < text.length && text[i + 1] == '/') {
+                        state = State.CODE
+                        i++
+                    } else {
+                        // Comment content, spans newlines.
+                    }
             }
             i++
         }
         return MatchResult.Unmatched(
-            "no closing '$ourClose' found for '$ourOpen' at index $start"
+            "no closing '$ourClose' found for '$ourOpen' at index $start",
         )
     }
 
@@ -264,7 +284,7 @@ object BraceMatcher {
         ourClose: Char,
         openerToCloser: Map<Char, Char>,
         closerToOpener: Map<Char, Char>,
-        maxScan: Int
+        maxScan: Int,
     ): MatchResult {
         var state = State.CODE
         var depth = 0
@@ -275,62 +295,67 @@ object BraceMatcher {
             if (scanned >= maxScan) {
                 return MatchResult.Unmatched(
                     "scan limit reached: no opening '$ourOpen' found within $maxScan " +
-                        "characters of index $start"
+                        "characters of index $start",
                 )
             }
             val c = text[i]
             scanned++
             when (state) {
-                State.CODE -> when {
-                    c == '"' && !isEscaped(text, i) -> state = State.STRING
-                    c == '\'' && !isEscaped(text, i) -> state = State.CHAR
-                    c == '/' && i > 0 && text[i - 1] == '*' -> {
-                        state = State.BLOCK_COMMENT
-                        i--
-                    }
-                    c == '/' && i > 0 && text[i - 1] == '/' -> {
-                        // Documented simplification: `//` makes the whole line
-                        // segment opaque; the scan resumes on the previous line.
-                        i = text.lastIndexOf('\n', i) + 1
-                    }
-                    c == ourClose -> depth++
-                    c == ourOpen -> when {
-                        depth > 0 -> depth--
-                        others.isEmpty() -> return MatchResult.Matched(i, false, ourClose)
-                        else -> return MatchResult.Unmatched(
-                            "unbalanced text: '$ourOpen' at index $i would match " +
-                                "'$ourClose' at index $start, but ${others.size} inner " +
-                                "bracket(s) between them remain unclosed"
-                        )
-                    }
-                    closerToOpener.containsKey(c) -> others.add(c)
-                    openerToCloser.containsKey(c) -> {
-                        val expectedClose = openerToCloser.getValue(c)
-                        if (others.isNotEmpty() && others.last() == expectedClose) {
-                            others.removeAt(others.lastIndex)
+                State.CODE ->
+                    when {
+                        c == '"' && !isEscaped(text, i) -> state = State.STRING
+                        c == '\'' && !isEscaped(text, i) -> state = State.CHAR
+                        c == '/' && i > 0 && text[i - 1] == '*' -> {
+                            state = State.BLOCK_COMMENT
+                            i--
                         }
-                        // else: stray opener of another type, tolerated and ignored.
+                        c == '/' && i > 0 && text[i - 1] == '/' -> {
+                            // Documented simplification: `//` makes the whole line
+                            // segment opaque; the scan resumes on the previous line.
+                            i = text.lastIndexOf('\n', i) + 1
+                        }
+                        c == ourClose -> depth++
+                        c == ourOpen ->
+                            when {
+                                depth > 0 -> depth--
+                                others.isEmpty() -> return MatchResult.Matched(i, false, ourClose)
+                                else -> return MatchResult.Unmatched(
+                                    "unbalanced text: '$ourOpen' at index $i would match " +
+                                        "'$ourClose' at index $start, but ${others.size} inner " +
+                                        "bracket(s) between them remain unclosed",
+                                )
+                            }
+                        closerToOpener.containsKey(c) -> others.add(c)
+                        openerToCloser.containsKey(c) -> {
+                            val expectedClose = openerToCloser.getValue(c)
+                            if (others.isNotEmpty() && others.last() == expectedClose) {
+                                others.removeAt(others.lastIndex)
+                            }
+                            // else: stray opener of another type, tolerated and ignored.
+                        }
+                        else -> {
+                            // Plain text character.
+                        }
                     }
-                    else -> {
-                        // Plain text character.
+                State.STRING ->
+                    if (c == '"' && !isEscaped(text, i)) {
+                        state = State.CODE
+                    } else {
+                        // String content; escapes are resolved by [isEscaped] at quotes.
                     }
-                }
-                State.STRING -> if (c == '"' && !isEscaped(text, i)) {
-                    state = State.CODE
-                } else {
-                    // String content; escapes are resolved by [isEscaped] at quotes.
-                }
-                State.CHAR -> if (c == '\'' && !isEscaped(text, i)) {
-                    state = State.CODE
-                } else {
-                    // Char literal content.
-                }
-                State.BLOCK_COMMENT -> if (c == '*' && i > 0 && text[i - 1] == '/') {
-                    state = State.CODE
-                    i--
-                } else {
-                    // Comment content.
-                }
+                State.CHAR ->
+                    if (c == '\'' && !isEscaped(text, i)) {
+                        state = State.CODE
+                    } else {
+                        // Char literal content.
+                    }
+                State.BLOCK_COMMENT ->
+                    if (c == '*' && i > 0 && text[i - 1] == '/') {
+                        state = State.CODE
+                        i--
+                    } else {
+                        // Comment content.
+                    }
                 State.LINE_COMMENT -> {
                     // Unreachable in the backward scan (line comments are
                     // skipped as whole segments); kept for exhaustiveness.
@@ -339,7 +364,7 @@ object BraceMatcher {
             i--
         }
         return MatchResult.Unmatched(
-            "no opening '$ourOpen' found for '$ourClose' at index $start"
+            "no opening '$ourOpen' found for '$ourClose' at index $start",
         )
     }
 
@@ -347,7 +372,10 @@ object BraceMatcher {
      * `true` when the character at [index] is preceded by an odd number of
      * backslashes (i.e. it is escaped by them).
      */
-    private fun isEscaped(text: String, index: Int): Boolean {
+    private fun isEscaped(
+        text: String,
+        index: Int,
+    ): Boolean {
         var run = 0
         var j = index - 1
         while (j >= 0 && text[j] == '\\') {
