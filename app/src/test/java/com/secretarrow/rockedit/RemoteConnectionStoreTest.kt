@@ -15,7 +15,7 @@ class RemotePathTest {
 
     @Test
     fun childJoinsAndNormalizes() {
-        assertEquals("/a/b", RemotePath.child("/", "b"))
+        assertEquals("/b", RemotePath.child("/", "b"))
         assertEquals("/a/b", RemotePath.child("/a", "b"))
         assertEquals("/a/b", RemotePath.child("/a/", "b"))
         assertEquals("/b", RemotePath.child("", "b"))

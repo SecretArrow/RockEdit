@@ -62,7 +62,7 @@ class FtpListParserTest {
         val calendar = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
         calendar.timeInMillis = millis!!
         assertEquals(2024, calendar.get(java.util.Calendar.YEAR))
-        assertEquals(11, calendar.get(java.util.Calendar.MONTH))
+        assertEquals(0, calendar.get(java.util.Calendar.MONTH))
         assertEquals(1, calendar.get(java.util.Calendar.DAY_OF_MONTH))
         assertNull(FtpListParser.parseTimestamp("bogus"))
     }

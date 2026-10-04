@@ -109,8 +109,14 @@ class RemoteConnectionStore(
 
     /** Adds or updates (by id) a connection. Returns the new list. */
     fun save(connection: RemoteConnection): List<RemoteConnection> {
-        val encrypted = connection.copy(
-            password = if (connection.password.isEmpty()) "" else encryptor.encrypt(connection.password)
+        // Store a concrete port and a normalized path so readers never have
+        // to guess defaults after a reload.
+        val normalized = connection.copy(
+            port = RemotePath.resolvePort(connection.type, connection.port),
+            initialPath = RemotePath.normalize(connection.initialPath)
+        )
+        val encrypted = normalized.copy(
+            password = if (normalized.password.isEmpty()) "" else encryptor.encrypt(normalized.password)
         )
         val current = list().toMutableList()
         val idx = current.indexOfFirst { it.id == connection.id }
