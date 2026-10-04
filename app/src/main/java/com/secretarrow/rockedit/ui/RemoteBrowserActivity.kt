@@ -13,9 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.FolderSort
-import com.secretarrow.rockedit.core.RemoteClientFactory
+import com.secretarrow.rockedit.core.RemoteClient
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
+import com.secretarrow.rockedit.remote.RemoteClientFactory
 import com.secretarrow.rockedit.databinding.ActivityRemoteBrowserBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

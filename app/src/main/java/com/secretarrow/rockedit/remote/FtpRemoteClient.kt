@@ -69,8 +69,8 @@ class FtpRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         }
     }
 
-    override fun mkdir(path: String) = withFtp { client ->
-        client.makeDirectory(RemotePath.normalize(path))
+    override fun mkdir(path: String) {
+        withFtp { client -> client.makeDirectory(RemotePath.normalize(path)) }
     }
 
     override fun delete(path: String) = withFtp { client ->
