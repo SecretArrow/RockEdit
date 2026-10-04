@@ -141,12 +141,13 @@ class EditorTabTest {
         m.add(tab("content://a"))
         m.add(tab("content://b"))
         m.add(tab("content://c"))
+        // add() activates the newest tab (index 2); cycling wraps to 0 first.
+        m.next()
+        assertEquals(0, m.activeIndex())
         m.next()
         assertEquals(1, m.activeIndex())
         m.next()
         assertEquals(2, m.activeIndex())
-        m.next()
-        assertEquals(0, m.activeIndex())
     }
 
     @Test
@@ -171,7 +172,8 @@ class EditorTabTest {
         val m = TabManager()
         m.add(tab("content://a"))
         m.add(tab("content://b"))
-        assertNull(m.setActive(99) == null)
+        val clamped = m.setActive(99)
+        assertEquals("content://b", clamped?.uri)
         assertEquals(1, m.activeIndex())
     }
 
