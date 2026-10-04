@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Privacy-first: NO internet permission. All files stay on device. -->
+    <!-- Privacy-first: no analytics/telemetry. The INTERNET permission exists
+         only for optional user-configured Storage Manager connections. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -51,6 +53,20 @@
         <activity
             android:name=".ui.LicensesActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ui.StorageManagerActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.RemoteBrowserActivity"
+            android:exported="false" />
+
+        <provider
+            android:name=".remote.RemoteContentProvider"
+            android:authorities="${applicationId}.remote"
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

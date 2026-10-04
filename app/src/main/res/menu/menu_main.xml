@@ -10,6 +10,10 @@
         android:title="@string/open_folder"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_storage_manager"
+        android:title="@string/storage_manager"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_settings"
         android:title="@string/settings"
         app:showAsAction="never" />

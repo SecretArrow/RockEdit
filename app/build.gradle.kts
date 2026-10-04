@@ -12,7 +12,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = (findProperty("rockeditVersionCode") as String?)?.toIntOrNull() ?: 1
-        versionName = (findProperty("rockeditVersionName") as String?) ?: "0.5.0"
+        versionName = (findProperty("rockeditVersionName") as String?) ?: "0.6.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -75,9 +75,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     implementation("com.github.albfernandez:juniversalchardet:2.5.0")
+    // Storage Manager (v0.6.0): FTP/FTPS + SFTP. WebDAV is dependency-free.
+    implementation("commons-net:commons-net:3.11.0")
+    implementation("com.hierynomus:sshj:0.38.0")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
+    // XmlPullParser implementation for JVM tests (WebDAV parser).
+    testImplementation("net.sf.kxml:kxml2:2.3.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:core:1.7.0")

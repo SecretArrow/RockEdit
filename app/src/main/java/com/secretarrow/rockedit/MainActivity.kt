@@ -71,6 +71,10 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent(this, com.secretarrow.rockedit.ui.FolderBrowserActivity::class.java))
                     true
                 }
+                R.id.action_storage_manager -> {
+                    startActivity(Intent(this, com.secretarrow.rockedit.ui.StorageManagerActivity::class.java))
+                    true
+                }
                 R.id.action_settings -> {
                     settingsLauncher.launch(Intent(this, SettingsActivity::class.java))
                     true

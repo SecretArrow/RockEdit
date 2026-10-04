@@ -39,4 +39,25 @@
     <string name="backup_failed">Cadangan gagal</string>
     <string name="restore_done">Memulihkan %1$d item, melewati %2$d</string>
     <string name="restore_failed">Pemulihan gagal — file tidak valid</string>
+
+    <!-- v0.6.0: manajer penyimpanan -->
+    <string name="storage_manager">Manajer penyimpanan</string>
+    <string name="storage_empty">Belum ada koneksi tersimpan.</string>
+    <string name="storage_add">Tambah koneksi</string>
+    <string name="storage_edit">Ubah koneksi</string>
+    <string name="storage_delete">Hapus koneksi</string>
+    <string name="storage_delete_confirm">Hapus %1$s?</string>
+    <string name="storage_name">Nama</string>
+    <string name="storage_type">Jenis</string>
+    <string name="storage_host">Host</string>
+    <string name="storage_port">Port (0 = bawaan)</string>
+    <string name="storage_user">Pengguna</string>
+    <string name="storage_password">Kata sandi</string>
+    <string name="storage_initial_path">Folder awal</string>
+    <string name="storage_host_required">Host wajib diisi</string>
+    <string name="storage_saved">Koneksi tersimpan — kata sandi terenkripsi</string>
+    <string name="storage_new_folder">Folder baru</string>
+    <string name="storage_folder_name">Nama folder</string>
+    <string name="storage_folder_created">Folder dibuat</string>
+    <string name="storage_operation_failed">Operasi gagal — periksa pengaturan koneksi</string>
 </resources>

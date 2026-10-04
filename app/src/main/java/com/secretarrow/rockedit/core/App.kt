@@ -25,6 +25,9 @@ object App {
     fun bookmarks(context: Context): BookmarkStore =
         BookmarkStore(keyValueStore(context))
 
+    fun remoteConnections(context: Context): RemoteConnectionStore =
+        RemoteConnectionStore(keyValueStore(context), KeystoreEncryptor)
+
     private fun android.content.SharedPreferences.toKeyValueStore(): KeyValueStore =
         object : KeyValueStore {
             override fun getString(key: String, defValue: String?): String? =

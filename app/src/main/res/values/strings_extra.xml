@@ -39,4 +39,25 @@
     <string name="backup_failed">Backup failed</string>
     <string name="restore_done">Restored %1$d item(s), skipped %2$d</string>
     <string name="restore_failed">Restore failed — invalid file</string>
+
+    <!-- v0.6.0: storage manager -->
+    <string name="storage_manager">Storage manager</string>
+    <string name="storage_empty">No saved connections yet.</string>
+    <string name="storage_add">Add connection</string>
+    <string name="storage_edit">Edit connection</string>
+    <string name="storage_delete">Delete connection</string>
+    <string name="storage_delete_confirm">Delete %1$s?</string>
+    <string name="storage_name">Name</string>
+    <string name="storage_type">Type</string>
+    <string name="storage_host">Host</string>
+    <string name="storage_port">Port (0 = default)</string>
+    <string name="storage_user">User</string>
+    <string name="storage_password">Password</string>
+    <string name="storage_initial_path">Initial folder</string>
+    <string name="storage_host_required">Host is required</string>
+    <string name="storage_saved">Connection saved — password is encrypted</string>
+    <string name="storage_new_folder">New folder</string>
+    <string name="storage_folder_name">Folder name</string>
+    <string name="storage_folder_created">Folder created</string>
+    <string name="storage_operation_failed">Operation failed — check connection settings</string>
 </resources>

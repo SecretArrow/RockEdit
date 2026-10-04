@@ -6,8 +6,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased]
 
 ### Planned
-- Storage Manager: FTP/FTPS/SFTP, WebDAV, Google Drive, Dropbox, OneDrive, GitHub, GitLab
-- Preview HTML/Markdown/AsciiDoc
+- Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal)
+- GitHub/GitLab via Personal Access Token
+- Preview HTML/Markdown/AsciiDoc, kompiler online
+
+## [0.6.0] - 2026-10-04
+
+### Added
+- Storage Manager: koneksi FTP, FTPS (TLS eksplisit), SFTP (SSH), dan WebDAV —
+  tambah/ubah/hapus koneksi, kata sandi disimpan terenkripsi (AES-GCM, kunci di
+  Android Keystore, tidak pernah ditulis mentah ke penyimpanan)
+- Peramban remote: daftar folder/file (folder di atas, honor sortir & filter
+  tersembunyi), navigasi naik, buat folder, hapus; file dibuka ke editor lewat
+  RemoteContentProvider sehingga tab, file terbaru, dan pemulihan sesi bekerja
+  persis seperti file lokal (simpan kembali langsung ke server)
+- Protokol: FTP/FTPS via Apache Commons Net, SFTP via sshj, WebDAV tanpa
+  dependensi tambahan (PROPFIND/GET/PUT/MKCOL/DELETE); parser daftar FTP
+  (Unix LIST) dan respons PROPFIND WebDAV murni dan ter-unit-test penuh
+- Izin INTERNET kini dinyatakan — hanya dipakai untuk koneksi yang
+  dikonfigurasi pengguna sendiri; tetap tanpa analitik/telemetri/iklan
+
+### Changed
+- Unit test baru: RemotePath (6), RemoteConnectionStore (5, termasuk uji
+  kebocoran kata sandi mentah), FtpListParser (4), WebDavParser (3);
+  E2E baru: StorageManagerE2eTest (tambah + daftar koneksi, tanpa jaringan)
 
 ## [0.5.0] - 2026-10-04
 
