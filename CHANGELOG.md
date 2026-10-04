@@ -6,10 +6,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased]
 
 ### Planned
-- Multi-tab editing
 - Storage Manager: FTP/FTPS/SFTP, WebDAV, Google Drive, Dropbox, OneDrive, GitHub, GitLab
-- Folder drawer, bookmark folder, backup/restore JSON
+- Bookmark folder, backup/restore JSON
 - Preview HTML/Markdown/AsciiDoc
+
+## [0.4.0] - 2026-10-04
+
+### Added
+- Editor multi-tab (maks 10 tab): bilah tab di bawah toolbar dengan indikator
+  perubahan belum disimpan (•), tutup per tab (✕ / tekan lama / menu), tutup tab
+  lainnya, tab berikutnya, dan tombol + untuk tab baru
+- Membuka file saat editor sudah terbuka otomatis menjadi tab baru
+  (launchMode singleTask + onNewIntent), termasuk berbagi teks dari aplikasi lain
+- Tab tanpa nama bisa diparalel (untitled, untitled 2, ...) dengan isi masing-masing
+- Memulihkan set tab terbuka saat aplikasi dimulai ulang (persist URI + index aktif,
+  muat isi tab secara lazy saat pertama diaktifkan; bisa dimatikan di pengaturan)
+- Jendela "Buka folder": peramban SAF (DocumentFile) dengan navigasi naik/turun,
+  breadcrumb, ikon folder, ukuran file, sortir folder-di-atas dan filter file
+  tersembunyi (pengaturan baru), URI folder terakhir diingat
+- Simpan semua saat keluar: dialog perubahan-belum-disimpan kini melaporkan jumlah
+  file kotor dan menyimpan semua tab bertag URI sebelum menutup editor
+- Auto-save kini menyimpan semua tab yang berubah (bukan hanya tab aktif)
+- Snapshot rotasi per-tab: teks, caret, scroll, encoding, read-only dipertahankan
+  saat rotasi untuk seluruh tab (dengan anggaran total 500 ribu karakter)
+- Undo/redo, bookmark, encoding, read-only, dan posisi kursor kini per-tab
+
+### Changed
+- E2E baru: MultiTabE2eTest (dua file, pindah tab bolak-balik)
+- Unit test baru: TabManager/EditorTab (17 kasus), TabPersistence (6), FolderSort (10),
+  pengaturan Files&Tabs (2)
+- Dependensi baru: androidx.documentfile 1.0.1
 
 ## [0.3.0] - 2026-10-04
 

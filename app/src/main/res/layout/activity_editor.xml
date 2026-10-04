@@ -13,6 +13,22 @@
         app:title="@string/untitled"
         app:subtitleTextAppearance="@style/TextAppearance.Material3.LabelSmall" />
 
+    <HorizontalScrollView
+        android:id="@+id/tab_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="38dp"
+        android:background="@color/gutter_background"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/tab_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+
     <LinearLayout
         android:id="@+id/editor_container"
         android:layout_width="match_parent"

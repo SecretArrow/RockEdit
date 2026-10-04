@@ -10,6 +10,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import android.widget.HorizontalScrollView
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +25,7 @@ import androidx.lifecycle.lifecycleScope
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.CursorNav
+import com.secretarrow.rockedit.core.EditorTab
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
 import com.secretarrow.rockedit.core.LineBreak
@@ -29,8 +33,9 @@ import com.secretarrow.rockedit.core.LineOps
 import com.secretarrow.rockedit.core.SearchEngine
 import com.secretarrow.rockedit.core.SettingsRepository
 import com.secretarrow.rockedit.core.SyntaxRegistry
+import com.secretarrow.rockedit.core.TabManager
+import com.secretarrow.rockedit.core.TabPersistence
 import com.secretarrow.rockedit.core.TextStats
-import com.secretarrow.rockedit.core.UndoStack
 import com.secretarrow.rockedit.databinding.ActivityEditorBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,45 +43,57 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
+import kotlin.math.min
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
- * The editing screen. Opens content:// or file:// URIs (SAF), keeps a bounded
- * undo/redo history, and writes files back preserving their line break style.
+ * The editing screen. Opens content:// or file:// URIs (SAF) into tabs,
+ * keeps a bounded undo/redo history per document, and writes files back
+ * preserving their line break style.
+ *
+ * Multi-tab: the tab bar lives under the toolbar; each [EditorTab] owns its
+ * text, undo stack, caret, scroll, encoding and read-only flag. Opening a
+ * file while the editor is already on screen delivers it through
+ * [onNewIntent] as a new tab (launchMode=singleTask).
  */
 class EditorActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEditorBinding
     private lateinit var settings: SettingsRepository
+    private lateinit var tabPersistence: TabPersistence
 
-    private var fileUri: Uri? = null
-    private var displayName: String? = null
-    private var charsetName: String = EncodingDetector.DEFAULT_CHARSET
-    private var fileLineBreak: LineBreak = LineBreak.LF
-    private var savedText: String = ""
-    private var lastCommitted: String = ""
+    private val tabManager = TabManager()
+    private var editorBoundTabId = -1
+    private var untitledCounter = 0
+
     private var applyingUndoRedo = false
     private var loading = true
-    private var readOnly = false
     private var wordWrapEnabled = false
+    private var pendingCloseIndex = -1
     private var pendingFinishAfterSave = false
     private var searchStart = 0
     private var originalKeyListener: KeyListener? = null
     private lateinit var highlighter: SyntaxHighlighter
     private var syntaxOn = true
-    private val undoStack = UndoStack()
+    private var tabSignature: String? = null
 
     private val saveAsLauncher =
         registerForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
             if (uri != null) {
-                fileUri = uri
-                takePersistentPermission(uri)
-                writeTo(uri)
+                val tab = tabManager.activeTab()
+                if (tab != null) {
+                    takePersistentPermission(uri)
+                    tab.uri = uri.toString()
+                    tab.name = DisplayNames.resolve(this, uri)
+                    writeTo(tab)
+                }
             }
         }
 
     private val backCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
-            if (isDirty()) {
+            if (hasDirtyTabs()) {
                 showUnsavedDialog()
             } else {
                 finish()
@@ -91,6 +108,7 @@ class EditorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        tabPersistence = TabPersistence(App.keyValueStore(this))
         applyFullScreen()
 
         setSupportActionBar(binding.toolbar)
@@ -108,14 +126,12 @@ class EditorActivity : AppCompatActivity() {
 
         val restored = restoreState(savedInstanceState)
         if (!restored) {
-            loadFromIntent(intent, savedInstanceState == null)
+            if (!addTabFromIntent(intent)) {
+                restorePersistedTabs()
+            }
         }
-        updateSyntaxLanguage()
         syntaxOn = settings.syntaxHighlight
         highlighter.setEnabled(syntaxOn)
-        // restoreState() fills the editor directly (outside the watcher), so an
-        // explicit pass guarantees colored text after configuration changes too.
-        highlighter.rehighlightNow()
         applyWordWrap(settings.wordWrap)
         val fontSp = settings.fontSizeSp
         binding.editor.textSize = fontSp.toFloat()
@@ -129,99 +145,349 @@ class EditorActivity : AppCompatActivity() {
         updateUiState()
     }
 
+    override fun onNewIntent(passedIntent: Intent) {
+        super.onNewIntent(passedIntent)
+        setIntent(passedIntent)
+        addTabFromIntent(passedIntent)
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        val text = binding.editor.text?.toString() ?: ""
-        if (text.length <= SNAPSHOT_LIMIT) {
-            outState.putString(STATE_TEXT, text)
+        captureActiveState()
+        val arr = JSONArray()
+        var budget = SNAPSHOT_TOTAL_BUDGET
+        for (tab in tabManager.tabs()) {
+            val obj = JSONObject()
+            obj.put(F_URI, tab.uri ?: "")
+            obj.put(F_NAME, tab.name)
+            obj.put(F_CHARSET, tab.charsetName)
+            obj.put(F_LINE_BREAK, tab.lineBreak.name)
+            obj.put(F_READ_ONLY, tab.readOnly)
+            obj.put(F_LOADED, tab.loaded)
+            obj.put(F_CARET, tab.caretStart)
+            obj.put(F_CARET_END, tab.caretEnd)
+            obj.put(F_SCROLL, tab.scrollY)
+            var committed = if (budget > 0 && tab.lastCommitted.length <= SNAPSHOT_LIMIT)
+                tab.lastCommitted else ""
+            if (committed.length > budget) committed = ""
+            budget -= committed.length
+            val saved = if (tab.isDirty || tab.savedText != tab.lastCommitted) {
+                var s = if (tab.savedText.length <= SNAPSHOT_LIMIT) tab.savedText else ""
+                if (s.length > budget) s = ""
+                s
+            } else {
+                committed
+            }
+            budget -= saved.length
+            obj.put(F_SAVED, saved)
+            obj.put(F_COMMITTED, committed)
+            arr.put(obj)
         }
-        outState.putString(STATE_URI, fileUri?.toString())
-        outState.putString(STATE_NAME, displayName)
-        outState.putString(STATE_CHARSET, charsetName)
-        outState.putString(STATE_LINE_BREAK, fileLineBreak.name)
-        outState.putString(STATE_SAVED_TEXT, savedText)
-        outState.putString(STATE_LAST_COMMITTED, lastCommitted)
+        outState.putString(STATE_TABS, arr.toString())
+        outState.putInt(STATE_ACTIVE, tabManager.activeIndex())
     }
 
     // ------------------------------------------------------------------ intent
 
-    private fun loadFromIntent(intent: Intent?, allowEmpty: Boolean) {
+    /** Turns an incoming intent into a new (or existing) tab. Returns true if handled. */
+    private fun addTabFromIntent(intent: Intent?): Boolean {
         val action = intent?.action
         val data: Uri? = intent?.data
-        when {
+        return when {
             (action == Intent.ACTION_VIEW || action == Intent.ACTION_EDIT) && data != null -> {
-                fileUri = data
-                loadFrom(data)
+                val uriStr = data.toString()
+                val existing = tabManager.indexOfUri(uriStr)
+                if (existing >= 0) {
+                    showTab(existing)
+                } else {
+                    if (tabManager.isFull()) {
+                        toast(getString(R.string.tab_limit_reached, TabManager.MAX_TABS))
+                        return true
+                    }
+                    takePersistentPermission(data)
+                    val tab = EditorTab.pending(
+                        uri = uriStr,
+                        name = data.lastPathSegment ?: "…"
+                    )
+                    val index = tabManager.add(tab)
+                    showTab(index)
+                }
+                true
             }
             action == Intent.ACTION_SEND -> {
                 val shared = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
-                setTextInternal(shared)
-                showBinaryHintIfNeeded(false)
+                val tab = newUntitledTab()
+                tab.lastCommitted = shared
+                val index = tabManager.add(tab)
+                showTab(index)
+                true
             }
-            allowEmpty -> setTextInternal("")
+            else -> false
         }
     }
 
-    private fun loadFrom(uri: Uri) {
+    // ------------------------------------------------------------- tab engine
+
+    private fun newUntitledTab(): EditorTab {
+        val n = untitledCounter++
+        val name = if (n == 0) getString(R.string.untitled)
+        else getString(R.string.untitled_n, n + 1)
+        return EditorTab.untitled(name)
+    }
+
+    private fun restorePersistedTabs() {
+        if (!settings.rememberTabs) {
+            activateFreshTab(newUntitledTab())
+            return
+        }
+        val saved = tabPersistence.load()
+        if (saved == null || saved.tabs.isEmpty()) {
+            activateFreshTab(newUntitledTab())
+            return
+        }
+        for (st in saved.tabs) {
+            val tab: EditorTab = if (st.uri == null) {
+                EditorTab(id = EditorTab.newId(), uri = null, name = st.name, loaded = true)
+            } else {
+                EditorTab.pending(st.uri, st.name.ifEmpty { "…" })
+            }
+            tab.charsetName = st.charset
+            val lb = LineBreak.entries.firstOrNull { it.name == st.lineBreak }
+            if (lb != null) tab.lineBreak = lb
+            tab.readOnly = st.readOnly
+            tabManager.add(tab)
+        }
+        val idx = saved.activeIndex.coerceIn(0, tabManager.size() - 1)
+        showTab(idx)
+    }
+
+    private fun activateFreshTab(tab: EditorTab) {
+        val index = tabManager.add(tab)
+        showTab(index)
+    }
+
+    private fun newTab() {
+        if (tabManager.isFull()) {
+            toast(getString(R.string.tab_limit_reached, TabManager.MAX_TABS))
+            return
+        }
+        activateFreshTab(newUntitledTab())
+    }
+
+    /** Stores the visible editor state into the tab currently bound to it. */
+    private fun captureActiveState() {
+        val tab = tabManager.activeTab() ?: return
+        if (tab.id != editorBoundTabId || !tab.loaded) return
+        tab.lastCommitted = binding.editor.text?.toString() ?: ""
+        val start = binding.editor.selectionStart
+        val end = binding.editor.selectionEnd
+        if (start >= 0 && end >= 0) {
+            tab.caretStart = min(start, end)
+            tab.caretEnd = max(start, end)
+        }
+        tab.scrollY = binding.editor.scrollY
+    }
+
+    /** Activates the tab at [index] (capturing the outgoing tab first). */
+    private fun showTab(index: Int) {
+        captureActiveState()
+        val tab = tabManager.setActive(index) ?: return
+        searchStart = 0
+        if (tab.loaded) {
+            renderTab(tab)
+        } else {
+            loadTab(tab)
+        }
+        updateUiState()
+    }
+
+    /** Puts [tab]'s content into the editor surface. */
+    private fun renderTab(tab: EditorTab) {
+        applyingUndoRedo = true
+        binding.editor.setText(tab.lastCommitted)
+        applyingUndoRedo = false
+        val len = tab.lastCommitted.length
+        val s = tab.caretStart.coerceIn(0, len)
+        val e = tab.caretEnd.coerceIn(0, len)
+        binding.editor.setSelection(min(s, e), max(s, e))
+        if (tab.scrollY > 0) {
+            binding.editor.post {
+                if (tabManager.activeTab()?.id == tab.id) {
+                    binding.editor.scrollTo(0, tab.scrollY)
+                    binding.gutter.scrollTo(0, tab.scrollY)
+                }
+            }
+        }
+        binding.editor.keyListener = if (tab.readOnly) null else originalKeyListener
+        editorBoundTabId = tab.id
+        updateSyntaxLanguage()
+        updateGutter()
+        highlighter.rehighlightNow()
+    }
+
+    /** Loads a lazily-restored tab from its URI, then renders it when active. */
+    private fun loadTab(tab: EditorTab) {
+        val uriStr = tab.uri
+        if (uriStr == null) {
+            tab.loaded = true
+            renderTab(tab)
+            return
+        }
+        loading = true
+        val uri = Uri.parse(uriStr)
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) { readBytes(uri) }
             if (result == null) {
-                toast(getString(R.string.open_failed, uri.lastPathSegment ?: uri.toString()))
-                finish()
-                return@launch
+                tab.loaded = true
+                tab.savedText = ""
+                tab.lastCommitted = ""
+                toast(getString(R.string.open_failed, tab.name))
+            } else {
+                val (bytes, maybeBinary) = result
+                tab.charsetName = EncodingDetector.detectName(bytes)
+                val text = EncodingDetector.decode(bytes, tab.charsetName)
+                tab.lineBreak = LineBreak.detect(text, LineBreak.LF)
+                tab.name = DisplayNames.resolve(this@EditorActivity, uri)
+                tab.savedText = text
+                tab.lastCommitted = text
+                tab.loaded = true
+                val session = App.sessions(this@EditorActivity).loadCursor(uriStr)
+                if (session != null) {
+                    tab.caretStart = session.selStart
+                    tab.caretEnd = session.selEnd
+                    tab.scrollY = session.scrollY
+                }
+                showBinaryHintIfNeeded(maybeBinary)
             }
-            val (bytes, maybeBinary) = result
-            charsetName = EncodingDetector.detectName(bytes)
-            val text = EncodingDetector.decode(bytes, charsetName)
-            fileLineBreak = LineBreak.detect(text, LineBreak.LF)
-            displayName = DisplayNames.resolve(this@EditorActivity, uri)
-            savedText = text
-            updateSyntaxLanguage()
-            setTextInternal(text)
-            restoreCursorFor(uri)
-            showBinaryHintIfNeeded(maybeBinary)
-            updateUiState()
+            loading = false
+            if (tabManager.activeTab()?.id == tab.id) {
+                renderTab(tab)
+                updateUiState()
+            }
         }
     }
 
-    private fun readBytes(uri: Uri): Pair<ByteArray, Boolean>? {
-        return try {
-            val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
-            // Heuristic: NUL byte almost always means binary content.
-            val binary = bytes.indexOf(0) >= 0
-            bytes to binary
-        } catch (_: Exception) {
-            null
+    // -------------------------------------------------------------- tab bar UI
+
+    /** Rebuilds the tab chips; cheap (max 10 tabs) and only on real changes. */
+    private fun refreshTabs() {
+        val bar = binding.tabBar
+        bar.removeAllViews()
+        val inflater = layoutInflater
+        val tabs = tabManager.tabs()
+        tabs.forEachIndexed { index, tab ->
+            val chip = inflater.inflate(R.layout.item_tab, bar, false) as LinearLayout
+            val name = chip.findViewById<TextView>(R.id.tab_name)
+            val close = chip.findViewById<TextView>(R.id.tab_close)
+            name.text = if (tab.isDirty) "\u2022 ${tab.name}" else tab.name
+            val active = index == tabManager.activeIndex()
+            chip.setBackgroundColor(
+                getColor(
+                    if (active) R.color.tab_chip_active else R.color.tab_chip_inactive
+                )
+            )
+            chip.setOnClickListener { showTab(index) }
+            chip.setOnLongClickListener {
+                closeTab(index)
+                true
+            }
+            close.setOnClickListener { closeTab(index) }
+            bar.addView(chip)
+        }
+        val plus = TextView(this).apply {
+            text = "+"
+            contentDescription = getString(R.string.new_tab)
+            textSize = 18f
+            setPadding(24, 0, 24, 0)
+            gravity = android.view.Gravity.CENTER
+            setOnClickListener { newTab() }
+        }
+        bar.addView(plus)
+        binding.tabScroll.post {
+            val idx = tabManager.activeIndex()
+            val activeChild = if (idx in tabs.indices) bar.getChildAt(idx) else plus
+            if (activeChild != null) {
+                binding.tabScroll.smoothScrollTo(activeChild.left, 0)
+            }
         }
     }
+
+    private fun tabStateSignature(): String = buildString {
+        append(tabManager.activeIndex()).append('|')
+        for (t in tabManager.tabs()) append(t.id).append(':').append(t.isDirty).append(':')
+            .append(t.name).append('|')
+    }
+
+    private fun closeTab(index: Int) {
+        val tab = tabManager.tabs().getOrNull(index) ?: return
+        if (tab.isDirty && tab.loaded) {
+            pendingCloseIndex = index
+            AlertDialog.Builder(this)
+                .setTitle(R.string.close_tab)
+                .setMessage(getString(R.string.close_tab_confirm, tab.name))
+                .setPositiveButton(R.string.save) { _, _ ->
+                    if (tabManager.activeIndex() != index) showTab(index)
+                    pendingFinishAfterSave = false
+                    save { performClose(index) }
+                }
+                .setNegativeButton(R.string.discard) { _, _ -> performClose(index) }
+                .setNeutralButton(R.string.cancel) { _, _ -> pendingCloseIndex = -1 }
+                .show()
+        } else {
+            performClose(index)
+        }
+    }
+
+    private fun performClose(index: Int) {
+        pendingCloseIndex = -1
+        tabManager.close(index)
+        if (tabManager.size() == 0) {
+            finish()
+            return
+        }
+        showTab(tabManager.activeIndex())
+    }
+
+    private fun closeOthers(index: Int) {
+        if (tabManager.size() <= 1) return
+        AlertDialog.Builder(this)
+            .setTitle(R.string.close_others)
+            .setMessage(getString(R.string.close_others_confirm, tabManager.size() - 1))
+            .setPositiveButton(R.string.close_others) { _, _ ->
+                tabManager.closeOthers(index)
+                showTab(0)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun hasDirtyTabs(): Boolean = tabManager.tabs().any { it.loaded && it.isDirty }
 
     // -------------------------------------------------------- session restore
 
     override fun onPause() {
         super.onPause()
-        val uri = fileUri ?: return
-        val start = binding.editor.selectionStart
-        val end = binding.editor.selectionEnd
-        if (start < 0 || end < 0) return
-        App.sessions(this).saveCursor(uri.toString(), start, end, binding.editor.scrollY)
-        if (settings.autoSave && isDirty() && !readOnly) {
-            writeTo(uri)
+        captureActiveState()
+        for (tab in tabManager.tabs()) {
+            if (tab.loaded && tab.uri != null && tab.caretStart >= 0) {
+                App.sessions(this).saveCursor(
+                    tab.uri, tab.caretStart, tab.caretEnd, tab.scrollY
+                )
+            }
+        }
+        persistTabs()
+        if (settings.autoSave) {
+            for (tab in tabManager.dirtyFileTabs()) {
+                writeTo(tab)
+            }
         }
     }
 
-    /** Restores the last caret/scroll of [uri], if this file was opened before. */
-    private fun restoreCursorFor(uri: Uri) {
-        val saved = App.sessions(this).loadCursor(uri.toString()) ?: return
-        val len = binding.editor.text?.length ?: 0
-        if (len == 0) return
-        val s = saved.selStart.coerceIn(0, len)
-        val e = saved.selEnd.coerceIn(0, len)
-        binding.editor.setSelection(minOf(s, e), maxOf(s, e))
-        if (saved.scrollY > 0) {
-            binding.editor.post {
-                binding.editor.scrollTo(0, saved.scrollY)
-                binding.gutter.scrollTo(0, saved.scrollY)
-            }
+    private fun persistTabs() {
+        if (settings.rememberTabs && tabManager.size() > 0) {
+            tabPersistence.save(tabManager.tabs(), tabManager.activeIndex())
+        } else {
+            tabPersistence.clear()
         }
     }
 
@@ -244,18 +510,20 @@ class EditorActivity : AppCompatActivity() {
     // ------------------------------------------------------------------ text state
 
     private fun setTextInternal(newText: String) {
+        val tab = tabManager.activeTab() ?: return
         applyingUndoRedo = true
         binding.editor.setText(newText)
         binding.editor.setSelection(newText.length)
-        lastCommitted = newText
-        undoStack.clear()
         applyingUndoRedo = false
-        dirtyChanged()
+        tab.lastCommitted = newText
+        tab.undoStack.clear()
+        editorBoundTabId = tab.id
         updateGutter()
+        dirtyChanged()
         highlighter.rehighlightNow()
     }
 
-    private fun isDirty(): Boolean = lastCommitted != savedText
+    private fun isDirty(): Boolean = tabManager.activeTab()?.isDirty == true
 
     private fun dirtyChanged() {
         updateUiState()
@@ -267,10 +535,11 @@ class EditorActivity : AppCompatActivity() {
 
         override fun afterTextChanged(s: Editable?) {
             if (applyingUndoRedo || loading) return
+            val tab = tabManager.activeTab() ?: return
             val text = s?.toString().orEmpty()
-            if (text != lastCommitted) {
-                undoStack.commit(lastCommitted)
-                lastCommitted = text
+            if (text != tab.lastCommitted) {
+                tab.undoStack.commit(tab.lastCommitted)
+                tab.lastCommitted = text
                 updateGutter()
                 dirtyChanged()
                 highlighter.scheduleHighlight()
@@ -283,41 +552,46 @@ class EditorActivity : AppCompatActivity() {
     private fun saveLineBreakForFile(): LineBreak = when (settings.lineBreakDefault) {
         SettingsRepository.LINE_BREAK_LF -> LineBreak.LF
         SettingsRepository.LINE_BREAK_CRLF -> LineBreak.CRLF
-        else -> fileLineBreak
+        else -> tabManager.activeTab()?.lineBreak ?: LineBreak.LF
     }
 
-    private fun save() {
-        if (readOnly) {
+    private fun save(afterSave: (() -> Unit)? = null) {
+        val tab = tabManager.activeTab() ?: return
+        if (tab.readOnly) {
             toast(getString(R.string.read_only_toast))
+            afterSave?.invoke()
             return
         }
-        val uri = fileUri
+        val uri = tab.uri
         if (uri == null) {
-            val suggested = FileNames.sanitize(displayName ?: "untitled.txt")
+            val suggested = FileNames.sanitize(tab.name)
             saveAsLauncher.launch(suggested)
         } else {
-            writeTo(uri)
+            writeTo(tab, afterSave)
         }
     }
 
-    private fun writeTo(uri: Uri) {
+    private fun writeTo(tab: EditorTab, afterSave: (() -> Unit)? = null) {
+        val uriStr = tab.uri ?: return
         val target = saveLineBreakForFile()
         lifecycleScope.launch {
-            val ok = withContext(Dispatchers.IO) { writeText(uri, lastCommitted, target, charsetName) }
+            val ok = withContext(Dispatchers.IO) {
+                writeText(Uri.parse(uriStr), tab.lastCommitted, target, tab.charsetName)
+            }
             if (ok) {
-                savedText = lastCommitted
-                fileLineBreak = target
-                if (displayName == null) {
-                    displayName = DisplayNames.resolve(this@EditorActivity, uri)
+                tab.savedText = tab.lastCommitted
+                tab.lineBreak = target
+                val uri = Uri.parse(uriStr)
+                if (tab.name.isEmpty() || tab.name == "…") {
+                    tab.name = DisplayNames.resolve(this@EditorActivity, uri)
                 }
-                App.recents(this@EditorActivity).add(uri.toString(), displayName ?: uri.toString())
+                App.recents(this@EditorActivity).add(uriStr, tab.name)
                 dirtyChanged()
                 toast(getString(R.string.saved_toast))
-                if (pendingFinishAfterSave) finish()
             } else {
-                pendingFinishAfterSave = false
-                toast(getString(R.string.save_failed, uri.lastPathSegment ?: uri.toString()))
+                toast(getString(R.string.save_failed, tab.name))
             }
+            afterSave?.invoke()
         }
     }
 
@@ -350,16 +624,36 @@ class EditorActivity : AppCompatActivity() {
     // ------------------------------------------------------------------ dialogs
 
     private fun showUnsavedDialog() {
+        val dirtyCount = tabManager.tabs().count { it.loaded && it.isDirty }
         AlertDialog.Builder(this)
             .setTitle(R.string.discard_changes_title)
-            .setMessage(R.string.discard_changes_msg)
-            .setPositiveButton(R.string.save) { _, _ ->
-                pendingFinishAfterSave = true
-                save()
-            }
+            .setMessage(
+                if (dirtyCount > 1) getString(R.string.discard_changes_multi, dirtyCount)
+                else getString(R.string.discard_changes_msg)
+            )
+            .setPositiveButton(R.string.save) { _, _ -> saveAllThenFinish() }
             .setNegativeButton(R.string.discard) { _, _ -> finish() }
             .setNeutralButton(R.string.cancel, null)
             .show()
+    }
+
+    private fun saveAllThenFinish() {
+        val dirtyFiles = tabManager.tabs().filter { it.isDirty && it.uri != null && it.loaded }
+        val untitledDirty = tabManager.tabs().count { it.isDirty && it.uri == null && it.loaded }
+        if (untitledDirty > 0) {
+            toast(getString(R.string.untitled_not_saved, untitledDirty))
+        }
+        if (dirtyFiles.isEmpty()) {
+            finish()
+            return
+        }
+        var remaining = dirtyFiles.size
+        for (tab in dirtyFiles) {
+            writeTo(tab) {
+                remaining--
+                if (remaining == 0) finish()
+            }
+        }
     }
 
     private fun showFindDialog() {
@@ -456,7 +750,7 @@ class EditorActivity : AppCompatActivity() {
             getString(R.string.stats_chars, TextStats.charCount(text)),
             getString(R.string.stats_words, TextStats.wordCount(text)),
             getString(R.string.stats_lines, TextStats.lineCount(text)),
-            getString(R.string.stats_encoding, charsetName)
+            getString(R.string.stats_encoding, tabManager.activeTab()?.charsetName ?: EncodingDetector.DEFAULT_CHARSET)
         ).joinToString("\n")
         AlertDialog.Builder(this)
             .setTitle(R.string.stats_title)
@@ -498,13 +792,14 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun toggleBookmark() {
-        val uri = fileUri ?: return
+        val tab = tabManager.activeTab() ?: return
+        val uri = tab.uri ?: return
         val line = currentLine()
         val text = binding.editor.text?.toString().orEmpty()
         val ls = LineOps.lineStart(text, binding.editor.selectionStart.coerceAtLeast(0))
         val le = LineOps.lineEnd(text, binding.editor.selectionStart.coerceAtLeast(0))
         val label = text.substring(ls, le).trim().take(60)
-        val added = App.bookmarks(this).toggle(uri.toString(), line, label)
+        val added = App.bookmarks(this).toggle(uri, line, label)
         toast(
             if (added) getString(R.string.bookmark_line) + " " + line
             else getString(R.string.bookmarks) + " " + line + " \u2717"
@@ -512,12 +807,13 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun showBookmarksDialog() {
-        val uri = fileUri
+        val tab = tabManager.activeTab() ?: return
+        val uri = tab.uri
         if (uri == null) {
             toast(getString(R.string.no_bookmarks))
             return
         }
-        val items = App.bookmarks(this).list(uri.toString())
+        val items = App.bookmarks(this).list(uri)
         if (items.isEmpty()) {
             toast(getString(R.string.no_bookmarks))
             return
@@ -564,7 +860,8 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun applyReadOnly(enabled: Boolean) {
-        readOnly = enabled
+        val tab = tabManager.activeTab() ?: return
+        tab.readOnly = enabled
         binding.editor.keyListener = if (enabled) null else originalKeyListener
         if (enabled) toast(getString(R.string.read_only_toast))
         updateUiState()
@@ -593,16 +890,19 @@ class EditorActivity : AppCompatActivity() {
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-        menu.findItem(R.id.action_undo)?.isEnabled = undoStack.canUndo()
-        menu.findItem(R.id.action_redo)?.isEnabled = undoStack.canRedo()
-        menu.findItem(R.id.action_save)?.isEnabled = isDirty() && !readOnly
+        val tab = tabManager.activeTab()
+        menu.findItem(R.id.action_undo)?.isEnabled = tab?.undoStack?.canUndo() == true
+        menu.findItem(R.id.action_redo)?.isEnabled = tab?.undoStack?.canRedo() == true
+        menu.findItem(R.id.action_save)?.isEnabled = isDirty() && tab?.readOnly != true
         menu.findItem(R.id.action_wrap)?.isChecked = wordWrapEnabled
         menu.findItem(R.id.action_line_numbers)?.isChecked = binding.gutter.visibility == View.VISIBLE
-        menu.findItem(R.id.action_read_only)?.isChecked = readOnly
+        menu.findItem(R.id.action_read_only)?.isChecked = tab?.readOnly == true
         menu.findItem(R.id.action_syntax)?.isChecked = syntaxOn
-        fileUri?.let { uri ->
+        menu.findItem(R.id.action_next_tab)?.isEnabled = tabManager.size() > 1
+        menu.findItem(R.id.action_close_others)?.isEnabled = tabManager.size() > 1
+        tab?.uri?.let { uri ->
             menu.findItem(R.id.action_bookmark_toggle)?.isChecked =
-                App.bookmarks(this).has(uri.toString(), currentLine())
+                App.bookmarks(this).has(uri, currentLine())
         }
         return super.onPrepareOptionsMenu(menu)
     }
@@ -611,9 +911,21 @@ class EditorActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.action_save -> save()
             R.id.action_save_as -> {
-                val suggested = FileNames.sanitize(displayName ?: "untitled.txt")
+                val suggested = FileNames.sanitize(
+                    tabManager.activeTab()?.name ?: "untitled.txt"
+                )
                 saveAsLauncher.launch(suggested)
             }
+            R.id.action_new_tab -> newTab()
+            R.id.action_next_tab -> {
+                val next = tabManager.next()
+                if (next != null) showTab(tabManager.activeIndex())
+            }
+            R.id.action_close_tab -> closeTab(tabManager.activeIndex())
+            R.id.action_close_others -> closeOthers(tabManager.activeIndex())
+            R.id.action_open_folder -> startActivity(
+                Intent(this, FolderBrowserActivity::class.java)
+            )
             R.id.action_undo -> performUndo()
             R.id.action_redo -> performRedo()
             R.id.action_find -> showFindDialog()
@@ -624,8 +936,9 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_move_line_down -> applyLineOp(LineOps::moveLineDown)
             R.id.action_bookmark_toggle -> {
                 toggleBookmark()
-                item.isChecked = fileUri != null &&
-                    App.bookmarks(this).has(fileUri.toString(), currentLine())
+                item.isChecked = tabManager.activeTab()?.uri?.let { uri ->
+                    App.bookmarks(this).has(uri, currentLine())
+                } == true
             }
             R.id.action_bookmarks -> showBookmarksDialog()
             R.id.action_stats -> showStatsDialog()
@@ -641,7 +954,7 @@ class EditorActivity : AppCompatActivity() {
                 if (show) updateGutter()
                 item.isChecked = show
             }
-            R.id.action_read_only -> applyReadOnly(!readOnly)
+            R.id.action_read_only -> applyReadOnly(tabManager.activeTab()?.readOnly != true)
             R.id.action_syntax -> {
                 syntaxOn = !syntaxOn
                 highlighter.setEnabled(syntaxOn)
@@ -660,11 +973,12 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun performUndo() {
-        val previous = undoStack.undo(lastCommitted) ?: return
+        val tab = tabManager.activeTab() ?: return
+        val previous = tab.undoStack.undo(tab.lastCommitted) ?: return
         applyingUndoRedo = true
         binding.editor.setText(previous)
         binding.editor.setSelection(previous.length)
-        lastCommitted = previous
+        tab.lastCommitted = previous
         applyingUndoRedo = false
         dirtyChanged()
         updateGutter()
@@ -672,11 +986,12 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun performRedo() {
-        val next = undoStack.redo(lastCommitted) ?: return
+        val tab = tabManager.activeTab() ?: return
+        val next = tab.undoStack.redo(tab.lastCommitted) ?: return
         applyingUndoRedo = true
         binding.editor.setText(next)
         binding.editor.setSelection(next.length)
-        lastCommitted = next
+        tab.lastCommitted = next
         applyingUndoRedo = false
         dirtyChanged()
         updateGutter()
@@ -686,30 +1001,62 @@ class EditorActivity : AppCompatActivity() {
     // ------------------------------------------------------------------ chrome
 
     private fun restoreState(state: Bundle?): Boolean {
-        if (state == null) return false
-        if (!state.containsKey(STATE_LAST_COMMITTED)) return false
-        fileUri = state.getString(STATE_URI)?.let(Uri::parse)
-        displayName = state.getString(STATE_NAME)
-        charsetName = state.getString(STATE_CHARSET) ?: EncodingDetector.DEFAULT_CHARSET
-        fileLineBreak = state.getString(STATE_LINE_BREAK)?.let { name ->
-            LineBreak.entries.firstOrNull { it.name == name }
-        } ?: LineBreak.LF
-        savedText = state.getString(STATE_SAVED_TEXT).orEmpty()
-        val text = state.getString(STATE_TEXT)
-        lastCommitted = state.getString(STATE_LAST_COMMITTED).orEmpty()
-        applyingUndoRedo = true
-        binding.editor.setText(text ?: lastCommitted)
-        binding.editor.setSelection(binding.editor.text?.length ?: 0)
-        applyingUndoRedo = false
-        updateGutter()
-        return true
+        val raw = state?.getString(STATE_TABS) ?: return false
+        return try {
+            val arr = JSONArray(raw)
+            if (arr.length() == 0) return false
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                val uri = o.optString(F_URI).ifEmpty { null }
+                val loaded = o.optBoolean(F_LOADED, true)
+                val committed = o.optString(F_COMMITTED, "")
+                val saved = o.optString(F_SAVED, "")
+                val tab: EditorTab = if (loaded && (uri == null || committed.isNotEmpty())) {
+                    EditorTab(id = EditorTab.newId(), uri = uri, name = o.optString(F_NAME))
+                } else if (uri != null) {
+                    EditorTab.pending(uri, o.optString(F_NAME).ifEmpty { "…" })
+                } else {
+                    EditorTab(id = EditorTab.newId(), uri = null, name = o.optString(F_NAME))
+                }
+                tab.charsetName = o.optString(F_CHARSET, EncodingDetector.DEFAULT_CHARSET)
+                val lb = LineBreak.entries.firstOrNull { it.name == o.optString(F_LINE_BREAK) }
+                if (lb != null) tab.lineBreak = lb
+                tab.readOnly = o.optBoolean(F_READ_ONLY, false)
+                tab.caretStart = o.optInt(F_CARET, 0)
+                tab.caretEnd = o.optInt(F_CARET_END, 0)
+                tab.scrollY = o.optInt(F_SCROLL, 0)
+                tab.savedText = saved
+                tab.lastCommitted = committed
+                tab.loaded = loaded && (uri == null || committed.isNotEmpty())
+                tabManager.add(tab)
+            }
+            showTab(state.getInt(STATE_ACTIVE, 0).coerceIn(0, tabManager.size() - 1))
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun updateUiState() {
-        val name = displayName ?: getString(R.string.untitled)
-        binding.toolbar.title = if (isDirty()) "$name •" else name
-        val subtitle = if (readOnly) getString(R.string.read_only) else charsetName
-        binding.toolbar.subtitle = subtitle
+        val tab = tabManager.activeTab()
+        if (tab == null) {
+            binding.toolbar.title = getString(R.string.untitled)
+            refreshTabs()
+            invalidateOptionsMenu()
+            return
+        }
+        val name = tab.name.ifEmpty { getString(R.string.untitled) }
+        binding.toolbar.title = if (tab.isDirty) "$name \u2022" else name
+        binding.toolbar.subtitle = if (tab.readOnly) {
+            getString(R.string.read_only)
+        } else {
+            tab.charsetName
+        }
+        val sig = tabStateSignature()
+        if (sig != tabSignature) {
+            tabSignature = sig
+            refreshTabs()
+        }
         invalidateOptionsMenu()
     }
 
@@ -719,66 +1066,75 @@ class EditorActivity : AppCompatActivity() {
 
     // ------------------------------------------------------------------ syntax & encoding
 
-    /** Re-detects the syntax language from the current file display name. */
+    /** Re-detects the syntax language from the active tab's file name. */
     private fun updateSyntaxLanguage() {
-        highlighter.setLanguage(SyntaxRegistry.languageForFileName(displayName))
+        val name = tabManager.activeTab()?.name
+        highlighter.setLanguage(SyntaxRegistry.languageForFileName(name))
     }
 
     private fun showReopenEncodingDialog() {
-        val uri = fileUri
-        if (uri == null) {
+        val tab = tabManager.activeTab() ?: return
+        val uriStr = tab.uri
+        if (uriStr == null) {
             toast(getString(R.string.reopen_needs_file))
             return
         }
-        if (isDirty()) {
+        if (tab.isDirty) {
             AlertDialog.Builder(this)
                 .setTitle(R.string.reopen_encoding)
                 .setMessage(R.string.reopen_discard_msg)
-                .setPositiveButton(R.string.continue_label) { _, _ -> pickCharsetAndReopen(uri) }
+                .setPositiveButton(R.string.continue_label) { _, _ ->
+                    pickCharsetAndReopen(tab)
+                }
                 .setNegativeButton(R.string.cancel, null)
                 .show()
         } else {
-            pickCharsetAndReopen(uri)
+            pickCharsetAndReopen(tab)
         }
     }
 
-    private fun pickCharsetAndReopen(uri: Uri) {
+    private fun pickCharsetAndReopen(tab: EditorTab) {
         val names = EncodingDetector.COMMON_CHARSETS.toTypedArray()
-        val current = names.indexOf(charsetName)
+        val current = names.indexOf(tab.charsetName)
         AlertDialog.Builder(this)
             .setTitle(R.string.reopen_encoding)
             .setSingleChoiceItems(names, current) { dialog, which ->
                 dialog.dismiss()
-                reopenWith(uri, names[which])
+                reopenWith(tab, names[which])
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    private fun reopenWith(uri: Uri, charset: String) {
+    private fun reopenWith(tab: EditorTab, charset: String) {
+        val uriStr = tab.uri ?: return
         lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) { readBytes(uri) }
+            val result = withContext(Dispatchers.IO) { readBytes(Uri.parse(uriStr)) }
             val bytes = result?.first
             if (bytes == null) {
-                toast(getString(R.string.open_failed, displayName ?: uri.toString()))
+                toast(getString(R.string.open_failed, tab.name))
                 return@launch
             }
             val text = EncodingDetector.decode(bytes, charset)
-            charsetName = charset
-            savedText = text
-            setTextInternal(text)
-            updateUiState()
+            tab.charsetName = charset
+            tab.savedText = text
+            tab.lastCommitted = text
+            if (tabManager.activeTab()?.id == tab.id) {
+                setTextInternal(text)
+                updateUiState()
+            }
         }
     }
 
     private fun showSaveEncodingDialog() {
+        val tab = tabManager.activeTab() ?: return
         val names = EncodingDetector.COMMON_CHARSETS.toTypedArray()
-        val current = names.indexOf(charsetName)
+        val current = names.indexOf(tab.charsetName)
         AlertDialog.Builder(this)
             .setTitle(R.string.save_encoding)
             .setSingleChoiceItems(names, current) { dialog, which ->
                 dialog.dismiss()
-                charsetName = names[which]
+                tab.charsetName = names[which]
                 updateUiState()
                 save()
             }
@@ -788,7 +1144,8 @@ class EditorActivity : AppCompatActivity() {
 
     private fun insertDateTime() {
         val editable = binding.editor.text ?: return
-        if (readOnly) {
+        val tab = tabManager.activeTab()
+        if (tab?.readOnly == true) {
             toast(getString(R.string.read_only_toast))
             return
         }
@@ -797,15 +1154,33 @@ class EditorActivity : AppCompatActivity() {
         editable.replace(start, start, stamp)
     }
 
+    private fun readBytes(uri: Uri): Pair<ByteArray, Boolean>? {
+        return try {
+            val bytes = contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: return null
+            // Heuristic: NUL byte almost always means binary content.
+            val binary = bytes.indexOf(0) >= 0
+            bytes to binary
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     companion object {
-        private const val STATE_TEXT = "state.text"
-        private const val STATE_URI = "state.uri"
-        private const val STATE_NAME = "state.name"
-        private const val STATE_CHARSET = "state.charset"
-        private const val STATE_LINE_BREAK = "state.linebreak"
-        private const val STATE_SAVED_TEXT = "state.saved_text"
-        private const val STATE_LAST_COMMITTED = "state.last_committed"
-        private const val SNAPSHOT_LIMIT = 300_000
+        private const val STATE_TABS = "state.tabs"
+        private const val STATE_ACTIVE = "state.active"
+        private const val F_URI = "uri"
+        private const val F_NAME = "name"
+        private const val F_CHARSET = "charset"
+        private const val F_LINE_BREAK = "line_break"
+        private const val F_READ_ONLY = "read_only"
+        private const val F_LOADED = "loaded"
+        private const val F_CARET = "caret"
+        private const val F_CARET_END = "caret_end"
+        private const val F_SCROLL = "scroll"
+        private const val F_SAVED = "saved"
+        private const val F_COMMITTED = "committed"
+        private const val SNAPSHOT_LIMIT = 200_000
+        private const val SNAPSHOT_TOTAL_BUDGET = 500_000
 
         /** Convenience starter used by MainActivity and tests. */
         fun createIntent(context: android.content.Context, uri: Uri?): Intent =

@@ -30,6 +30,7 @@
         <activity
             android:name=".ui.EditorActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -38,6 +39,10 @@
                 <data android:mimeType="text/*" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.FolderBrowserActivity"
+            android:exported="false" />
 
         <activity
             android:name=".ui.SettingsActivity"

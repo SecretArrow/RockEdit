@@ -2,4 +2,28 @@
 <resources>
     <string name="file_meta">%1$s · %2$s</string>
     <string name="file_no_ext">tanpa ekstensi</string>
+
+    <!-- v0.4.0: tab & peramban folder -->
+    <string name="new_tab">Tab baru</string>
+    <string name="next_tab">Tab berikutnya</string>
+    <string name="close_tab">Tutup tab</string>
+    <string name="close_others">Tutup tab lainnya</string>
+    <string name="close_tab_confirm">Simpan perubahan di %1$s sebelum menutup?</string>
+    <string name="close_others_confirm">Tutup %1$d tab lainnya? Perubahan yang belum disimpan akan hilang.</string>
+    <string name="open_folder">Buka folder</string>
+    <string name="folder_empty">Folder ini kosong.</string>
+    <string name="pick_folder">Pilih folder…</string>
+    <string name="folder_root">Root</string>
+    <string name="up">Naik</string>
+    <string name="folder_icon">📁</string>
+    <string name="folder_kind">Folder</string>
+    <string name="file_kind">%1$s · %2$s</string>
+    <string name="tab_limit_reached">Maksimal %1$d tab</string>
+    <string name="untitled_n">Tanpa nama %1$d</string>
+    <string name="discard_changes_multi">%1$d file memiliki perubahan yang belum disimpan.</string>
+    <string name="untitled_not_saved">%1$d tab tanpa nama tidak ikut disimpan.</string>
+    <string name="pref_files_tabs">File &amp; tab</string>
+    <string name="pref_remember_tabs">Ingat tab yang terbuka</string>
+    <string name="pref_sort_folders">Folder di atas</string>
+    <string name="pref_show_hidden">Tampilkan file tersembunyi</string>
 </resources>

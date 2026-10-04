@@ -67,6 +67,28 @@ class SettingsRepository(private val kv: KeyValueStore) {
         else -> LineBreak.LF // placeholder: activity decides "auto" from file content
     }
 
+    // ---- Files & tabs ------------------------------------------------------
+
+    /** Restores the set of open tabs when the editor starts without a file. */
+    var rememberTabs: Boolean
+        get() = kv.getBoolean(KEY_REMEMBER_TABS, true)
+        set(value) = kv.putBoolean(KEY_REMEMBER_TABS, value)
+
+    /** Folder browser: lists folders before files. */
+    var sortFoldersFirst: Boolean
+        get() = kv.getBoolean(KEY_SORT_FOLDERS_FIRST, true)
+        set(value) = kv.putBoolean(KEY_SORT_FOLDERS_FIRST, value)
+
+    /** Folder browser: shows dot-files. */
+    var showHiddenFiles: Boolean
+        get() = kv.getBoolean(KEY_SHOW_HIDDEN_FILES, false)
+        set(value) = kv.putBoolean(KEY_SHOW_HIDDEN_FILES, value)
+
+    /** Last folder tree the user browsed (content:// tree URI string). */
+    var lastFolderUri: String
+        get() = kv.getString(KEY_LAST_FOLDER_URI, "").orEmpty()
+        set(value) = kv.putString(KEY_LAST_FOLDER_URI, value)
+
     companion object {
         const val KEY_THEME = "theme"
         const val KEY_LINE_NUMBERS = "line_numbers"
@@ -76,6 +98,10 @@ class SettingsRepository(private val kv: KeyValueStore) {
         const val KEY_SYNTAX_HIGHLIGHT = "syntax_highlight"
         const val KEY_FONT_SIZE = "font_size"
         const val KEY_AUTO_SAVE = "auto_save"
+        const val KEY_REMEMBER_TABS = "remember_tabs"
+        const val KEY_SORT_FOLDERS_FIRST = "sort_folders_first"
+        const val KEY_SHOW_HIDDEN_FILES = "show_hidden_files"
+        const val KEY_LAST_FOLDER_URI = "last_folder_uri"
 
         const val DEFAULT_FONT_SIZE = "14"
 

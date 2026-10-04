@@ -2,4 +2,28 @@
 <resources>
     <string name="file_meta">%1$s · %2$s</string>
     <string name="file_no_ext">no extension</string>
+
+    <!-- v0.4.0: tabs & folder browser -->
+    <string name="new_tab">New tab</string>
+    <string name="next_tab">Next tab</string>
+    <string name="close_tab">Close tab</string>
+    <string name="close_others">Close other tabs</string>
+    <string name="close_tab_confirm">Save changes to %1$s before closing?</string>
+    <string name="close_others_confirm">Close %1$d other tab(s)? Unsaved changes in them will be lost.</string>
+    <string name="open_folder">Open folder</string>
+    <string name="folder_empty">This folder is empty.</string>
+    <string name="pick_folder">Pick a folder…</string>
+    <string name="folder_root">Root</string>
+    <string name="up">Up</string>
+    <string name="folder_icon">📁</string>
+    <string name="folder_kind">Folder</string>
+    <string name="file_kind">%1$s · %2$s</string>
+    <string name="tab_limit_reached">Up to %1$d tabs</string>
+    <string name="untitled_n">Untitled %1$d</string>
+    <string name="discard_changes_multi">%1$d files have unsaved changes.</string>
+    <string name="untitled_not_saved">%1$d untitled tab(s) were not saved.</string>
+    <string name="pref_files_tabs">Files &amp; tabs</string>
+    <string name="pref_remember_tabs">Remember open tabs</string>
+    <string name="pref_sort_folders">Folders first</string>
+    <string name="pref_show_hidden">Show hidden files</string>
 </resources>

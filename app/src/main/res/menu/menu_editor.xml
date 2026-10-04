@@ -12,6 +12,26 @@
         android:title="@string/save_as"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_new_tab"
+        android:title="@string/new_tab"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_next_tab"
+        android:title="@string/next_tab"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_close_tab"
+        android:title="@string/close_tab"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_close_others"
+        android:title="@string/close_others"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_open_folder"
+        android:title="@string/open_folder"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_undo"
         android:title="@string/undo"
         app:showAsAction="never" />

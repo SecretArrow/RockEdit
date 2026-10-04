@@ -8,4 +8,8 @@
     <color name="syntax_string">#86EFAC</color>
     <color name="syntax_comment">#64748B</color>
     <color name="syntax_number">#FCD34D</color>
+
+    <!-- Tab chips -->
+    <color name="tab_chip_active">#334155</color>
+    <color name="tab_chip_inactive">#00000000</color>
 </resources>

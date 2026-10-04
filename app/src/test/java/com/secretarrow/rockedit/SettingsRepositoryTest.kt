@@ -95,4 +95,28 @@ class SettingsRepositoryTest {
         store.putString(SettingsRepository.KEY_LINE_BREAK, SettingsRepository.LINE_BREAK_CRLF)
         assertEquals(com.secretarrow.rockedit.core.LineBreak.CRLF, s.resolveLineBreak())
     }
+
+    @Test
+    fun filesAndTabsDefaults() {
+        val s = SettingsRepository(InMemoryKeyValueStore())
+        assertTrue(s.rememberTabs)
+        assertTrue(s.sortFoldersFirst)
+        assertFalse(s.showHiddenFiles)
+        assertEquals("", s.lastFolderUri)
+    }
+
+    @Test
+    fun filesAndTabsRoundTrip() {
+        val store = InMemoryKeyValueStore()
+        val writer = SettingsRepository(store)
+        writer.rememberTabs = false
+        writer.sortFoldersFirst = false
+        writer.showHiddenFiles = true
+        writer.lastFolderUri = "content://com.android.externalstorage/tree/home"
+        val reader = SettingsRepository(store)
+        assertFalse(reader.rememberTabs)
+        assertFalse(reader.sortFoldersFirst)
+        assertTrue(reader.showHiddenFiles)
+        assertEquals("content://com.android.externalstorage/tree/home", reader.lastFolderUri)
+    }
 }

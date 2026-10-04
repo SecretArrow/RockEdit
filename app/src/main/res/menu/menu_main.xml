@@ -6,6 +6,10 @@
         android:title="@string/open_file"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_open_folder"
+        android:title="@string/open_folder"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_settings"
         android:title="@string/settings"
         app:showAsAction="never" />

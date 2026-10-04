@@ -54,4 +54,21 @@
             android:key="auto_save"
             android:title="@string/pref_auto_save" />
     </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_files_tabs">
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="remember_tabs"
+            android:title="@string/pref_remember_tabs" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="sort_folders_first"
+            android:title="@string/pref_sort_folders" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="show_hidden_files"
+            android:title="@string/pref_show_hidden" />
+    </PreferenceCategory>
 </PreferenceScreen>

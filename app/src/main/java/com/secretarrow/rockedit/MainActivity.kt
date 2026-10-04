@@ -67,6 +67,10 @@ class MainActivity : AppCompatActivity() {
                     openDocument.launch(arrayOf("*/*"))
                     true
                 }
+                R.id.action_open_folder -> {
+                    startActivity(Intent(this, com.secretarrow.rockedit.ui.FolderBrowserActivity::class.java))
+                    true
+                }
                 R.id.action_settings -> {
                     settingsLauncher.launch(Intent(this, SettingsActivity::class.java))
                     true

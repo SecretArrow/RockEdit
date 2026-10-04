@@ -13,4 +13,8 @@
 
     <color name="black_amoled">#000000</color>
     <color name="black_elevated">#121212</color>
+
+    <!-- Tab chips -->
+    <color name="tab_chip_active">#FFFFFF</color>
+    <color name="tab_chip_inactive">#00000000</color>
 </resources>
