@@ -145,7 +145,9 @@ class EditorActivity : AppCompatActivity() {
         updateUiState()
     }
 
-    override fun onNewIntent(passedIntent: Intent) {
+    // Public so instrumentation tests can deliver intents the way the
+    // system does for a singleTask instance that is already on screen.
+    public override fun onNewIntent(passedIntent: Intent) {
         super.onNewIntent(passedIntent)
         setIntent(passedIntent)
         addTabFromIntent(passedIntent)
