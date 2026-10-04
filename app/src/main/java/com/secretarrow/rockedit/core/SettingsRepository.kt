@@ -89,6 +89,11 @@ class SettingsRepository(private val kv: KeyValueStore) {
         get() = kv.getString(KEY_LAST_FOLDER_URI, "").orEmpty()
         set(value) = kv.putString(KEY_LAST_FOLDER_URI, value)
 
+    /** Opt-in consent for sending code to the Piston online runner. */
+    var onlineExecution: Boolean
+        get() = kv.getBoolean(KEY_ONLINE_EXECUTION, false)
+        set(value) = kv.putBoolean(KEY_ONLINE_EXECUTION, value)
+
     companion object {
         const val KEY_THEME = "theme"
         const val KEY_LINE_NUMBERS = "line_numbers"
@@ -102,6 +107,7 @@ class SettingsRepository(private val kv: KeyValueStore) {
         const val KEY_SORT_FOLDERS_FIRST = "sort_folders_first"
         const val KEY_SHOW_HIDDEN_FILES = "show_hidden_files"
         const val KEY_LAST_FOLDER_URI = "last_folder_uri"
+        const val KEY_ONLINE_EXECUTION = "online_execution"
 
         const val DEFAULT_FONT_SIZE = "14"
 

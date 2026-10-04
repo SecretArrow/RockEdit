@@ -62,6 +62,14 @@
             android:name=".ui.RemoteBrowserActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.HelpActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.PreviewActivity"
+            android:exported="false" />
+
         <provider
             android:name=".remote.RemoteContentProvider"
             android:authorities="${applicationId}.remote"

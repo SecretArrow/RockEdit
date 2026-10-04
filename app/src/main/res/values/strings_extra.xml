@@ -60,4 +60,36 @@
     <string name="storage_folder_name">Folder name</string>
     <string name="storage_folder_created">Folder created</string>
     <string name="storage_operation_failed">Operation failed — check connection settings</string>
+
+    <!-- v0.7.0: preview, online execution, help -->
+    <string name="preview">Preview</string>
+    <string name="run">Run code</string>
+    <string name="run_consent_title">Run code online?</string>
+    <string name="run_consent_msg">Your code will be sent to the public Piston service (emkc.org) for execution. It leaves your device. Enable online execution?</string>
+    <string name="run_consent_yes">Enable and run</string>
+    <string name="run_not_supported">Online execution is not available for this file type</string>
+    <string name="run_done">Execution finished</string>
+    <string name="run_output_title">Output</string>
+    <string name="pref_online_exec">Allow online code execution</string>
+    <string name="pref_online_exec_summary">Sends code to the public Piston service when you use “Run code”. Off by default.</string>
+    <string name="help_title">Help</string>
+    <string name="help_intro">Rock Edit is a fast, private text and code editor: 100%% free and open (GPL-3.0), no ads, no accounts, no telemetry.</string>
+    <string name="help_privacy">Your files never leave the device unless you explicitly use Storage Manager connections or the opt-in online code execution.</string>
+    <string name="help_q1">How do I open multiple files at once?</string>
+    <string name="help_a1">Open any file while the editor is on screen — it becomes a new tab. Use the + button or the “New tab” menu for empty tabs, long-press a tab to close it, and use “Close other tabs” to keep only the active one.</string>
+    <string name="help_q2">Where are my files? Can I browse folders?</string>
+    <string name="help_a2">Use “Open folder” to browse any folder the system file picker can reach, or “Open file” for a single document. The folder you picked is remembered for next time.</string>
+    <string name="help_q3">How do I work with FTP, SFTP or WebDAV servers?</string>
+    <string name="help_a3">Open the Storage manager from the main menu, add a connection (FTP, FTPS, SFTP or WebDAV) and browse the server. Files open in the editor like local ones; saving uploads them back. Passwords are stored encrypted with your device key store.</string>
+    <string name="help_q4">Can I restore my settings and data?</string>
+    <string name="help_a4">Yes — Settings › “Backup data (JSON)” writes a single file with your settings, recents, bookmarks, sessions and open tabs. “Restore data” reads it back on any device.</string>
+    <string name="help_q5">Which languages get syntax highlighting?</string>
+    <string name="help_a5">48 languages, detected from the file name: Kotlin, Java, C/C++, C#, Go, Rust, JavaScript/TypeScript, Python, Ruby, PHP, Swift, Shell, SQL, JSON, YAML, XML, HTML, CSS and many more including Lua, Dart, Scala, PowerShell, Makefile, Dockerfile and LaTeX.</string>
+    <string name="help_q6">What about encodings and line breaks?</string>
+    <string name="help_a6">Files open with auto-detected encoding (15 charsets) and line break style (LF/CR/CRLF is preserved when saving). Use the “Reopen with encoding” and “Save with encoding” menus for full control.</string>
+    <string name="help_q7">How do I print or export a document?</string>
+    <string name="help_a7">Use “Print” from the editor menu — Android’s print service renders the document (and can save it as PDF) with any installed print service.</string>
+    <string name="help_q8">Can it run my code?</string>
+    <string name="help_a8">Optionally: “Run code” sends the current document to the public Piston service and shows stdout/stderr. It is off by default — enable it when prompted if you are comfortable with the code leaving the device.</string>
+    <string name="pref_advanced">Advanced</string>
 </resources>

@@ -8,7 +8,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal)
 - GitHub/GitLab via Personal Access Token
-- Preview HTML/Markdown/AsciiDoc, kompiler online
+
+## [0.7.0] - 2026-10-04
+
+### Added
+- Pratinjau dokumen: HTML dirender di WebView bawaan; Markdown dikonversi ke
+  HTML oleh renderer murni (heading, bold/italic, kode inline & fenced, tautan,
+  gambar, list, blockquote, hr) dengan tema terang/gelap mengikuti aplikasi;
+  file lain tampil sebagai teks terformat
+- Jalankan kode daring (opsional, default MATI): kirim dokumen ke layanan
+  publik Piston (emkc.org, tanpa kunci) dan tampilkan stdout/stderr/compile
+  output; dialog persetujuan eksplisit + sakelar di Pengaturan › Lanjutan;
+  pemetaan 28 bahasa (Python, JS/TS, Java, C/C++, Go, Rust, Kotlin, dst.)
+- Layar Bantuan bawaan (offline): FAQ lengkap multi-tab, folder, Storage
+  Manager, backup/restore, bahasa, encoding, cetak, dan eksekusi daring
+
+### Changed
+- Unit test baru: MarkdownRenderer (7), PistonClient (5)
 
 ## [0.6.0] - 2026-10-04
 

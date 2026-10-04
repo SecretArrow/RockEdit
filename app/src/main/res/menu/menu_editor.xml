@@ -81,6 +81,14 @@
         android:title="@string/print"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_preview"
+        android:title="@string/preview"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_run"
+        android:title="@string/run"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_share"
         android:title="@string/share"
         app:showAsAction="never" />

@@ -60,4 +60,36 @@
     <string name="storage_folder_name">Nama folder</string>
     <string name="storage_folder_created">Folder dibuat</string>
     <string name="storage_operation_failed">Operasi gagal — periksa pengaturan koneksi</string>
+
+    <!-- v0.7.0: pratinjau, eksekusi daring, bantuan -->
+    <string name="preview">Pratinjau</string>
+    <string name="run">Jalankan kode</string>
+    <string name="run_consent_title">Jalankan kode daring?</string>
+    <string name="run_consent_msg">Kode Anda akan dikirim ke layanan publik Piston (emkc.org) untuk dieksekusi. Artinya kode keluar dari perangkat Anda. Aktifkan eksekusi daring?</string>
+    <string name="run_consent_yes">Aktifkan dan jalankan</string>
+    <string name="run_not_supported">Eksekusi daring tidak tersedia untuk jenis file ini</string>
+    <string name="run_done">Eksekusi selesai</string>
+    <string name="run_output_title">Keluaran</string>
+    <string name="pref_online_exec">Izinkan eksekusi kode daring</string>
+    <string name="pref_online_exec_summary">Mengirim kode ke layanan publik Piston saat Anda memakai “Jalankan kode”. Mati secara bawaan.</string>
+    <string name="help_title">Bantuan</string>
+    <string name="help_intro">Rock Edit adalah editor teks &amp; kode yang cepat dan privat: 100%% gratis dan terbuka (GPL-3.0), tanpa iklan, tanpa akun, tanpa telemetri.</string>
+    <string name="help_privacy">File Anda tidak pernah meninggalkan perangkat kecuali Anda secara eksplisit memakai koneksi Manajer Penyimpanan atau eksekusi kode daring yang bersifat opt-in.</string>
+    <string name="help_q1">Bagaimana membuka beberapa file sekaligus?</string>
+    <string name="help_a1">Buka file apa pun saat editor tampil — file menjadi tab baru. Gunakan tombol + atau menu “Tab baru” untuk tab kosong, tekan lama tab untuk menutupnya, dan “Tutup tab lainnya” untuk menyisakan tab aktif.</string>
+    <string name="help_q2">Di mana file saya? Bisakah menelusuri folder?</string>
+    <string name="help_a2">Gunakan “Buka folder” untuk menelusuri folder mana pun yang dapat dijangkau pemilih file sistem, atau “Buka file” untuk satu dokumen. Folder yang dipilih diingat untuk waktu berikutnya.</string>
+    <string name="help_q3">Bagaimana bekerja dengan server FTP, SFTP, atau WebDAV?</string>
+    <string name="help_a3">Buka Manajer penyimpanan dari menu utama, tambahkan koneksi (FTP, FTPS, SFTP, atau WebDAV) lalu telusuri server. File terbuka di editor seperti file lokal; menyimpan akan mengunggahnya kembali. Kata sandi disimpan terenkripsi dengan key store perangkat Anda.</string>
+    <string name="help_q4">Bisakah memulihkan pengaturan dan data saya?</string>
+    <string name="help_a4">Ya — Pengaturan › “Cadangkan data (JSON)” menulis satu file berisi pengaturan, file terbaru, bookmark, sesi, dan tab terbuka. “Pulihkan data” membacanya kembali di perangkat mana pun.</string>
+    <string name="help_q5">Bahasa apa saja yang mendapat penyorotan sintaks?</string>
+    <string name="help_a5">48 bahasa, dideteksi dari nama file: Kotlin, Java, C/C++, C#, Go, Rust, JavaScript/TypeScript, Python, Ruby, PHP, Swift, Shell, SQL, JSON, YAML, XML, HTML, CSS dan banyak lainnya termasuk Lua, Dart, Scala, PowerShell, Makefile, Dockerfile, dan LaTeX.</string>
+    <string name="help_q6">Bagaimana dengan encoding dan line break?</string>
+    <string name="help_a6">File dibuka dengan encoding terdeteksi otomatis (15 charset) dan gaya line break (LF/CR/CRLF dipertahankan saat menyimpan). Gunakan menu “Buka ulang dengan encoding” dan “Simpan dengan encoding” untuk kendali penuh.</string>
+    <string name="help_q7">Bagaimana mencetak atau mengekspor dokumen?</string>
+    <string name="help_a7">Gunakan “Cetak” dari menu editor — layanan cetak Android merender dokumen (dan dapat menyimpannya sebagai PDF) dengan layanan cetak apa pun yang terpasang.</string>
+    <string name="help_q8">Bisakah menjalankan kode saya?</string>
+    <string name="help_a8">Opsional: “Jalankan kode” mengirim dokumen aktif ke layanan publik Piston dan menampilkan stdout/stderr. Fitur mati secara bawaan — aktifkan saat diminta bila Anda nyaman dengan kode yang keluar dari perangkat.</string>
+    <string name="pref_advanced">Lanjutan</string>
 </resources>

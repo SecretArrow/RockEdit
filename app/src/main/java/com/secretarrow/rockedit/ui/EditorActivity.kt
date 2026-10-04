@@ -30,6 +30,7 @@ import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
 import com.secretarrow.rockedit.core.LineBreak
 import com.secretarrow.rockedit.core.LineOps
+import com.secretarrow.rockedit.core.PistonClient
 import com.secretarrow.rockedit.core.SearchEngine
 import com.secretarrow.rockedit.core.SettingsRepository
 import com.secretarrow.rockedit.core.SyntaxRegistry
@@ -855,6 +856,57 @@ class EditorActivity : AppCompatActivity() {
         TextPrinter.print(this, FileNames.sanitize(tab.name), text)
     }
 
+    private fun showPreview() {
+        val tab = tabManager.activeTab() ?: return
+        val intent = Intent(this, PreviewActivity::class.java)
+            .putExtra(PreviewActivity.EXTRA_TEXT, binding.editor.text?.toString().orEmpty())
+            .putExtra(PreviewActivity.EXTRA_TITLE, tab.name)
+            .putExtra(PreviewActivity.EXTRA_FILE_NAME, tab.name)
+        startActivity(intent)
+    }
+
+    private fun runCode() {
+        val tab = tabManager.activeTab() ?: return
+        val text = binding.editor.text?.toString().orEmpty()
+        val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id
+        val pistonLanguage = languageId?.let { PistonClient.LANGUAGE_MAP[it] }
+        if (pistonLanguage == null) {
+            toast(getString(R.string.run_not_supported))
+            return
+        }
+        if (!settings.onlineExecution) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.run_consent_title)
+                .setMessage(R.string.run_consent_msg)
+                .setPositiveButton(R.string.run_consent_yes) { _, _ ->
+                    settings.onlineExecution = true
+                    executeOnline(pistonLanguage, text)
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+            return
+        }
+        executeOnline(pistonLanguage, text)
+    }
+
+    private fun executeOnline(language: String, code: String) {
+        toast(getString(R.string.run_done) + "…")
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                try {
+                    PistonClient.execute(language, code)
+                } catch (e: Exception) {
+                    PistonClient.ExecutionResult("", e.message ?: "network error", "", -1)
+                }
+            }
+            AlertDialog.Builder(this@EditorActivity)
+                .setTitle(R.string.run_output_title)
+                .setMessage(result.summary)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
+    }
+
     // ------------------------------------------------------------------ toggles
 
     private fun applyWordWrap(enabled: Boolean) {
@@ -952,6 +1004,8 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_bookmarks -> showBookmarksDialog()
             R.id.action_stats -> showStatsDialog()
             R.id.action_print -> printDocument()
+            R.id.action_preview -> showPreview()
+            R.id.action_run -> runCode()
             R.id.action_share -> shareText()
             R.id.action_wrap -> {
                 val enable = !wordWrapEnabled

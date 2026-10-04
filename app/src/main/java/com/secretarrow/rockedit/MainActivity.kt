@@ -79,6 +79,10 @@ class MainActivity : AppCompatActivity() {
                     settingsLauncher.launch(Intent(this, SettingsActivity::class.java))
                     true
                 }
+                R.id.action_help -> {
+                    startActivity(Intent(this, com.secretarrow.rockedit.ui.HelpActivity::class.java))
+                    true
+                }
                 R.id.action_about -> {
                     showAbout()
                     true
