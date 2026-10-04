@@ -82,20 +82,22 @@ object PistonClient {
      * Finds the runtime version for [language] in a /runtimes response.
      * Returns "*" when absent (Piston accepts it in most deployments).
      */
-    fun resolveVersion(runtimesJson: String, language: String): String = try {
-        val arr = JSONArray(runtimesJson)
-        for (i in 0 until arr.length()) {
-            val runtime = arr.getJSONObject(i)
-            val runtimeLanguage = runtime.optString("language")
-            val aliases = runtime.optJSONArray("aliases") ?: continue
-            val aliasMatch = (0 until aliases.length()).any { aliases.getString(it) == language }
-            if (runtimeLanguage == language || aliasMatch) {
-                return runtime.optString("version", "*")
+    fun resolveVersion(runtimesJson: String, language: String): String {
+        return try {
+            val arr = JSONArray(runtimesJson)
+            for (i in 0 until arr.length()) {
+                val runtime = arr.getJSONObject(i)
+                val runtimeLanguage = runtime.optString("language")
+                val aliases = runtime.optJSONArray("aliases") ?: continue
+                val aliasMatch = (0 until aliases.length()).any { aliases.getString(it) == language }
+                if (runtimeLanguage == language || aliasMatch) {
+                    return runtime.optString("version", "*")
+                }
             }
+            "*"
+        } catch (_: Exception) {
+            "*"
         }
-        "*"
-    } catch (_: Exception) {
-        "*"
     }
 
     /** Parses the /execute response into an [ExecutionResult]. */

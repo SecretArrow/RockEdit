@@ -40,7 +40,7 @@ class PreviewActivity : AppCompatActivity() {
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT
             )
-            settings.javaScriptEnabled = true
+            this.settings.javaScriptEnabled = true
         }
         binding.settingsContainer.addView(webView)
 
