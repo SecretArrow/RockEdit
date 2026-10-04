@@ -1282,7 +1282,12 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
-    /** Text tools dialog: 18 pure transformations on selection or document. */
+    /**
+     * Text tools dialog: 18 pure transformations on selection or document.
+     * Built as a plain ScrollView of rows (not AlertDialog.setItems): every
+     * row is always laid out, which keeps the dialog testable on tiny
+     * screens where a virtualized ListView materializes nothing.
+     */
     private fun showTextToolsDialog() {
         val opLabels = resources.getStringArray(R.array.text_tools_ops)
         val ops = TextUtilities.Op.values()
@@ -1291,20 +1296,45 @@ class EditorActivity : AppCompatActivity() {
         val selStart = binding.editor.selectionStart
         val selEnd = binding.editor.selectionEnd
         val hasSelection = selStart >= 0 && selEnd > selStart
-        AlertDialog.Builder(this)
-            .setTitle(R.string.text_tools)
-            .setMessage(
-                getString(
-                    if (hasSelection) R.string.text_tools_scope_selection
-                    else R.string.text_tools_scope_document
-                )
-            )
-            .setItems(labels) { _, which ->
-                if (which in ops.indices) applyTextTool(ops[which])
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_text_tools, null)
+        val container = view.findViewById<LinearLayout>(R.id.text_tools_container)
+        val scope = view.findViewById<TextView>(R.id.text_tools_scope)
+        scope.text = getString(
+            if (hasSelection) R.string.text_tools_scope_selection
+            else R.string.text_tools_scope_document
+        )
+        val ripple = android.util.TypedValue()
+        val hasRipple = theme.resolveAttribute(
+            android.R.attr.selectableItemBackground, ripple, true
+        )
+        val rowParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        var dialog: AlertDialog? = null
+        for ((index, op) in ops.withIndex()) {
+            val row = TextView(this)
+            row.text = labels[index]
+            row.textSize = 16f
+            row.isClickable = true
+            row.isFocusable = true
+            row.setPadding(dp(20), dp(14), dp(20), dp(14))
+            if (hasRipple) row.setBackgroundResource(ripple.resourceId)
+            row.setOnClickListener {
+                dialog?.dismiss()
+                applyTextTool(op)
             }
+            container.addView(row, rowParams)
+        }
+        dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.text_tools)
+            .setView(view)
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
+
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
 
     private fun applyTextTool(op: TextUtilities.Op) {
         val tab = tabManager.activeTab() ?: return
