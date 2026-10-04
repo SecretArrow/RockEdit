@@ -98,16 +98,16 @@ object MarkdownRenderer {
     /** Applies inline formatting to an already-HTML-escaped fragment. */
     fun inline(text: String): String {
         val escaped = escapeHtml(text)
-        // Ordered application: code spans first protect their content.
-        val parts = escaped.split(Regex("(`[^`]+`)"))
-        val built = parts.joinToString("") { part ->
-            if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
-                "<code>" + part.substring(1, part.length - 1) + "</code>"
-            } else {
-                applyFormatting(part)
-            }
+        val codePattern = Regex("`([^`]+)`")
+        val out = StringBuilder()
+        var last = 0
+        for (match in codePattern.findAll(escaped)) {
+            out.append(applyFormatting(escaped.substring(last, match.range.first)))
+            out.append("<code>").append(match.groupValues[1]).append("</code>")
+            last = match.range.last + 1
         }
-        return built
+        out.append(applyFormatting(escaped.substring(last)))
+        return out.toString()
     }
 
     private fun applyFormatting(fragment: String): String {
