@@ -30,22 +30,26 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class DiffSnippetE2eTest {
+    private fun context(): Context = ApplicationProvider.getApplicationContext<Context>()
 
-    private fun context(): Context =
-        ApplicationProvider.getApplicationContext<Context>()
-
-    private fun newTestFileIntent(name: String, content: String): Intent {
+    private fun newTestFileIntent(
+        name: String,
+        content: String,
+    ): Intent {
         val file = File(context().filesDir, name)
         file.writeText(content)
-        val uri = androidx.core.content.FileProvider.getUriForFile(
-            context(), context().packageName + ".fileprovider", file
-        )
+        val uri =
+            androidx.core.content.FileProvider.getUriForFile(
+                context(),
+                context().packageName + ".fileprovider",
+                file,
+            )
         return Intent(Intent.ACTION_VIEW).apply {
             setClass(context(), EditorActivity::class.java)
             setDataAndType(uri, "text/plain")
             addFlags(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         }
     }
@@ -60,7 +64,11 @@ class DiffSnippetE2eTest {
         }
     }
 
-    private fun waitUntil(block: () -> Boolean, what: String, timeoutMs: Long = 8000) {
+    private fun waitUntil(
+        block: () -> Boolean,
+        what: String,
+        timeoutMs: Long = 8000,
+    ) {
         val deadline = System.currentTimeMillis() + timeoutMs
         var lastError: Throwable? = null
         while (System.currentTimeMillis() < deadline) {
@@ -80,15 +88,16 @@ class DiffSnippetE2eTest {
         val newFile = File(context().cacheDir, "e2e_diff_new.txt")
         oldFile.writeText("alpha\nbravo\ncharlie\ndelta\necho")
         newFile.writeText("alpha\nBRAVO\ncharlie\ndelta\necho")
-        val intent = Intent(context(), DiffActivity::class.java)
-            .putExtra("rockedit.extra.DIFF_OLD_PATH", oldFile.absolutePath)
-            .putExtra("rockedit.extra.DIFF_NEW_PATH", newFile.absolutePath)
+        val intent =
+            Intent(context(), DiffActivity::class.java)
+                .putExtra("rockedit.extra.DIFF_OLD_PATH", oldFile.absolutePath)
+                .putExtra("rockedit.extra.DIFF_NEW_PATH", newFile.absolutePath)
 
         ActivityScenario.launch<DiffActivity>(intent)
 
         waitUntil({
             onView(withId(R.id.diff_summary)).check(
-                matches(withText(containsString("1 added, 1 removed, 4 unchanged")))
+                matches(withText(containsString("1 added, 1 removed, 4 unchanged"))),
             )
             true
         }, "diff summary rendered")
@@ -130,7 +139,7 @@ class DiffSnippetE2eTest {
 
         waitUntil({
             onView(withId(R.id.editor)).check(
-                matches(withText(containsString("hello world!")))
+                matches(withText(containsString("hello world!"))),
             )
             true
         }, "snippet expanded into document")

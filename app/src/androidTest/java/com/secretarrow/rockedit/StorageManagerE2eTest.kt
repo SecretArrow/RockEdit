@@ -10,12 +10,10 @@ import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.secretarrow.rockedit.ui.StorageManagerActivity
-import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -27,11 +25,10 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class StorageManagerE2eTest {
-
     @Test
     fun addsConnectionAndListsIt() {
         ActivityScenario.launch<StorageManagerActivity>(
-            Intent(ApplicationProvider.getApplicationContext(), StorageManagerActivity::class.java)
+            Intent(ApplicationProvider.getApplicationContext(), StorageManagerActivity::class.java),
         )
 
         onView(withId(R.id.btn_add_connection)).perform(click())
@@ -50,7 +47,7 @@ class StorageManagerE2eTest {
         while (System.currentTimeMillis() < deadline && !found) {
             try {
                 onView(withId(R.id.connections)).check(
-                    matches(hasDescendant(withText(containsString("ci-ftp"))))
+                    matches(hasDescendant(withText(containsString("ci-ftp")))),
                 )
                 found = true
             } catch (_: Throwable) {

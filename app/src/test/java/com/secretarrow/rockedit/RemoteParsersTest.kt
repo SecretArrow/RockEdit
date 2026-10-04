@@ -9,17 +9,17 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FtpListParserTest {
-
     @Test
     fun parsesMlsdEntries() {
-        val files = FtpListParser.parseMlsd(
-            listOf(
-                "type=dir;size=0;modify=20240101120000; public",
-                "type=file;size=1024;modify=20240203130405; notes.txt",
-                "type=dir;size=0;modify=20240101120000; .",
-                "total 4"
+        val files =
+            FtpListParser.parseMlsd(
+                listOf(
+                    "type=dir;size=0;modify=20240101120000; public",
+                    "type=file;size=1024;modify=20240203130405; notes.txt",
+                    "type=dir;size=0;modify=20240101120000; .",
+                    "total 4",
+                ),
             )
-        )
         assertEquals(2, files.size)
         val dir = files[0]
         assertTrue(dir.isFolder)
@@ -32,14 +32,15 @@ class FtpListParserTest {
 
     @Test
     fun parsesUnixListLines() {
-        val files = FtpListParser.parseUnix(
-            listOf(
-                "total 24",
-                "drwxr-xr-x  2 user group 4096 Jan  1 12:00 src",
-                "-rw-r--r--  1 user group  512 Feb  3 13:40 main.kt",
-                "drwxr-xr-x  2 user group 4096 Jan  1 12:00 .."
+        val files =
+            FtpListParser.parseUnix(
+                listOf(
+                    "total 24",
+                    "drwxr-xr-x  2 user group 4096 Jan  1 12:00 src",
+                    "-rw-r--r--  1 user group  512 Feb  3 13:40 main.kt",
+                    "drwxr-xr-x  2 user group 4096 Jan  1 12:00 ..",
+                ),
             )
-        )
         assertEquals(2, files.size)
         assertTrue(files[0].isFolder)
         assertEquals("src", files[0].name)
@@ -69,8 +70,8 @@ class FtpListParserTest {
 }
 
 class WebDavParserTest {
-
-    private val sampleXml = """
+    private val sampleXml =
+        """
         <?xml version="1.0" encoding="utf-8"?>
         <D:multistatus xmlns:D="DAV:">
           <D:response>
@@ -94,7 +95,7 @@ class WebDavParserTest {
             </D:prop></D:propstat>
           </D:response>
         </D:multistatus>
-    """.trimIndent()
+        """.trimIndent()
 
     @Test
     fun parsesCollectionsAndFiles() {

@@ -29,9 +29,8 @@ internal class LineScanner(
     private val stringDelims: List<Char>,
     private val multilineDelims: List<Pair<String, String>>,
     private val openChars: List<Char>,
-    private val closeChars: List<Char>
+    private val closeChars: List<Char>,
 ) {
-
     /** Closer token of the block comment we are currently inside, or null. */
     private var blockCommentCloser: String? = null
 
@@ -57,7 +56,7 @@ internal class LineScanner(
         /** true when the line starts inside a carried block comment. */
         val startsInsideBlockComment: Boolean,
         /** true when the line starts inside a carried multiline string. */
-        val startsInsideMultiline: Boolean
+        val startsInsideMultiline: Boolean,
     )
 
     fun scanLine(line: String): LineScan {
@@ -195,7 +194,7 @@ internal class LineScanner(
             hasCode = hasCode,
             unterminatedString = unterminated,
             startsInsideBlockComment = startedInBlock,
-            startsInsideMultiline = startedInMultiline
+            startsInsideMultiline = startedInMultiline,
         )
     }
 }

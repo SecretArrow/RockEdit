@@ -15,14 +15,21 @@ import org.junit.Test
  * optional groups), caps + truncation, and each flag independently.
  */
 class RegexTesterTest {
-
-    private fun found(pattern: String, text: String, flags: Flags = Flags(), cap: Int = RegexTester.DEFAULT_MAX_MATCHES): RegexTester.RegexResult {
+    private fun found(
+        pattern: String,
+        text: String,
+        flags: Flags = Flags(),
+        cap: Int = RegexTester.DEFAULT_MAX_MATCHES,
+    ): RegexTester.RegexResult {
         val outcome = RegexTester.run(pattern, text, flags, cap)
         assertTrue("expected Found, was $outcome", outcome is RegexOutcome.Found)
         return (outcome as RegexOutcome.Found).result
     }
 
-    private fun failure(pattern: String, text: String = "abc"): RegexTester.RegexError {
+    private fun failure(
+        pattern: String,
+        text: String = "abc",
+    ): RegexTester.RegexError {
         val outcome = RegexTester.run(pattern, text)
         assertTrue("expected Failure, was $outcome", outcome is RegexOutcome.Failure)
         return (outcome as RegexOutcome.Failure).error

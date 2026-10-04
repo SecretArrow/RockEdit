@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FileNamesTest {
-
     @Test
     fun splitBasic() {
         assertEquals("notes" to "txt", FileNames.split("notes.txt"))

@@ -1,15 +1,15 @@
 package com.secretarrow.rockedit.core
 
-import java.io.IOException
-import java.io.StringReader
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.parsers.ParserConfigurationException
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
 import org.xml.sax.SAXParseException
+import java.io.IOException
+import java.io.StringReader
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.parsers.ParserConfigurationException
 
 /**
  * XML formatter (also used for SVG and other XML dialects).
@@ -26,8 +26,9 @@ import org.xml.sax.SAXParseException
  * platform reports them. Nesting is bounded ([MAX_DEPTH]) and the deadline
  * is polled while walking the tree.
  */
-class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCodeFormatter(nowMs) {
-
+class XmlFormatter(
+    nowMs: () -> Long = System::currentTimeMillis,
+) : AbstractCodeFormatter(nowMs) {
     override val id: String = "xml"
     override val supportedLanguages: Set<String> = setOf("xml", "svg", "plist")
 
@@ -35,15 +36,15 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         // PRIMARY XXE GUARD — reject DTDs before touching the parser.
         if (DTD_REGEX.containsMatchIn(text.take(DTD_SCAN_CHARS))) {
             return FormatResult.Failure(
                 FormatError(
                     FormatErrorCode.PARSE_ERROR,
-                    "DTD/DOCTYPE declarations are rejected (XXE protection)"
-                )
+                    "DTD/DOCTYPE declarations are rejected (XXE protection)",
+                ),
             )
         }
 
@@ -57,45 +58,46 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
         factory.isExpandEntityReferences = false
         factory.isXIncludeAware = false
 
-        val document = try {
-            val builder = factory.newDocumentBuilder()
-            builder.setErrorHandler(null) // we rely on exceptions, not handler callbacks
-            builder.parse(InputSource(StringReader(text)))
-        } catch (e: SAXParseException) {
-            val line = e.lineNumber.takeIf { it > 0 }
-            val column = e.columnNumber.takeIf { it > 0 }
-            return FormatResult.Failure(
-                FormatError(
-                    FormatErrorCode.PARSE_ERROR,
-                    "invalid XML at line ${e.lineNumber}, column ${e.columnNumber}: " +
-                        (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName),
-                    line,
-                    column
+        val document =
+            try {
+                val builder = factory.newDocumentBuilder()
+                builder.setErrorHandler(null) // we rely on exceptions, not handler callbacks
+                builder.parse(InputSource(StringReader(text)))
+            } catch (e: SAXParseException) {
+                val line = e.lineNumber.takeIf { it > 0 }
+                val column = e.columnNumber.takeIf { it > 0 }
+                return FormatResult.Failure(
+                    FormatError(
+                        FormatErrorCode.PARSE_ERROR,
+                        "invalid XML at line ${e.lineNumber}, column ${e.columnNumber}: " +
+                            (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName),
+                        line,
+                        column,
+                    ),
                 )
-            )
-        } catch (e: SAXException) {
-            return FormatResult.Failure(
-                FormatError(
-                    FormatErrorCode.PARSE_ERROR,
-                    "invalid XML: " + (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName)
+            } catch (e: SAXException) {
+                return FormatResult.Failure(
+                    FormatError(
+                        FormatErrorCode.PARSE_ERROR,
+                        "invalid XML: " + (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName),
+                    ),
                 )
-            )
-        } catch (e: ParserConfigurationException) {
-            return FormatResult.Failure(
-                FormatError(
-                    FormatErrorCode.INTERNAL_ERROR,
-                    "XML parser unavailable on this platform: " +
-                        (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName)
+            } catch (e: ParserConfigurationException) {
+                return FormatResult.Failure(
+                    FormatError(
+                        FormatErrorCode.INTERNAL_ERROR,
+                        "XML parser unavailable on this platform: " +
+                            (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName),
+                    ),
                 )
-            )
-        } catch (e: IOException) {
-            return FormatResult.Failure(
-                FormatError(
-                    FormatErrorCode.INTERNAL_ERROR,
-                    "failed to read the XML input: " + (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName)
+            } catch (e: IOException) {
+                return FormatResult.Failure(
+                    FormatError(
+                        FormatErrorCode.INTERNAL_ERROR,
+                        "failed to read the XML input: " + (e.message?.take(MAX_MESSAGE) ?: e::class.java.simpleName),
+                    ),
                 )
-            )
-        }
+            }
 
         if (deadline.isExpired()) return timeoutResult(deadline.budgetMs)
 
@@ -113,7 +115,10 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
     }
 
     /** Re-emits the original XML declaration verbatim when one is present. */
-    private fun appendXmlDeclaration(text: String, out: StringBuilder) {
+    private fun appendXmlDeclaration(
+        text: String,
+        out: StringBuilder,
+    ) {
         val trimmed = text.trimStart()
         if (!trimmed.startsWith("<?xml")) return
         val end = trimmed.indexOf("?>")
@@ -127,7 +132,7 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
         depth: Int,
         out: StringBuilder,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ) {
         val children = document.childNodes ?: return
         for (i in 0 until children.length) {
@@ -139,7 +144,13 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
         }
     }
 
-    private fun writeNode(node: Node, depth: Int, out: StringBuilder, options: FormatOptions, deadline: Deadline) {
+    private fun writeNode(
+        node: Node,
+        depth: Int,
+        out: StringBuilder,
+        options: FormatOptions,
+        deadline: Deadline,
+    ) {
         if (depth > MAX_DEPTH) throw DepthSignal(MAX_DEPTH)
         if (deadline.isExpired()) throw TimeoutSignal(deadline.budgetMs)
         when (node.nodeType) {
@@ -153,7 +164,8 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
             }
             Node.CDATA_SECTION_NODE -> {
                 val value = node.nodeValue ?: ""
-                out.append(pad(options, depth))
+                out
+                    .append(pad(options, depth))
                     .append("<![CDATA[")
                     .append(value.replace("]]>", "]]]]><![CDATA[>")) // cannot appear raw inside CDATA
                     .append("]]>")
@@ -161,11 +173,16 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
             Node.COMMENT_NODE -> {
                 val value = node.nodeValue ?: ""
                 if (value.isNotBlank()) {
-                    out.append(pad(options, depth)).append("<!--").append(value).append("-->")
+                    out
+                        .append(pad(options, depth))
+                        .append("<!--")
+                        .append(value)
+                        .append("-->")
                 }
             }
             Node.PROCESSING_INSTRUCTION_NODE -> {
-                out.append(pad(options, depth))
+                out
+                    .append(pad(options, depth))
                     .append("<?")
                     .append(node.nodeName ?: "")
                     .append(' ')
@@ -183,7 +200,7 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
         depth: Int,
         out: StringBuilder,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ) {
         if (depth > MAX_DEPTH) throw DepthSignal(MAX_DEPTH)
         if (deadline.isExpired()) throw TimeoutSignal(deadline.budgetMs)
@@ -194,7 +211,12 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
         val childCount = children?.length ?: 0
 
         if (childCount == 0) {
-            out.append(pad(options, depth)).append('<').append(name).append(attributes).append("/>")
+            out
+                .append(pad(options, depth))
+                .append('<')
+                .append(name)
+                .append(attributes)
+                .append("/>")
             return
         }
 
@@ -204,19 +226,37 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
                 val value = (only.nodeValue ?: "").trim()
                 if (value.isEmpty()) {
                     // <x></x> with no real text: emit self-closing.
-                    out.append(pad(options, depth)).append('<').append(name).append(attributes).append("/>")
+                    out
+                        .append(pad(options, depth))
+                        .append('<')
+                        .append(name)
+                        .append(attributes)
+                        .append("/>")
                     return
                 }
                 if (value.length <= INLINE_TEXT_LIMIT && !value.contains('\n')) {
-                    out.append(pad(options, depth)).append('<').append(name).append(attributes)
-                        .append('>').append(escapeText(value)).append("</").append(name).append('>')
+                    out
+                        .append(pad(options, depth))
+                        .append('<')
+                        .append(name)
+                        .append(attributes)
+                        .append('>')
+                        .append(escapeText(value))
+                        .append("</")
+                        .append(name)
+                        .append('>')
                     return
                 }
                 // Long or multi-line text: fall through to block layout.
             }
         }
 
-        out.append(pad(options, depth)).append('<').append(name).append(attributes).append('>')
+        out
+            .append(pad(options, depth))
+            .append('<')
+            .append(name)
+            .append(attributes)
+            .append('>')
         for (i in 0 until childCount) {
             val child = children.item(i) ?: continue
             if (child.nodeType == Node.TEXT_NODE && (child.nodeValue ?: "").isBlank()) continue
@@ -233,16 +273,21 @@ class XmlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
         val sb = StringBuilder()
         for (i in 0 until map.length) {
             val attr = map.item(i) ?: continue
-            sb.append(' ').append(attr.nodeName).append("=\"")
-                .append(escapeAttr(attr.nodeValue ?: "")).append('"')
+            sb
+                .append(' ')
+                .append(attr.nodeName)
+                .append("=\"")
+                .append(escapeAttr(attr.nodeValue ?: ""))
+                .append('"')
         }
         return sb.toString()
     }
 
-    private fun escapeText(value: String): String = value
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
+    private fun escapeText(value: String): String =
+        value
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
 
     private fun escapeAttr(value: String): String = escapeText(value).replace("\"", "&quot;")
 

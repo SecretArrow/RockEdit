@@ -19,10 +19,10 @@ import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.DiffEngine
 import com.secretarrow.rockedit.databinding.ActivityDiffBinding
-import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
  * Compare screen (v0.12.0): current document vs a picked file, rendered as a
@@ -43,7 +43,6 @@ import kotlinx.coroutines.withContext
  *   lenient) and binary content was rejected before this screen starts.
  */
 class DiffActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityDiffBinding
     private lateinit var adapter: DiffRowsAdapter
 
@@ -83,15 +82,19 @@ class DiffActivity : AppCompatActivity() {
         }
     }
 
-    private suspend fun runDiff(oldText: String, newText: String) {
+    private suspend fun runDiff(
+        oldText: String,
+        newText: String,
+    ) {
         val outcome = withContext(Dispatchers.Default) { DiffEngine.diff(oldText, newText) }
         when (outcome) {
             is DiffEngine.DiffOutcome.Failure -> {
-                val message = if (outcome.code == DiffEngine.DiffErrorCode.INPUT_TOO_LARGE) {
-                    getString(R.string.diff_too_large)
-                } else {
-                    getString(R.string.diff_error_generic, outcome.message)
-                }
+                val message =
+                    if (outcome.code == DiffEngine.DiffErrorCode.INPUT_TOO_LARGE) {
+                        getString(R.string.diff_too_large)
+                    } else {
+                        getString(R.string.diff_error_generic, outcome.message)
+                    }
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show()
                 finish()
             }
@@ -101,8 +104,9 @@ class DiffActivity : AppCompatActivity() {
 
     private fun render(outcome: DiffEngine.DiffOutcome.Done) {
         val stats = outcome.stats
-        val summary = getString(R.string.diff_summary, stats.addedLines, stats.removedLines, stats.unchangedLines) +
-            if (outcome.fellBack) getString(R.string.diff_fell_back) else ""
+        val summary =
+            getString(R.string.diff_summary, stats.addedLines, stats.removedLines, stats.unchangedLines) +
+                if (outcome.fellBack) getString(R.string.diff_fell_back) else ""
         binding.diffSummary.text = summary
         if (!stats.hasChanges) {
             binding.diffResults.visibility = View.GONE
@@ -158,7 +162,10 @@ class DiffActivity : AppCompatActivity() {
     }
 
     /** Reads both cache sides and always cleans them up afterwards. */
-    private fun readSides(oldPath: String, newPath: String): Pair<String, String>? {
+    private fun readSides(
+        oldPath: String,
+        newPath: String,
+    ): Pair<String, String>? {
         val oldFile = File(oldPath)
         val newFile = File(newPath)
         return try {
@@ -185,7 +192,11 @@ class DiffActivity : AppCompatActivity() {
         private const val CONTEXT = 3
         private const val MAX_ROWS = 2000
 
-        fun createIntent(context: Context, oldPath: String, newPath: String): Intent =
+        fun createIntent(
+            context: Context,
+            oldPath: String,
+            newPath: String,
+        ): Intent =
             Intent(context, DiffActivity::class.java)
                 .putExtra(EXTRA_OLD_PATH, oldPath)
                 .putExtra(EXTRA_NEW_PATH, newPath)
@@ -194,35 +205,54 @@ class DiffActivity : AppCompatActivity() {
 
 /** One renderable row: a numbered change line or an unchanged-lines gap. */
 sealed interface DiffRow {
-    data class Change(val number: Int, val text: String) : DiffRow
-    data class Gap(val count: Int) : DiffRow
+    data class Change(
+        val number: Int,
+        val text: String,
+    ) : DiffRow
+
+    data class Gap(
+        val count: Int,
+    ) : DiffRow
 }
 
 class DiffRowsAdapter : ListAdapter<DiffRow, DiffRowViewHolder>(DIFF) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DiffRowViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_diff_row, parent, false)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): DiffRowViewHolder {
+        val view =
+            LayoutInflater
+                .from(parent.context)
+                .inflate(R.layout.item_diff_row, parent, false)
         return DiffRowViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: DiffRowViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: DiffRowViewHolder,
+        position: Int,
+    ) {
         holder.bind(getItem(position))
     }
 
     companion object {
-        val DIFF = object : DiffUtil.ItemCallback<DiffRow>() {
-            override fun areItemsTheSame(oldItem: DiffRow, newItem: DiffRow): Boolean =
-                oldItem == newItem
+        val DIFF =
+            object : DiffUtil.ItemCallback<DiffRow>() {
+                override fun areItemsTheSame(
+                    oldItem: DiffRow,
+                    newItem: DiffRow,
+                ): Boolean = oldItem == newItem
 
-            override fun areContentsTheSame(oldItem: DiffRow, newItem: DiffRow): Boolean =
-                oldItem == newItem
-        }
+                override fun areContentsTheSame(
+                    oldItem: DiffRow,
+                    newItem: DiffRow,
+                ): Boolean = oldItem == newItem
+            }
     }
 }
 
-class DiffRowViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
+class DiffRowViewHolder(
+    view: View,
+) : RecyclerView.ViewHolder(view) {
     private val number: TextView = view.findViewById(R.id.diff_row_number)
     private val text: TextView = view.findViewById(R.id.diff_row_text)
 
@@ -234,13 +264,14 @@ class DiffRowViewHolder(view: View) : RecyclerView.ViewHolder(view) {
                 text.text = row.text
                 number.setTextColor(ContextCompat.getColor(context, R.color.diff_row_text))
                 text.setTextColor(ContextCompat.getColor(context, R.color.diff_row_text))
-                val background = if (row.text.startsWith("+")) {
-                    R.color.diff_insert_bg
-                } else if (row.text.startsWith("-")) {
-                    R.color.diff_delete_bg
-                } else {
-                    android.R.color.transparent
-                }
+                val background =
+                    if (row.text.startsWith("+")) {
+                        R.color.diff_insert_bg
+                    } else if (row.text.startsWith("-")) {
+                        R.color.diff_delete_bg
+                    } else {
+                        android.R.color.transparent
+                    }
                 itemView.setBackgroundColor(ContextCompat.getColor(context, background))
             }
             is DiffRow.Gap -> {

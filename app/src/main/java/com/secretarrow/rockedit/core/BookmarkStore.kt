@@ -4,14 +4,21 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /** One bookmark: a marked line inside one file, with an optional label. */
-data class Bookmark(val uri: String, val line: Int, val label: String, val createdAt: Long)
+data class Bookmark(
+    val uri: String,
+    val line: Int,
+    val label: String,
+    val createdAt: Long,
+)
 
 /**
  * Per-file line bookmarks, persisted across sessions.
  * Backed by [KeyValueStore] so it runs in plain JVM unit tests.
  */
-class BookmarkStore(private val kv: KeyValueStore, private val capacity: Int = MAX_ITEMS) {
-
+class BookmarkStore(
+    private val kv: KeyValueStore,
+    private val capacity: Int = MAX_ITEMS,
+) {
     /** All bookmarks of [uri], sorted ascending by line number. */
     fun list(uri: String): List<Bookmark> =
         parse(kv.getString(KEY, null) ?: "[]")
@@ -19,14 +26,21 @@ class BookmarkStore(private val kv: KeyValueStore, private val capacity: Int = M
             .sortedBy { it.line }
 
     /** True when [line] in [uri] is bookmarked. */
-    fun has(uri: String, line: Int): Boolean =
-        parse(kv.getString(KEY, null) ?: "[]").any { it.uri == uri && it.line == line }
+    fun has(
+        uri: String,
+        line: Int,
+    ): Boolean = parse(kv.getString(KEY, null) ?: "[]").any { it.uri == uri && it.line == line }
 
     /**
      * Toggles the bookmark on [line] of [uri]. Returns true when the bookmark
      * was added, false when it was removed.
      */
-    fun toggle(uri: String, line: Int, label: String, timestamp: Long = System.currentTimeMillis()): Boolean {
+    fun toggle(
+        uri: String,
+        line: Int,
+        label: String,
+        timestamp: Long = System.currentTimeMillis(),
+    ): Boolean {
         if (uri.isBlank() || line < 1) return has(uri, line)
         val all = parse(kv.getString(KEY, null) ?: "[]").toMutableList()
         val existing = all.indexOfFirst { it.uri == uri && it.line == line }
@@ -55,7 +69,7 @@ class BookmarkStore(private val kv: KeyValueStore, private val capacity: Int = M
                     .put("uri", it.uri)
                     .put("line", it.line)
                     .put("label", it.label)
-                    .put("createdAt", it.createdAt)
+                    .put("createdAt", it.createdAt),
             )
         }
         kv.putString(KEY, arr.toString())

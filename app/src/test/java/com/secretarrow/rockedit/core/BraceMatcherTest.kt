@@ -11,7 +11,6 @@ import org.junit.Test
  * handling, scan limits, bounds handling and BracePairs validation.
  */
 class BraceMatcherTest {
-
     private fun matched(result: BraceMatcher.MatchResult): BraceMatcher.MatchResult.Matched {
         assertTrue("expected Matched, was $result", result is BraceMatcher.MatchResult.Matched)
         return result as BraceMatcher.MatchResult.Matched
@@ -22,15 +21,14 @@ class BraceMatcherTest {
         return result as BraceMatcher.MatchResult.Unmatched
     }
 
-    private fun expectIllegal(block: () -> Unit): String {
-        return try {
+    private fun expectIllegal(block: () -> Unit): String =
+        try {
             block()
             fail("expected IllegalArgumentException")
             error("unreachable: expected IllegalArgumentException")
         } catch (expected: IllegalArgumentException) {
             expected.message ?: ""
         }
-    }
 
     // -------------------------------------------------- simple pairs
 
@@ -297,9 +295,10 @@ class BraceMatcherTest {
 
     @Test
     fun negativeLimitIsAProgrammingError() {
-        val message = expectIllegal {
-            BraceMatcher.matchAtWithLimit("(x)", 0, BracePairs.DEFAULT, -1)
-        }
+        val message =
+            expectIllegal {
+                BraceMatcher.matchAtWithLimit("(x)", 0, BracePairs.DEFAULT, -1)
+            }
         assertTrue(message.contains("maxScan is -1"))
     }
 

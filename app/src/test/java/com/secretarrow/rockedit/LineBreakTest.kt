@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class LineBreakTest {
-
     @Test
     fun detectLf() {
         assertEquals(LineBreak.LF, LineBreak.detect("a\nb"))

@@ -2,7 +2,6 @@ package com.secretarrow.rockedit.core
 
 /** Pure text statistics used by the Statistics dialog. */
 object TextStats {
-
     /** Number of characters (code units, same as String.length). */
     fun charCount(text: String): Int = text.length
 

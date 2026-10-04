@@ -19,10 +19,10 @@ import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
 import com.secretarrow.rockedit.databinding.ActivitySplitEditorBinding
-import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 /**
  * Split view (v0.13.0): two editable panes side by side (or stacked) for
@@ -55,7 +55,6 @@ import kotlinx.coroutines.withContext
  *   [EncodingDetector]); no per-pane encoding switching in v1.
  */
 class SplitEditorActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivitySplitEditorBinding
     private var paneAName: String = ""
     private var paneBName: String = ""
@@ -73,15 +72,16 @@ class SplitEditorActivity : AppCompatActivity() {
             savePaneB(uri)
         }
 
-    private val backCallback = object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-            if (dirtyA || dirtyB) {
-                showDiscardDialog()
-            } else {
-                finish()
+    private val backCallback =
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (dirtyA || dirtyB) {
+                    showDiscardDialog()
+                } else {
+                    finish()
+                }
             }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val settings = App.settings(this)
@@ -108,13 +108,13 @@ class SplitEditorActivity : AppCompatActivity() {
             PaneWatcher { dirty ->
                 dirtyA = dirty
                 updateStatusA()
-            }
+            },
         )
         binding.paneB.addTextChangedListener(
             PaneWatcher { dirty ->
                 dirtyB = dirty
                 updateStatusB()
-            }
+            },
         )
 
         // Consume the process-local handoff exactly once; null -> empty pane.
@@ -197,7 +197,10 @@ class SplitEditorActivity : AppCompatActivity() {
             return
         }
         takePersistentPermission(uri)
-        val text = binding.paneB.text?.toString().orEmpty()
+        val text =
+            binding.paneB.text
+                ?.toString()
+                .orEmpty()
         lifecycleScope.launch {
             val ok = withContext(Dispatchers.IO) { writePane(uri, text) }
             if (ok) {
@@ -232,25 +235,41 @@ class SplitEditorActivity : AppCompatActivity() {
      */
     private fun applyPaneGeometry(vertical: Boolean) {
         if (vertical) {
-            binding.splitPaneA.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
-            )
-            binding.splitPaneB.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
-            )
-            binding.splitDivider.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(1)
-            )
+            binding.splitPaneA.layoutParams =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f,
+                )
+            binding.splitPaneB.layoutParams =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f,
+                )
+            binding.splitDivider.layoutParams =
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(1),
+                )
         } else {
-            binding.splitPaneA.layoutParams = LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
-            )
-            binding.splitPaneB.layoutParams = LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.MATCH_PARENT, 1f
-            )
-            binding.splitDivider.layoutParams = LinearLayout.LayoutParams(
-                dp(1), LinearLayout.LayoutParams.MATCH_PARENT
-            )
+            binding.splitPaneA.layoutParams =
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1f,
+                )
+            binding.splitPaneB.layoutParams =
+                LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    1f,
+                )
+            binding.splitDivider.layoutParams =
+                LinearLayout.LayoutParams(
+                    dp(1),
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                )
         }
     }
 
@@ -259,8 +278,14 @@ class SplitEditorActivity : AppCompatActivity() {
      * content can never appear clean after the swap.
      */
     private fun swapPanes() {
-        val textA = binding.paneA.text?.toString().orEmpty()
-        val textB = binding.paneB.text?.toString().orEmpty()
+        val textA =
+            binding.paneA.text
+                ?.toString()
+                .orEmpty()
+        val textB =
+            binding.paneB.text
+                ?.toString()
+                .orEmpty()
         loading = true
         binding.paneA.setText(textB)
         binding.paneB.setText(textA)
@@ -285,18 +310,20 @@ class SplitEditorActivity : AppCompatActivity() {
     }
 
     /** "● name" when dirty, plain name otherwise. */
-    private fun statusText(name: String, dirty: Boolean): String =
-        if (dirty) "$DIRTY_DOT $name" else name
+    private fun statusText(
+        name: String,
+        dirty: Boolean,
+    ): String = if (dirty) "$DIRTY_DOT $name" else name
 
     private fun showDiscardDialog() {
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.split_discard_title)
             .setMessage(R.string.split_discard_body)
             .setPositiveButton(R.string.discard) { _, _ -> finish() }
             .setNegativeButton(R.string.cancel) { _, _ ->
                 // Stay on the screen and keep both panes editable.
-            }
-            .show()
+            }.show()
     }
 
     private fun openLoadPicker() {
@@ -307,8 +334,8 @@ class SplitEditorActivity : AppCompatActivity() {
                     "application/json",
                     "application/xml",
                     "application/javascript",
-                    "application/x-yaml"
-                )
+                    "application/x-yaml",
+                ),
             )
         } catch (e: Exception) {
             // No file picker on the device (or the resolver failed).
@@ -319,11 +346,13 @@ class SplitEditorActivity : AppCompatActivity() {
     // -------------------------------------------------------------- io
 
     /** Friendly file name; DisplayNames falls back to the last URI segment. */
-    private fun resolveName(uri: Uri): String =
-        DisplayNames.resolve(this, uri).ifBlank { getString(R.string.split_untitled_pane) }
+    private fun resolveName(uri: Uri): String = DisplayNames.resolve(this, uri).ifBlank { getString(R.string.split_untitled_pane) }
 
     /** Outcome of reading pane B's file: unreadable (null) / too large / text. */
-    private class PaneRead(val text: String?, val tooLarge: Boolean)
+    private class PaneRead(
+        val text: String?,
+        val tooLarge: Boolean,
+    )
 
     /**
      * Reads the document with a [MAX_FILE_BYTES] byte ceiling; a file bigger
@@ -331,44 +360,49 @@ class SplitEditorActivity : AppCompatActivity() {
      * characters, maps to `tooLarge`. Any I/O or provider failure returns
      * null (mapped to split_read_failed by the caller).
      */
-    private fun readPaneFile(uri: Uri): PaneRead? = try {
-        val stream = contentResolver.openInputStream(uri) ?: return null
-        stream.use { input ->
-            val buffer = ByteArrayOutputStream()
-            val chunk = ByteArray(16 * 1024)
-            var read = input.read(chunk)
-            var overflow = false
-            while (read >= 0) {
-                if (buffer.size() >= MAX_FILE_BYTES) {
-                    overflow = true
-                    break
+    private fun readPaneFile(uri: Uri): PaneRead? =
+        try {
+            val stream = contentResolver.openInputStream(uri) ?: return null
+            stream.use { input ->
+                val buffer = ByteArrayOutputStream()
+                val chunk = ByteArray(16 * 1024)
+                var read = input.read(chunk)
+                var overflow = false
+                while (read >= 0) {
+                    if (buffer.size() >= MAX_FILE_BYTES) {
+                        overflow = true
+                        break
+                    }
+                    buffer.write(chunk, 0, minOf(read, MAX_FILE_BYTES - buffer.size()))
+                    read = input.read(chunk)
                 }
-                buffer.write(chunk, 0, minOf(read, MAX_FILE_BYTES - buffer.size()))
-                read = input.read(chunk)
-            }
-            if (overflow) {
-                PaneRead(null, true)
-            } else {
-                val decoded =
-                    EncodingDetector.decode(buffer.toByteArray(), EncodingDetector.DEFAULT_CHARSET)
-                if (decoded.length > MAX_PANE_CHARS) {
+                if (overflow) {
                     PaneRead(null, true)
                 } else {
-                    PaneRead(decoded, false)
+                    val decoded =
+                        EncodingDetector.decode(buffer.toByteArray(), EncodingDetector.DEFAULT_CHARSET)
+                    if (decoded.length > MAX_PANE_CHARS) {
+                        PaneRead(null, true)
+                    } else {
+                        PaneRead(decoded, false)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            null
         }
-    } catch (e: Exception) {
-        null
-    }
 
-    private fun writePane(uri: Uri, text: String): Boolean {
+    private fun writePane(
+        uri: Uri,
+        text: String,
+    ): Boolean {
         return try {
-            val stream = try {
-                contentResolver.openOutputStream(uri, "wt")
-            } catch (_: IllegalArgumentException) {
-                null
-            } ?: contentResolver.openOutputStream(uri) ?: return false
+            val stream =
+                try {
+                    contentResolver.openOutputStream(uri, "wt")
+                } catch (_: IllegalArgumentException) {
+                    null
+                } ?: contentResolver.openOutputStream(uri) ?: return false
             stream.use { it.write(text.toByteArray(Charsets.UTF_8)) }
             true
         } catch (e: Exception) {
@@ -380,27 +414,38 @@ class SplitEditorActivity : AppCompatActivity() {
         try {
             contentResolver.takePersistableUriPermission(
                 uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         } catch (_: SecurityException) {
             // Non-persistable grant: still valid for this session.
         }
     }
 
-    private fun dp(value: Int): Int =
-        (value * resources.displayMetrics.density).toInt()
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     /** Marks a pane dirty on any edit; ignored while text is set programmatically. */
-    private inner class PaneWatcher(private val onDirty: (Boolean) -> Unit) : TextWatcher {
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+    private inner class PaneWatcher(
+        private val onDirty: (Boolean) -> Unit,
+    ) : TextWatcher {
+        override fun beforeTextChanged(
+            s: CharSequence?,
+            start: Int,
+            count: Int,
+            after: Int,
+        ) {
             // Not needed: dirty state is derived from afterTextChanged only.
         }
 
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+        override fun onTextChanged(
+            s: CharSequence?,
+            start: Int,
+            before: Int,
+            count: Int,
+        ) {
             // Not needed.
         }
 

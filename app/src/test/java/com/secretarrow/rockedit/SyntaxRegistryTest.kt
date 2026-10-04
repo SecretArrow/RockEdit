@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SyntaxRegistryTest {
-
     @Test
     fun mapsCommonExtensions() {
         assertEquals("kotlin", SyntaxRegistry.languageForFileName("Main.kt")?.id)
@@ -43,15 +42,65 @@ class SyntaxRegistryTest {
         // Known representative languages must exist with unique ids.
         val ids = HashSet<String>()
         for (id in listOf(
-            "kotlin", "java", "c", "cpp", "csharp", "go", "rust", "javascript",
-            "typescript", "python", "ruby", "php", "swift", "shell", "sql",
-            "json", "yaml", "xml", "html", "css",
-            "lua", "perl", "r", "objc", "dart", "scala", "groovy", "haskell",
-            "erlang", "elixir", "clojure", "fsharp", "vb", "assembly", "toml",
-            "ini", "makefile", "cmake", "batch", "powershell", "vue", "graphql",
-            "julia", "nim", "ocaml", "latex", "zig", "protobuf",
-            "solidity", "vyper", "move", "cairo", "clarity", "cadence",
-            "motoko", "aiken", "leo", "fe", "michelson"
+            "kotlin",
+            "java",
+            "c",
+            "cpp",
+            "csharp",
+            "go",
+            "rust",
+            "javascript",
+            "typescript",
+            "python",
+            "ruby",
+            "php",
+            "swift",
+            "shell",
+            "sql",
+            "json",
+            "yaml",
+            "xml",
+            "html",
+            "css",
+            "lua",
+            "perl",
+            "r",
+            "objc",
+            "dart",
+            "scala",
+            "groovy",
+            "haskell",
+            "erlang",
+            "elixir",
+            "clojure",
+            "fsharp",
+            "vb",
+            "assembly",
+            "toml",
+            "ini",
+            "makefile",
+            "cmake",
+            "batch",
+            "powershell",
+            "vue",
+            "graphql",
+            "julia",
+            "nim",
+            "ocaml",
+            "latex",
+            "zig",
+            "protobuf",
+            "solidity",
+            "vyper",
+            "move",
+            "cairo",
+            "clarity",
+            "cadence",
+            "motoko",
+            "aiken",
+            "leo",
+            "fe",
+            "michelson",
         )) {
             val language = SyntaxRegistry.languageById(id)
             assertTrue("missing language $id", language != null)
@@ -85,10 +134,11 @@ class SyntaxRegistryTest {
     @Test
     fun tokenizerTreatsLuaBlockComments() {
         val language = SyntaxRegistry.languageById("lua")!!
-        val tokens = com.secretarrow.rockedit.core.SyntaxTokenizer.tokenize(
-            "--[[ hidden ]]\ncode = 1",
-            language
-        )
+        val tokens =
+            com.secretarrow.rockedit.core.SyntaxTokenizer.tokenize(
+                "--[[ hidden ]]\ncode = 1",
+                language,
+            )
         assertTrue(tokens.any { it.type == com.secretarrow.rockedit.core.SyntaxTokenType.COMMENT })
     }
 

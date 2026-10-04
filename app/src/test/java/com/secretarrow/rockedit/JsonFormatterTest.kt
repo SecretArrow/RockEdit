@@ -18,11 +18,12 @@ import org.junit.Test
  * depth limit, line-break handling and idempotency.
  */
 class JsonFormatterTest {
-
     private val formatter = JsonFormatter()
 
-    private fun format(text: String, options: FormatOptions = FormatOptions()): FormatResult =
-        formatter.format(FormatRequest(text, "json", options))
+    private fun format(
+        text: String,
+        options: FormatOptions = FormatOptions(),
+    ): FormatResult = formatter.format(FormatRequest(text, "json", options))
 
     // ------------------------------------------------------------ pretty
 
@@ -30,7 +31,8 @@ class JsonFormatterTest {
     fun prettyPrintsNestedStructures() {
         val out = format("""{"b":1,"a":[2,{"c":null}]}""")
         assertTrue(out is FormatResult.Success)
-        val expected = """
+        val expected =
+            """
             {
                 "b": 1,
                 "a": [
@@ -40,7 +42,7 @@ class JsonFormatterTest {
                     }
                 ]
             }
-        """.trimIndent() + "\n"
+            """.trimIndent() + "\n"
         assertEquals(expected, (out as FormatResult.Success).formattedText)
     }
 
@@ -176,8 +178,9 @@ class JsonFormatterTest {
 
     @Test
     fun crlfOutputWhenRequested() {
-        val out = (format("""{"a":1}""", FormatOptions(lineBreak = LineBreak.CRLF)) as FormatResult.Success)
-            .formattedText
+        val out =
+            (format("""{"a":1}""", FormatOptions(lineBreak = LineBreak.CRLF)) as FormatResult.Success)
+                .formattedText
         assertTrue(out.contains("\r\n"))
     }
 

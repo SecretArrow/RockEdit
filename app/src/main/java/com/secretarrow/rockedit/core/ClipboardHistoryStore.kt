@@ -37,9 +37,8 @@ import org.json.JSONObject
 class ClipboardHistoryStore(
     private val kv: KeyValueStore,
     maxEntries: Int = DEFAULT_MAX_ENTRIES,
-    maxEntryChars: Int = DEFAULT_MAX_ENTRY_CHARS
+    maxEntryChars: Int = DEFAULT_MAX_ENTRY_CHARS,
 ) {
-
     /**
      * Effective entry cap after clamping the constructor request into
      * [MIN_MAX_ENTRIES]..[MAX_MAX_ENTRIES] (raw values never throw).
@@ -58,14 +57,20 @@ class ClipboardHistoryStore(
         val id: String,
         val text: String,
         val createdAt: Long,
-        val pinned: Boolean
+        val pinned: Boolean,
     )
 
     enum class ErrorCode { BLANK_TEXT, TEXT_TOO_LARGE }
 
     sealed interface AddResult {
-        data class Success(val entries: List<Entry>) : AddResult
-        data class Failure(val code: ErrorCode, val message: String) : AddResult
+        data class Success(
+            val entries: List<Entry>,
+        ) : AddResult
+
+        data class Failure(
+            val code: ErrorCode,
+            val message: String,
+        ) : AddResult
     }
 
     /**
@@ -80,7 +85,7 @@ class ClipboardHistoryStore(
         if (text.length > effectiveMaxEntryChars) {
             return AddResult.Failure(
                 ErrorCode.TEXT_TOO_LARGE,
-                "text has ${text.length} characters, limit is $effectiveMaxEntryChars"
+                "text has ${text.length} characters, limit is $effectiveMaxEntryChars",
             )
         }
         val all = load().toMutableList()
@@ -106,16 +111,17 @@ class ClipboardHistoryStore(
      */
     fun list(query: String? = null): List<Entry> {
         val all = load()
-        val filtered = if (query.isNullOrBlank()) {
-            all
-        } else {
-            val needle = query.trim()
-            if (needle.isEmpty()) {
+        val filtered =
+            if (query.isNullOrBlank()) {
                 all
             } else {
-                all.filter { it.text.contains(needle, ignoreCase = true) }
+                val needle = query.trim()
+                if (needle.isEmpty()) {
+                    all
+                } else {
+                    all.filter { it.text.contains(needle, ignoreCase = true) }
+                }
             }
-        }
         val (pinned, unpinned) = filtered.partition { it.pinned }
         return pinned + unpinned
     }
@@ -156,7 +162,10 @@ class ClipboardHistoryStore(
         return if (oldestUnpinned > 0) oldestUnpinned else all.size - 1
     }
 
-    private fun setPinned(id: String, pinned: Boolean): Boolean {
+    private fun setPinned(
+        id: String,
+        pinned: Boolean,
+    ): Boolean {
         val all = load().toMutableList()
         val index = all.indexOfFirst { it.id == id }
         if (index < 0) {
@@ -186,8 +195,8 @@ class ClipboardHistoryStore(
                             id = id,
                             text = text,
                             createdAt = o.optLong(F_CREATED, 0L),
-                            pinned = o.optBoolean(F_PINNED, false)
-                        )
+                            pinned = o.optBoolean(F_PINNED, false),
+                        ),
                     )
                 }
             }
@@ -205,7 +214,7 @@ class ClipboardHistoryStore(
                     .put(F_ID, e.id)
                     .put(F_TEXT, e.text)
                     .put(F_CREATED, e.createdAt)
-                    .put(F_PINNED, e.pinned)
+                    .put(F_PINNED, e.pinned),
             )
         }
         kv.putString(KEY, JSONObject().put(F_ENTRIES, arr).toString())

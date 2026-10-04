@@ -27,8 +27,10 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class TextToolsE2eTest {
-
-    private fun newTestFile(name: String, content: String): Intent {
+    private fun newTestFile(
+        name: String,
+        content: String,
+    ): Intent {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val file = File(context.filesDir, name)
         file.writeText(content)
@@ -46,13 +48,17 @@ class TextToolsE2eTest {
             onView(withText(titleRes)).perform(click())
         } catch (_: Throwable) {
             Espresso.openActionBarOverflowOrOptionsMenu(
-                ApplicationProvider.getApplicationContext<android.content.Context>()
+                ApplicationProvider.getApplicationContext<android.content.Context>(),
             )
             onView(withText(titleRes)).perform(click())
         }
     }
 
-    private fun waitUntil(block: () -> Boolean, what: String, timeoutMs: Long = 8000) {
+    private fun waitUntil(
+        block: () -> Boolean,
+        what: String,
+        timeoutMs: Long = 8000,
+    ) {
         val deadline = System.currentTimeMillis() + timeoutMs
         var lastError: Throwable? = null
         while (System.currentTimeMillis() < deadline) {
@@ -87,7 +93,7 @@ class TextToolsE2eTest {
 
         waitUntil({
             onView(withId(R.id.editor)).check(
-                matches(withText("apple\nbanana\ncherry"))
+                matches(withText("apple\nbanana\ncherry")),
             )
             true
         }, "document sorted")
@@ -110,7 +116,7 @@ class TextToolsE2eTest {
 
         waitUntil({
             onView(withId(R.id.regex_results)).check(
-                matches(withText(containsString("Found")))
+                matches(withText(containsString("Found"))),
             )
             true
         }, "regex results rendered")

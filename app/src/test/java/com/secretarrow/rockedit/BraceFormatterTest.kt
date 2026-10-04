@@ -19,11 +19,15 @@ import org.junit.Test
  * strict, CRLF input, preprocessor, depth cap, minify, tabs, idempotency.
  */
 class BraceFormatterTest {
+    private val fmt =
+        com.secretarrow.rockedit.core
+            .BraceFormatter()
 
-    private val fmt = com.secretarrow.rockedit.core.BraceFormatter()
-
-    private fun run(text: String, language: String, options: FormatOptions = FormatOptions()) =
-        fmt.format(FormatRequest(text, language, options.copy(insertFinalNewline = false)))
+    private fun run(
+        text: String,
+        language: String,
+        options: FormatOptions = FormatOptions(),
+    ) = fmt.format(FormatRequest(text, language, options.copy(insertFinalNewline = false)))
 
     private fun ok(result: FormatResult): String {
         assertTrue("expected Success but was $result", result is FormatResult.Success)
@@ -37,7 +41,7 @@ class BraceFormatterTest {
         val out = ok(run("class A {\nfun f() {\nif (x) {\ny()\n}\n}\n}", "kotlin"))
         assertEquals(
             "class A {\n    fun f() {\n        if (x) {\n            y()\n        }\n    }\n}",
-            out
+            out,
         )
     }
 
@@ -83,11 +87,12 @@ class BraceFormatterTest {
 
     @Test
     fun finalNewlineInsertedWhenRequested() {
-        val out = ok(
-            fmt.format(
-                FormatRequest("fun f() {\n    y()\n}", "kotlin", FormatOptions(insertFinalNewline = true))
+        val out =
+            ok(
+                fmt.format(
+                    FormatRequest("fun f() {\n    y()\n}", "kotlin", FormatOptions(insertFinalNewline = true)),
+                ),
             )
-        )
         assertEquals("fun f() {\n    y()\n}\n", out)
     }
 

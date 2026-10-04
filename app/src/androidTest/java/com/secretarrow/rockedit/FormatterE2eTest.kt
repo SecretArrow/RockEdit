@@ -11,7 +11,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.secretarrow.rockedit.ui.EditorActivity
 import org.hamcrest.Matchers.containsString
@@ -28,21 +27,27 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class FormatterE2eTest {
-
-    private fun newTestFile(name: String, content: String): Pair<File, Intent> {
+    private fun newTestFile(
+        name: String,
+        content: String,
+    ): Pair<File, Intent> {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val file = File(context.filesDir, name)
         file.writeText(content)
         val uri = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setClass(context, EditorActivity::class.java)
-            setDataAndType(uri, "text/plain")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        }
+        val intent =
+            Intent(Intent.ACTION_VIEW).apply {
+                setClass(context, EditorActivity::class.java)
+                setDataAndType(uri, "text/plain")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            }
         return file to intent
     }
 
-    private fun waitForText(expected: String, timeoutMs: Long = 5000) {
+    private fun waitForText(
+        expected: String,
+        timeoutMs: Long = 5000,
+    ) {
         val deadline = System.currentTimeMillis() + timeoutMs
         var found = false
         while (System.currentTimeMillis() < deadline && !found) {
@@ -66,7 +71,7 @@ class FormatterE2eTest {
             onView(withContentDescription(R.string.format)).perform(click())
         } catch (_: Throwable) {
             Espresso.openActionBarOverflowOrOptionsMenu(
-                ApplicationProvider.getApplicationContext<android.content.Context>()
+                ApplicationProvider.getApplicationContext<android.content.Context>(),
             )
             onView(withText(R.string.format)).perform(click())
         }

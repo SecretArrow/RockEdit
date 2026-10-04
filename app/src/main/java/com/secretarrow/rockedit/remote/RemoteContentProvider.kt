@@ -21,11 +21,9 @@ import java.io.File
  * a temporary file that is uploaded when the descriptor closes.
  */
 class RemoteContentProvider : ContentProvider() {
-
     private fun connectionId(uri: Uri): Long = uri.pathSegments.firstOrNull()?.toLongOrNull() ?: -1L
 
-    private fun remotePath(uri: Uri): String =
-        "/" + uri.pathSegments.drop(1).joinToString("/")
+    private fun remotePath(uri: Uri): String = "/" + uri.pathSegments.drop(1).joinToString("/")
 
     override fun onCreate(): Boolean = true
 
@@ -39,7 +37,7 @@ class RemoteContentProvider : ContentProvider() {
         projection: Array<out String>?,
         selection: String?,
         selectionArgs: Array<out String>?,
-        sortOrder: String?
+        sortOrder: String?,
     ): Cursor? {
         val name = remotePath(uri).trimEnd('/').substringAfterLast('/')
         val columns = projection ?: arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
@@ -54,7 +52,10 @@ class RemoteContentProvider : ContentProvider() {
         return cursor
     }
 
-    override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
+    override fun openFile(
+        uri: Uri,
+        mode: String,
+    ): ParcelFileDescriptor? {
         val context = context ?: return null
         val connection = App.remoteConnections(context).find(connectionId(uri)) ?: return null
         val client = RemoteClientFactory.create(connection)
@@ -73,7 +74,7 @@ class RemoteContentProvider : ContentProvider() {
                     ParcelFileDescriptor.MODE_READ_WRITE or
                         ParcelFileDescriptor.MODE_TRUNCATE or
                         ParcelFileDescriptor.MODE_CREATE,
-                    handler
+                    handler,
                 ) {
                     // Upload when the writer closes the descriptor.
                     try {
@@ -96,14 +97,21 @@ class RemoteContentProvider : ContentProvider() {
         }
     }
 
-    override fun insert(uri: Uri, values: ContentValues?): Uri? = null
+    override fun insert(
+        uri: Uri,
+        values: ContentValues?,
+    ): Uri? = null
 
     override fun update(
         uri: Uri,
         values: ContentValues?,
         selection: String?,
-        selectionArgs: Array<out String>?
+        selectionArgs: Array<out String>?,
     ): Int = 0
 
-    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = 0
+    override fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ): Int = 0
 }

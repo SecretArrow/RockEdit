@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class EncodingDetectorTest {
-
     @Test
     fun detectsUtf8() {
         val text = "Rock Edit — plain ASCII and beyond"
@@ -23,11 +22,19 @@ class EncodingDetectorTest {
     @Test
     fun detectsShiftJis() {
         // "こんにちは" (hello in Japanese) encoded in Shift_JIS.
-        val shiftJis = byteArrayOf(
-            0x82.toByte(), 0xB1.toByte(), 0x82.toByte(), 0xF1.toByte(),
-            0x82.toByte(), 0xC9.toByte(), 0x82.toByte(), 0xBF.toByte(),
-            0x82.toByte(), 0xCD.toByte()
-        )
+        val shiftJis =
+            byteArrayOf(
+                0x82.toByte(),
+                0xB1.toByte(),
+                0x82.toByte(),
+                0xF1.toByte(),
+                0x82.toByte(),
+                0xC9.toByte(),
+                0x82.toByte(),
+                0xBF.toByte(),
+                0x82.toByte(),
+                0xCD.toByte(),
+            )
         assertEquals("SHIFT_JIS", EncodingDetector.detectName(shiftJis))
     }
 

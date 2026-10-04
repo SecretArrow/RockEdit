@@ -26,35 +26,65 @@ package com.secretarrow.rockedit.core
  *   mistaken for strings; strict mode reports the line, lenient proceeds,
  * - case labels indent like the switch body (no special case handling).
  */
-class BraceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCodeFormatter(nowMs) {
-
+class BraceFormatter(
+    nowMs: () -> Long = System::currentTimeMillis,
+) : AbstractCodeFormatter(nowMs) {
     override val id: String = "brace"
 
-    override val supportedLanguages: Set<String> = setOf(
-        "kotlin", "java", "c", "cpp", "csharp", "objc", "swift", "dart",
-        "javascript", "typescript", "go", "rust", "php", "scala", "groovy",
-        "zig", "r", "powershell", "protobuf", "graphql",
-        "solidity", "move", "cairo", "cadence", "motoko", "aiken", "leo", "fe",
-        "sol", "cosmwasm", "ink", "soroban"
-    )
+    override val supportedLanguages: Set<String> =
+        setOf(
+            "kotlin",
+            "java",
+            "c",
+            "cpp",
+            "csharp",
+            "objc",
+            "swift",
+            "dart",
+            "javascript",
+            "typescript",
+            "go",
+            "rust",
+            "php",
+            "scala",
+            "groovy",
+            "zig",
+            "r",
+            "powershell",
+            "protobuf",
+            "graphql",
+            "solidity",
+            "move",
+            "cairo",
+            "cadence",
+            "motoko",
+            "aiken",
+            "leo",
+            "fe",
+            "sol",
+            "cosmwasm",
+            "ink",
+            "soroban",
+        )
 
     override fun formatValidated(
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         val config = FormatterLanguages.braceConfigFor(language)
         // Internal pass always works on LF; applyFinalTouches converts back.
         val source = LineBreak.normalize(text, LineBreak.LF)
-        val scanner = LineScanner(
-            lineComments = config.lineComments,
-            blockComments = config.blockComments,
-            stringDelims = config.stringDelims,
-            multilineDelims = config.multilineStringDelims,
-            openChars = listOf('{'),
-            closeChars = listOf('}')
-        )
+        val scanner =
+            LineScanner(
+                lineComments = config.lineComments,
+                blockComments = config.blockComments,
+                stringDelims = config.stringDelims,
+                multilineDelims = config.multilineStringDelims,
+                openChars = listOf('{'),
+                closeChars = listOf('}'),
+            )
         val lines = source.split('\n')
         val out = StringBuilder(source.length + 16)
         var depth = 0
@@ -78,13 +108,14 @@ class BraceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCo
             }
 
             if (scan.unterminatedString && pendingError == null) {
-                pendingError = FormatError(
-                    FormatErrorCode.PARSE_ERROR,
-                    "unterminated string literal: a closing quote is missing " +
-                        "(regex literals containing quotes are a known limitation)",
-                    lineNo,
-                    null
-                )
+                pendingError =
+                    FormatError(
+                        FormatErrorCode.PARSE_ERROR,
+                        "unterminated string literal: a closing quote is missing " +
+                            "(regex literals containing quotes are a known limitation)",
+                        lineNo,
+                        null,
+                    )
             }
             // Dedent exactly ONE level for a leading-closer line (`}` ,
             // `});` , `} else {` , `}}` — the first closer defines the
@@ -93,12 +124,13 @@ class BraceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCo
             val renderDepth = before - (if (scan.leadingDedent > 0) 1 else 0)
             if (renderDepth < 0) {
                 if (!options.lenient && pendingError == null) {
-                    pendingError = FormatError(
-                        FormatErrorCode.PARSE_ERROR,
-                        "unbalanced closing brace: one '}' too many",
-                        lineNo,
-                        null
-                    )
+                    pendingError =
+                        FormatError(
+                            FormatErrorCode.PARSE_ERROR,
+                            "unbalanced closing brace: one '}' too many",
+                            lineNo,
+                            null,
+                        )
                 }
                 depth = 0
             } else {
@@ -115,12 +147,13 @@ class BraceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCo
             val after = before + scan.netDelta
             if (after < 0) {
                 if (!options.lenient && pendingError == null) {
-                    pendingError = FormatError(
-                        FormatErrorCode.PARSE_ERROR,
-                        "unbalanced closing brace: one '}' too many",
-                        lineNo,
-                        null
-                    )
+                    pendingError =
+                        FormatError(
+                            FormatErrorCode.PARSE_ERROR,
+                            "unbalanced closing brace: one '}' too many",
+                            lineNo,
+                            null,
+                        )
                 }
                 depth = 0
             } else {
@@ -137,20 +170,29 @@ class BraceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCo
                     FormatErrorCode.PARSE_ERROR,
                     "unclosed '{': $depth block(s) never close before end of file",
                     lines.size,
-                    null
-                )
+                    null,
+                ),
             )
         }
         return finish(out, options, source)
     }
 
     /** Shared tail: final touches and changed flag. Never throws. */
-    private fun finish(out: StringBuilder, options: FormatOptions, source: String): FormatResult {
+    private fun finish(
+        out: StringBuilder,
+        options: FormatOptions,
+        source: String,
+    ): FormatResult {
         val formatted = applyFinalTouches(out, options, trimTrailing = false)
         return FormatResult.Success(formatted, formatted != source, 0L)
     }
 
-    private fun appendLine(out: StringBuilder, index: Int, total: Int, content: String) {
+    private fun appendLine(
+        out: StringBuilder,
+        index: Int,
+        total: Int,
+        content: String,
+    ) {
         out.append(content)
         if (index < total - 1) out.append('\n')
     }

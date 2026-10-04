@@ -10,8 +10,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TabPersistenceTest {
-
-    private fun loadedTab(uri: String?, name: String): EditorTab =
+    private fun loadedTab(
+        uri: String?,
+        name: String,
+    ): EditorTab =
         EditorTab(id = EditorTab.newId(), uri = uri, name = name).apply {
             savedText = "saved"
             lastCommitted = "committed"

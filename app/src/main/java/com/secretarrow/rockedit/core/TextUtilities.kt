@@ -35,7 +35,6 @@ import java.security.MessageDigest
  *   A pure-Kotlin implementation is used so JVM unit tests run unmocked.
  */
 object TextUtilities {
-
     const val MAX_INPUT_CHARS = 2_000_000
 
     /** Every supported operation. The UI lists them in enum order. */
@@ -57,25 +56,41 @@ object TextUtilities {
         DEDUPE_LINES,
         REVERSE_LINES,
         JSON_ESCAPE,
-        JSON_UNESCAPE
+        JSON_UNESCAPE,
     }
 
     enum class ErrorCode { INPUT_TOO_LARGE, PARSE_ERROR, INTERNAL_ERROR }
 
-    data class TextError(val code: ErrorCode, val message: String, val position: Int? = null)
+    data class TextError(
+        val code: ErrorCode,
+        val message: String,
+        val position: Int? = null,
+    )
 
     sealed class TextResult {
-        data class Success(val text: String, val changed: Boolean) : TextResult()
-        data class Failure(val error: TextError) : TextResult()
-        data class Skipped(val reason: String) : TextResult()
+        data class Success(
+            val text: String,
+            val changed: Boolean,
+        ) : TextResult()
+
+        data class Failure(
+            val error: TextError,
+        ) : TextResult()
+
+        data class Skipped(
+            val reason: String,
+        ) : TextResult()
     }
 
     /** Single entry point; never throws. */
-    fun run(op: Op, input: String): TextResult {
+    fun run(
+        op: Op,
+        input: String,
+    ): TextResult {
         if (input.isBlank()) return TextResult.Skipped("empty input")
         if (input.length > MAX_INPUT_CHARS) {
             return TextResult.Failure(
-                TextError(ErrorCode.INPUT_TOO_LARGE, "input exceeds $MAX_INPUT_CHARS characters")
+                TextError(ErrorCode.INPUT_TOO_LARGE, "input exceeds $MAX_INPUT_CHARS characters"),
             )
         }
         return try {
@@ -110,11 +125,15 @@ object TextUtilities {
 
     // ------------------------------------------------------------ helpers
 
-    private fun ok(result: String, input: String): TextResult.Success =
-        TextResult.Success(result, result != input)
+    private fun ok(
+        result: String,
+        input: String,
+    ): TextResult.Success = TextResult.Success(result, result != input)
 
-    private fun parseError(message: String, position: Int? = null): TextResult.Failure =
-        TextResult.Failure(TextError(ErrorCode.PARSE_ERROR, message, position))
+    private fun parseError(
+        message: String,
+        position: Int? = null,
+    ): TextResult.Failure = TextResult.Failure(TextError(ErrorCode.PARSE_ERROR, message, position))
 
     // ------------------------------------------------------------- Base64
 
@@ -125,10 +144,12 @@ object TextUtilities {
         val sb = StringBuilder(((bytes.size + 2) / 3) * 4)
         var i = 0
         while (i + 3 <= bytes.size) {
-            val n = ((bytes[i].toInt() and 0xFF) shl 16) or
-                ((bytes[i + 1].toInt() and 0xFF) shl 8) or
-                (bytes[i + 2].toInt() and 0xFF)
-            sb.append(B64_STD[(n ushr 18) and 63])
+            val n =
+                ((bytes[i].toInt() and 0xFF) shl 16) or
+                    ((bytes[i + 1].toInt() and 0xFF) shl 8) or
+                    (bytes[i + 2].toInt() and 0xFF)
+            sb
+                .append(B64_STD[(n ushr 18) and 63])
                 .append(B64_STD[(n ushr 12) and 63])
                 .append(B64_STD[(n ushr 6) and 63])
                 .append(B64_STD[n and 63])
@@ -140,7 +161,8 @@ object TextUtilities {
             sb.append(B64_STD[(n ushr 18) and 63]).append(B64_STD[(n ushr 12) and 63]).append("==")
         } else if (rem == 2) {
             val n = ((bytes[i].toInt() and 0xFF) shl 16) or ((bytes[i + 1].toInt() and 0xFF) shl 8)
-            sb.append(B64_STD[(n ushr 18) and 63])
+            sb
+                .append(B64_STD[(n ushr 18) and 63])
                 .append(B64_STD[(n ushr 12) and 63])
                 .append(B64_STD[(n ushr 6) and 63])
                 .append('=')
@@ -148,7 +170,10 @@ object TextUtilities {
         return sb.toString()
     }
 
-    private fun charValue(alphabet: String, c: Char): Int = alphabet.indexOf(c)
+    private fun charValue(
+        alphabet: String,
+        c: Char,
+    ): Int = alphabet.indexOf(c)
 
     private fun decodeBase64(input: String): TextResult {
         val trimmed = input.trim()
@@ -170,11 +195,12 @@ object TextUtilities {
             }
         }
         if (body.length % 4 == 1) return parseError("invalid Base64 length", body.length)
-        val canonicalPads = when (body.length % 4) {
-            2 -> 2
-            3 -> 1
-            else -> 0
-        }
+        val canonicalPads =
+            when (body.length % 4) {
+                2 -> 2
+                3 -> 1
+                else -> 0
+            }
         // Canonical padding is enforced when present; unpadded input (0 pads)
         // is accepted for lengths 2..3 mod 4 (documented lenient tail).
         if (pads != 0 && pads != canonicalPads) {
@@ -196,9 +222,11 @@ object TextUtilities {
         }
         return try {
             // Strict UTF-8: silent replacement chars would corrupt code files.
-            val decoder = Charsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT)
+            val decoder =
+                Charsets.UTF_8
+                    .newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
             ok(decoder.decode(ByteBuffer.wrap(out)).toString(), input)
         } catch (e: CharacterCodingException) {
             parseError("decoded bytes are not valid UTF-8")
@@ -207,8 +235,8 @@ object TextUtilities {
 
     // ------------------------------------------------------------- URL
 
-    private fun decodeUrl(input: String): TextResult {
-        return try {
+    private fun decodeUrl(input: String): TextResult =
+        try {
             ok(URLDecoder.decode(input, "UTF-8"), input)
         } catch (e: IllegalArgumentException) {
             // URLDecoder reports illegal escapes without a position; locate
@@ -224,7 +252,6 @@ object TextUtilities {
             }
             parseError("invalid URL escape sequence", if (bad >= 0) bad else null)
         }
-    }
 
     private fun isHex(c: Char): Boolean = c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F'
 
@@ -275,11 +302,12 @@ object TextUtilities {
         if (entity.length < 3) return null
         return if (entity[1] == '#') {
             val body = entity.substring(2, entity.length - 1)
-            val code = if (body.isNotEmpty() && (body[0] == 'x' || body[0] == 'X')) {
-                body.substring(1).toIntOrNull(16)
-            } else {
-                body.toIntOrNull(10)
-            } ?: return null
+            val code =
+                if (body.isNotEmpty() && (body[0] == 'x' || body[0] == 'X')) {
+                    body.substring(1).toIntOrNull(16)
+                } else {
+                    body.toIntOrNull(10)
+                } ?: return null
             if (code < 0 || code > 0x10FFFF) return null
             // Reject surrogates: they cannot stand alone in valid UTF-16.
             if (code in 0xD800..0xDFFF) return null
@@ -291,7 +319,10 @@ object TextUtilities {
 
     // ------------------------------------------------------------- hash
 
-    private fun hashHex(text: String, algorithm: String): String {
+    private fun hashHex(
+        text: String,
+        algorithm: String,
+    ): String {
         val digest = MessageDigest.getInstance(algorithm).digest(text.toByteArray(Charsets.UTF_8))
         val sb = StringBuilder(digest.size * 2)
         for (b in digest) {
@@ -305,14 +336,19 @@ object TextUtilities {
 
     private enum class CaseStyle { CAMEL, SNAKE, KEBAB }
 
-    private fun joinWords(text: String, style: CaseStyle): String {
+    private fun joinWords(
+        text: String,
+        style: CaseStyle,
+    ): String {
         val words = splitWords(text)
         if (words.isEmpty()) return text
         val lowered = words.map { it.lowercase() }
         return when (style) {
-            CaseStyle.CAMEL -> lowered.first() + lowered.drop(1).joinToString("") { w ->
-                if (w.isEmpty()) w else w[0].uppercase() + w.substring(1)
-            }
+            CaseStyle.CAMEL ->
+                lowered.first() +
+                    lowered.drop(1).joinToString("") { w ->
+                        if (w.isEmpty()) w else w[0].uppercase() + w.substring(1)
+                    }
             CaseStyle.SNAKE -> lowered.joinToString("_")
             CaseStyle.KEBAB -> lowered.joinToString("-")
         }
@@ -335,13 +371,17 @@ object TextUtilities {
 
     // ------------------------------------------------------------- lines
 
-    private fun splitKeepBreaks(text: String): Pair<List<String>, String> = when {
-        text.contains("\r\n") -> text.split(Regex("\r\n|\n|\r")) to "\r\n"
-        text.contains('\r') -> text.split(Regex("\r\n|\n|\r")) to "\r"
-        else -> text.split(Regex("\r\n|\n|\r")) to "\n"
-    }
+    private fun splitKeepBreaks(text: String): Pair<List<String>, String> =
+        when {
+            text.contains("\r\n") -> text.split(Regex("\r\n|\n|\r")) to "\r\n"
+            text.contains('\r') -> text.split(Regex("\r\n|\n|\r")) to "\r"
+            else -> text.split(Regex("\r\n|\n|\r")) to "\n"
+        }
 
-    private fun sortLines(text: String, descending: Boolean): String {
+    private fun sortLines(
+        text: String,
+        descending: Boolean,
+    ): String {
         val (lines, br) = splitKeepBreaks(text)
         val sorted = if (descending) lines.sortedDescending() else lines.sorted()
         return sorted.joinToString(br)
@@ -376,8 +416,11 @@ object TextUtilities {
                 '\b' -> sb.append("\\b")
                 '\u000C' -> sb.append("\\f")
                 else ->
-                    if (c < ' ') sb.append("\\u").append(String.format("%04x", c.code))
-                    else sb.append(c)
+                    if (c < ' ') {
+                        sb.append("\\u").append(String.format("%04x", c.code))
+                    } else {
+                        sb.append(c)
+                    }
             }
         }
         return sb.toString()
@@ -398,21 +441,46 @@ object TextUtilities {
                 return parseError("dangling escape at end of input", i)
             }
             when (val next = text[i + 1]) {
-                '"' -> { sb.append('"'); i += 2 }
-                '\\' -> { sb.append('\\'); i += 2 }
-                '/' -> { sb.append('/'); i += 2 }
-                'n' -> { sb.append('\n'); i += 2 }
-                'r' -> { sb.append('\r'); i += 2 }
-                't' -> { sb.append('\t'); i += 2 }
-                'b' -> { sb.append('\b'); i += 2 }
-                'f' -> { sb.append('\u000C'); i += 2 }
+                '"' -> {
+                    sb.append('"')
+                    i += 2
+                }
+                '\\' -> {
+                    sb.append('\\')
+                    i += 2
+                }
+                '/' -> {
+                    sb.append('/')
+                    i += 2
+                }
+                'n' -> {
+                    sb.append('\n')
+                    i += 2
+                }
+                'r' -> {
+                    sb.append('\r')
+                    i += 2
+                }
+                't' -> {
+                    sb.append('\t')
+                    i += 2
+                }
+                'b' -> {
+                    sb.append('\b')
+                    i += 2
+                }
+                'f' -> {
+                    sb.append('\u000C')
+                    i += 2
+                }
                 'u' -> {
                     if (i + 6 > text.length) {
                         return parseError("truncated \\u escape", i)
                     }
                     val hex = text.substring(i + 2, i + 6)
-                    val code = hex.toIntOrNull(16)
-                        ?: return parseError("invalid \\u escape '$hex'", i)
+                    val code =
+                        hex.toIntOrNull(16)
+                            ?: return parseError("invalid \\u escape '$hex'", i)
                     // Lone surrogates are invalid JSON escapes: reject.
                     if (code in 0xD800..0xDFFF) {
                         return parseError("lone surrogate in \\u escape", i)
@@ -426,14 +494,39 @@ object TextUtilities {
         return ok(sb.toString(), text)
     }
 
-    private val NAMED_ENTITIES: Map<String, String> = mapOf(
-        "amp" to "&", "lt" to "<", "gt" to ">", "quot" to "\"", "apos" to "'",
-        "nbsp" to " ", "copy" to "©", "reg" to "®", "trade" to "™",
-        "hellip" to "…", "mdash" to "—", "ndash" to "–", "lsquo" to "‘",
-        "rsquo" to "’", "ldquo" to "“", "rdquo" to "”", "bull" to "•",
-        "deg" to "°", "plusmn" to "±", "times" to "×", "divide" to "÷",
-        "euro" to "€", "pound" to "£", "yen" to "¥", "cent" to "¢",
-        "sect" to "§", "para" to "¶", "middot" to "·", "laquo" to "«",
-        "raquo" to "»", "iexcl" to "¡", "iquest" to "¿"
-    )
+    private val NAMED_ENTITIES: Map<String, String> =
+        mapOf(
+            "amp" to "&",
+            "lt" to "<",
+            "gt" to ">",
+            "quot" to "\"",
+            "apos" to "'",
+            "nbsp" to " ",
+            "copy" to "©",
+            "reg" to "®",
+            "trade" to "™",
+            "hellip" to "…",
+            "mdash" to "—",
+            "ndash" to "–",
+            "lsquo" to "‘",
+            "rsquo" to "’",
+            "ldquo" to "“",
+            "rdquo" to "”",
+            "bull" to "•",
+            "deg" to "°",
+            "plusmn" to "±",
+            "times" to "×",
+            "divide" to "÷",
+            "euro" to "€",
+            "pound" to "£",
+            "yen" to "¥",
+            "cent" to "¢",
+            "sect" to "§",
+            "para" to "¶",
+            "middot" to "·",
+            "laquo" to "«",
+            "raquo" to "»",
+            "iexcl" to "¡",
+            "iquest" to "¿",
+        )
 }

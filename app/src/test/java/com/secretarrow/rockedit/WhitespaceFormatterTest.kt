@@ -16,11 +16,12 @@ import org.junit.Test
  * newline, changed flag, and registry integration for arbitrary languages.
  */
 class WhitespaceFormatterTest {
-
     private val registry = FormatterRegistry.default()
 
-    private fun format(text: String, options: FormatOptions = FormatOptions()): FormatResult =
-        registry.format(FormatRequest(text, "python", options))
+    private fun format(
+        text: String,
+        options: FormatOptions = FormatOptions(),
+    ): FormatResult = registry.format(FormatRequest(text, "python", options))
 
     // ------------------------------------------------- line break handling
 

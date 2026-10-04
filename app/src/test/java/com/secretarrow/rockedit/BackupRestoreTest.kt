@@ -10,7 +10,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BackupRestoreTest {
-
     private fun populatedStore(): InMemoryKeyValueStore {
         val kv = InMemoryKeyValueStore()
         kv.putString("theme", "black")
@@ -25,15 +24,16 @@ class BackupRestoreTest {
     fun exportIncludesOnlySetKeysWithTypes() {
         val kv = populatedStore()
         val backup = BackupRestore(kv)
-        val json = backup.export(
-            listOf(
-                BackupRestore.BackupKey("theme", BackupRestore.BackupKey.EntryType.STRING),
-                BackupRestore.BackupKey("line_numbers", BackupRestore.BackupKey.EntryType.BOOLEAN),
-                BackupRestore.BackupKey("font_size", BackupRestore.BackupKey.EntryType.STRING),
-                BackupRestore.BackupKey("recent_files", BackupRestore.BackupKey.EntryType.JSON),
-                BackupRestore.BackupKey("never_set", BackupRestore.BackupKey.EntryType.STRING)
+        val json =
+            backup.export(
+                listOf(
+                    BackupRestore.BackupKey("theme", BackupRestore.BackupKey.EntryType.STRING),
+                    BackupRestore.BackupKey("line_numbers", BackupRestore.BackupKey.EntryType.BOOLEAN),
+                    BackupRestore.BackupKey("font_size", BackupRestore.BackupKey.EntryType.STRING),
+                    BackupRestore.BackupKey("recent_files", BackupRestore.BackupKey.EntryType.JSON),
+                    BackupRestore.BackupKey("never_set", BackupRestore.BackupKey.EntryType.STRING),
+                ),
             )
-        )
         val obj = JSONObject(json)
         assertEquals("rockedit", obj.getString("app"))
         assertEquals(1, obj.getInt("version"))
@@ -66,23 +66,24 @@ class BackupRestoreTest {
         assertEquals("18", target.getString("font_size", null))
         assertEquals(
             source.getString("recent_files", null),
-            target.getString("recent_files", null)
+            target.getString("recent_files", null),
         )
         assertEquals(
             source.getString("bookmarks", null),
-            target.getString("bookmarks", null)
+            target.getString("bookmarks", null),
         )
     }
 
     @Test
     fun restoreSkipsUnknownKeys() {
         val target = InMemoryKeyValueStore()
-        val payload = """
+        val payload =
+            """
             {"app":"rockedit","version":1,"entries":[
               {"key":"theme","type":"string","value":"dark"},
               {"key":"evil_key","type":"string","value":"boom"}
             ]}
-        """.trimIndent()
+            """.trimIndent()
         val result = BackupRestore(target).restore(payload, setOf("theme"))
         assertEquals(1, result.applied)
         assertEquals(1, result.skipped)
@@ -97,20 +98,21 @@ class BackupRestoreTest {
         assertEquals(0, BackupRestore(target).restore("[]", setOf("theme")).applied)
         assertEquals(
             0,
-            BackupRestore(target).restore("""{"app":"x","entries":[]}""", setOf("theme")).applied
+            BackupRestore(target).restore("""{"app":"x","entries":[]}""", setOf("theme")).applied,
         )
     }
 
     @Test
     fun restoreSkipsUnknownTypesAndNullValues() {
         val target = InMemoryKeyValueStore()
-        val payload = """
+        val payload =
+            """
             {"entries":[
               {"key":"theme","type":"warp","value":"dark"},
               {"key":"font_size","type":"string","value":null},
               {"key":"line_numbers","type":"boolean","value":true}
             ]}
-        """.trimIndent()
+            """.trimIndent()
         val result = BackupRestore(target).restore(payload, setOf("theme", "font_size", "line_numbers"))
         assertEquals(1, result.applied)
         assertEquals(2, result.skipped)

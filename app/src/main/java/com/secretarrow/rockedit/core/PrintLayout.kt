@@ -6,7 +6,6 @@ package com.secretarrow.rockedit.core
  * resulting pages.
  */
 object PrintLayout {
-
     /**
      * Splits [text] into pages of at most [linesPerPage] lines, hard-wrapping
      * longer lines at [charsPerLine] characters. Tabs are expanded to spaces.
@@ -15,7 +14,7 @@ object PrintLayout {
     fun paginate(
         text: String,
         linesPerPage: Int,
-        charsPerLine: Int
+        charsPerLine: Int,
     ): List<List<String>> {
         require(linesPerPage > 0) { "linesPerPage must be positive" }
         require(charsPerLine > 0) { "charsPerLine must be positive" }

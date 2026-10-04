@@ -8,12 +8,11 @@ import org.xmlpull.v1.XmlPullParserFactory
  * XmlPullParser (Android ships kxml; JVM tests use kxml2).
  */
 object WebDavParser {
-
     data class Resource(
         val href: String,
         val isCollection: Boolean,
         val size: Long,
-        val lastModified: Long
+        val lastModified: Long,
     )
 
     /**
@@ -39,11 +38,13 @@ object WebDavParser {
                 when (event) {
                     XmlPullParser.START_TAG -> {
                         when (local(parser.name)) {
-                            "href" -> href = try {
-                                parser.nextText().trim()
-                            } catch (_: Exception) {
-                                null
-                            }
+                            "href" ->
+                                href =
+                                    try {
+                                        parser.nextText().trim()
+                                    } catch (_: Exception) {
+                                        null
+                                    }
                             "collection" -> isCollection = true
                             "getcontentlength" -> size = readLong(parser)
                             "getlastmodified" -> lastModified = readDate(parser) ?: 0L
@@ -86,17 +87,16 @@ object WebDavParser {
 
     private fun local(name: String): String = name.substringAfter(':').lowercase()
 
-    private fun readLong(parser: XmlPullParser): Long {
-        return try {
+    private fun readLong(parser: XmlPullParser): Long =
+        try {
             val text = parser.nextText().trim()
             text.toLongOrNull() ?: -1L
         } catch (_: Exception) {
             -1L
         }
-    }
 
-    private fun readDate(parser: XmlPullParser): Long? {
-        return try {
+    private fun readDate(parser: XmlPullParser): Long? =
+        try {
             val text = parser.nextText().trim()
             // RFC 1123: "Tue, 01 Jan 2024 12:00:00 GMT"
             val format = java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", java.util.Locale.US)
@@ -105,5 +105,4 @@ object WebDavParser {
         } catch (_: Exception) {
             null
         }
-    }
 }

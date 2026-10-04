@@ -6,7 +6,6 @@ import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
 import com.secretarrow.rockedit.core.RemoteType
-import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -17,8 +16,9 @@ import java.net.URL
  * (from [RemoteConnection.initialPath]); reads and writes map onto the
  * contents/commits APIs, so saving in the editor creates a real commit.
  */
-class GitRemoteClient(private val connection: RemoteConnection) : RemoteClient {
-
+class GitRemoteClient(
+    private val connection: RemoteConnection,
+) : RemoteClient {
     private val type: RemoteType = connection.type
     private val base: GitPath.Base? = GitPath.parseBase(connection.initialPath)
 
@@ -31,31 +31,37 @@ class GitRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         return if (rel != null) {
             listRepo(b, normalized, rel)
         } else {
-            val next = GitPath.nextSegmentTowardBase(b, normalized)
-                ?: throw IllegalArgumentException("Path outside repository: $path")
+            val next =
+                GitPath.nextSegmentTowardBase(b, normalized)
+                    ?: throw IllegalArgumentException("Path outside repository: $path")
             listOf(
                 RemoteFile(
                     name = next,
                     path = RemotePath.child(normalized, next),
-                    isFolder = true
-                )
+                    isFolder = true,
+                ),
             )
         }
     }
 
-    private fun listRepo(b: GitPath.Base, fullPath: String, repoRel: String): List<RemoteFile> {
-        val url = when (type) {
-            RemoteType.GITHUB -> {
-                val contentsPart = if (repoRel.isEmpty()) "contents" else "contents/$repoRel"
-                "$API_ROOT/repos/${b.owner}/${b.repo}/$contentsPart?ref=${urlEncode(b.branch)}"
+    private fun listRepo(
+        b: GitPath.Base,
+        fullPath: String,
+        repoRel: String,
+    ): List<RemoteFile> {
+        val url =
+            when (type) {
+                RemoteType.GITHUB -> {
+                    val contentsPart = if (repoRel.isEmpty()) "contents" else "contents/$repoRel"
+                    "$API_ROOT/repos/${b.owner}/${b.repo}/$contentsPart?ref=${urlEncode(b.branch)}"
+                }
+                RemoteType.GITLAB ->
+                    "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/repository/tree" +
+                        "?ref=${urlEncode(b.branch)}" +
+                        (if (repoRel.isEmpty()) "" else "&path=${urlEncode(repoRel)}") +
+                        "&per_page=100"
+                else -> throw IllegalArgumentException("Not a git connection: $type")
             }
-            RemoteType.GITLAB ->
-                "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/repository/tree" +
-                    "?ref=${urlEncode(b.branch)}" +
-                    (if (repoRel.isEmpty()) "" else "&path=${urlEncode(repoRel)}") +
-                    "&per_page=100"
-            else -> throw IllegalArgumentException("Not a git connection: $type")
-        }
         val body = get(url)
         return when (type) {
             RemoteType.GITHUB -> GitHubApi.parseContents(body, fullPath)
@@ -71,54 +77,63 @@ class GitRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         return when (type) {
             RemoteType.GITHUB -> {
                 val url = "$API_ROOT/repos/${b.owner}/${b.repo}/contents/$rel?ref=${urlEncode(b.branch)}"
-                val entry = GitHubApi.parseFileEntry(get(url))
-                    ?: throw IllegalStateException("Not a file: $path")
+                val entry =
+                    GitHubApi.parseFileEntry(get(url))
+                        ?: throw IllegalStateException("Not a file: $path")
                 if (entry.second.length > MAX_CONTENT_BASE64) {
                     throw IllegalStateException("File too large for editing: $path")
                 }
                 GitHubApi.decodeContent(entry.second)
             }
             RemoteType.GITLAB -> {
-                val url = "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/" +
-                    "repository/files/${GitLabApi.filePath(rel)}/raw?ref=${urlEncode(b.branch)}"
+                val url =
+                    "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/" +
+                        "repository/files/${GitLabApi.filePath(rel)}/raw?ref=${urlEncode(b.branch)}"
                 get(url).toByteArray(Charsets.UTF_8)
             }
             else -> throw IllegalArgumentException("Not a git connection: $type")
         }
     }
 
-    override fun write(path: String, data: ByteArray) {
+    override fun write(
+        path: String,
+        data: ByteArray,
+    ) {
         val b = requireBase()
         val rel = requireRepoRel(b, path)
         val encoded = GitHubApi.encodeContent(data)
         when (type) {
             RemoteType.GITHUB -> {
-                val existing = try {
-                    val url = "$API_ROOT/repos/${b.owner}/${b.repo}/contents/$rel?ref=${urlEncode(b.branch)}"
-                    GitHubApi.parseFileEntry(get(url))
-                } catch (_: Exception) {
-                    null
-                }
+                val existing =
+                    try {
+                        val url = "$API_ROOT/repos/${b.owner}/${b.repo}/contents/$rel?ref=${urlEncode(b.branch)}"
+                        GitHubApi.parseFileEntry(get(url))
+                    } catch (_: Exception) {
+                        null
+                    }
                 val body = GitHubApi.buildPutBody(rel, b.branch, encoded, existing?.first)
                 val url = "$API_ROOT/repos/${b.owner}/${b.repo}/contents/$rel"
                 val status = request(url, "PUT", body)
                 if (status !in 200..299) throw IllegalStateException("GitHub save failed: HTTP $status")
             }
             RemoteType.GITLAB -> {
-                val exists = try {
-                    val url = "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/" +
-                        "repository/files/${GitLabApi.filePath(rel)}?ref=${urlEncode(b.branch)}"
-                    request(url, "HEAD", null) in 200..299
-                } catch (_: Exception) {
-                    false
-                }
-                val body = GitLabApi.buildCommitBody(
-                    b.branch,
-                    "Update $rel (via Rock Edit)",
-                    if (exists) "update" else "create",
-                    rel,
-                    encoded
-                )
+                val exists =
+                    try {
+                        val url =
+                            "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/" +
+                                "repository/files/${GitLabApi.filePath(rel)}?ref=${urlEncode(b.branch)}"
+                        request(url, "HEAD", null) in 200..299
+                    } catch (_: Exception) {
+                        false
+                    }
+                val body =
+                    GitLabApi.buildCommitBody(
+                        b.branch,
+                        "Update $rel (via Rock Edit)",
+                        if (exists) "update" else "create",
+                        rel,
+                        encoded,
+                    )
                 val url = "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/repository/commits"
                 val status = request(url, "POST", body)
                 if (status !in 200..299) throw IllegalStateException("GitLab save failed: HTTP $status")
@@ -140,19 +155,26 @@ class GitRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         when (type) {
             RemoteType.GITHUB -> {
                 val url = "$API_ROOT/repos/${b.owner}/${b.repo}/contents/$rel?ref=${urlEncode(b.branch)}"
-                val sha = GitHubApi.parseFileEntry(get(url))?.first
-                    ?: throw IllegalStateException("Not found: $path")
-                val status = request(
-                    "$API_ROOT/repos/${b.owner}/${b.repo}/contents/$rel",
-                    "DELETE",
-                    GitHubApi.buildDeleteBody(rel, b.branch, sha)
-                )
+                val sha =
+                    GitHubApi.parseFileEntry(get(url))?.first
+                        ?: throw IllegalStateException("Not found: $path")
+                val status =
+                    request(
+                        "$API_ROOT/repos/${b.owner}/${b.repo}/contents/$rel",
+                        "DELETE",
+                        GitHubApi.buildDeleteBody(rel, b.branch, sha),
+                    )
                 if (status !in 200..299) throw IllegalStateException("GitHub delete failed: HTTP $status")
             }
             RemoteType.GITLAB -> {
-                val body = GitLabApi.buildCommitBody(
-                    b.branch, "Delete $rel (via Rock Edit)", "delete", rel, null
-                )
+                val body =
+                    GitLabApi.buildCommitBody(
+                        b.branch,
+                        "Delete $rel (via Rock Edit)",
+                        "delete",
+                        rel,
+                        null,
+                    )
                 val url = "$gitlabRoot/projects/${GitLabApi.projectId(b.owner, b.repo)}/repository/commits"
                 val status = request(url, "POST", body)
                 if (status !in 200..299) throw IllegalStateException("GitLab delete failed: HTTP $status")
@@ -172,15 +194,17 @@ class GitRemoteClient(private val connection: RemoteConnection) : RemoteClient {
 
     private fun requireBase(): GitPath.Base =
         base ?: throw IllegalStateException(
-            "Initial path must be owner/repo/branch (was '${connection.initialPath}')"
+            "Initial path must be owner/repo/branch (was '${connection.initialPath}')",
         )
 
-    private fun requireRepoRel(b: GitPath.Base, path: String): String =
+    private fun requireRepoRel(
+        b: GitPath.Base,
+        path: String,
+    ): String =
         GitPath.repoRelative(b, RemotePath.normalize(path))
             ?: throw IllegalArgumentException("Path outside repository: $path")
 
-    private fun urlEncode(value: String): String =
-        java.net.URLEncoder.encode(value, "UTF-8")
+    private fun urlEncode(value: String): String = java.net.URLEncoder.encode(value, "UTF-8")
 
     private fun get(url: String): String {
         val conn = open(url, "GET")
@@ -189,7 +213,11 @@ class GitRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         }
     }
 
-    private fun request(url: String, method: String, body: String?): Int {
+    private fun request(
+        url: String,
+        method: String,
+        body: String?,
+    ): Int {
         val conn = open(url, method)
         if (body != null) {
             conn.doOutput = true
@@ -203,7 +231,10 @@ class GitRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         return status
     }
 
-    private fun open(url: String, method: String): HttpURLConnection {
+    private fun open(
+        url: String,
+        method: String,
+    ): HttpURLConnection {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.requestMethod = method
         conn.connectTimeout = TIMEOUT_MS

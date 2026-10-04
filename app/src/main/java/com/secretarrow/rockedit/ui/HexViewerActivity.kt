@@ -23,12 +23,12 @@ import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.HexDump
 import com.secretarrow.rockedit.databinding.ActivityHexViewerBinding
-import java.io.ByteArrayOutputStream
-import java.io.FileNotFoundException
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
+import java.io.IOException
 
 /**
  * Hex viewer (v0.13.0): read-only byte dump of a document, one monospace line
@@ -51,7 +51,6 @@ import kotlinx.coroutines.withContext
  *   service or a failed copy surfaces the failure banner, never a crash.
  */
 class HexViewerActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityHexViewerBinding
     private lateinit var adapter: HexLinesAdapter
 
@@ -103,32 +102,38 @@ class HexViewerActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
-        R.id.action_copy_dump -> {
-            copyDump()
-            true
+    override fun onOptionsItemSelected(item: MenuItem): Boolean =
+        when (item.itemId) {
+            R.id.action_copy_dump -> {
+                copyDump()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
-        else -> super.onOptionsItemSelected(item)
-    }
 
     // ------------------------------------------------------------ rendering
 
-    private fun render(name: String, bytes: ByteArray) {
+    private fun render(
+        name: String,
+        bytes: ByteArray,
+    ) {
         if (bytes.isEmpty()) {
             supportActionBar?.subtitle = "$name · ${getString(R.string.hex_bytes, 0)}"
             showEmptyState()
             return
         }
         lifecycleScope.launch {
-            val outcome = withContext(Dispatchers.Default) {
-                val lines = HexDump.toDumpLines(bytes)
-                val text = if (lines is HexDump.ResultLines.Success) {
-                    HexDump.toDumpText(bytes)
-                } else {
-                    ""
+            val outcome =
+                withContext(Dispatchers.Default) {
+                    val lines = HexDump.toDumpLines(bytes)
+                    val text =
+                        if (lines is HexDump.ResultLines.Success) {
+                            HexDump.toDumpText(bytes)
+                        } else {
+                            ""
+                        }
+                    Rendered(lines, text)
                 }
-                Rendered(lines, text)
-            }
             when (val result = outcome.result) {
                 is HexDump.ResultLines.Failure -> {
                     // Cannot normally happen: size is already capped and the
@@ -167,14 +172,22 @@ class HexViewerActivity : AppCompatActivity() {
     // -------------------------------------------------------------- reading
 
     private sealed interface LoadResult {
-        data class Success(val bytes: ByteArray) : LoadResult
-        data class TooLarge(val size: Int) : LoadResult
-        data class Failed(val reason: String) : LoadResult
+        data class Success(
+            val bytes: ByteArray,
+        ) : LoadResult
+
+        data class TooLarge(
+            val size: Int,
+        ) : LoadResult
+
+        data class Failed(
+            val reason: String,
+        ) : LoadResult
     }
 
     private data class Rendered(
         val result: HexDump.ResultLines,
-        val text: String
+        val text: String,
     )
 
     /**
@@ -194,11 +207,12 @@ class HexViewerActivity : AppCompatActivity() {
     }
 
     /** Cosmetic display name; failures degrade to the last path segment. */
-    private fun displayName(uri: Uri): String = try {
-        DisplayNames.resolve(this, uri)
-    } catch (_: Exception) {
-        uri.lastPathSegment ?: "file"
-    }
+    private fun displayName(uri: Uri): String =
+        try {
+            DisplayNames.resolve(this, uri)
+        } catch (_: Exception) {
+            uri.lastPathSegment ?: "file"
+        }
 
     /**
      * Reads up to [HexDump.MAX_BYTES] + 1 bytes so an oversized file is
@@ -206,21 +220,22 @@ class HexViewerActivity : AppCompatActivity() {
      * [LoadResult.Failed] with a specific reason; no path returns null.
      */
     private fun readBytes(uri: Uri): LoadResult {
-        val stream = try {
-            contentResolver.openInputStream(uri)
-        } catch (e: SecurityException) {
-            return LoadResult.Failed("access denied (SecurityException): ${e.message}")
-        } catch (e: FileNotFoundException) {
-            return LoadResult.Failed("file not found (FileNotFoundException): ${e.message}")
-        } catch (e: IOException) {
-            return LoadResult.Failed("I/O error while opening (IOException): ${e.message}")
-        } catch (e: NullPointerException) {
-            return LoadResult.Failed(
-                "provider rejected the URI (NullPointerException): ${e.message}"
-            )
-        } catch (e: Exception) {
-            return LoadResult.Failed("unexpected ${e.javaClass.simpleName}: ${e.message}")
-        }
+        val stream =
+            try {
+                contentResolver.openInputStream(uri)
+            } catch (e: SecurityException) {
+                return LoadResult.Failed("access denied (SecurityException): ${e.message}")
+            } catch (e: FileNotFoundException) {
+                return LoadResult.Failed("file not found (FileNotFoundException): ${e.message}")
+            } catch (e: IOException) {
+                return LoadResult.Failed("I/O error while opening (IOException): ${e.message}")
+            } catch (e: NullPointerException) {
+                return LoadResult.Failed(
+                    "provider rejected the URI (NullPointerException): ${e.message}",
+                )
+            } catch (e: Exception) {
+                return LoadResult.Failed("unexpected ${e.javaClass.simpleName}: ${e.message}")
+            }
         if (stream == null) {
             return LoadResult.Failed("content provider returned no stream for $uri")
         }
@@ -270,7 +285,10 @@ class HexViewerActivity : AppCompatActivity() {
     companion object {
         private const val EXTRA_URI = "rockedit.extra.HEX_URI"
 
-        fun createIntent(context: Context, uri: Uri): Intent =
+        fun createIntent(
+            context: Context,
+            uri: Uri,
+        ): Intent =
             Intent(context, HexViewerActivity::class.java)
                 .putExtra(EXTRA_URI, uri.toString())
     }
@@ -281,19 +299,27 @@ class HexViewerActivity : AppCompatActivity() {
  * DiffUtil-backed ListAdapter so re-submits stay cheap for 65k+ lines.
  */
 class HexLinesAdapter : ListAdapter<HexDump.DumpLine, HexLinesAdapter.ViewHolder>(DIFF) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_hex_line, parent, false)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            LayoutInflater
+                .from(parent.context)
+                .inflate(R.layout.item_hex_line, parent, false)
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         holder.bind(getItem(position))
     }
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
+    inner class ViewHolder(
+        view: View,
+    ) : RecyclerView.ViewHolder(view) {
         private val text: TextView = view.findViewById(R.id.hex_line_text)
 
         fun bind(line: HexDump.DumpLine) {
@@ -303,16 +329,17 @@ class HexLinesAdapter : ListAdapter<HexDump.DumpLine, HexLinesAdapter.ViewHolder
     }
 
     companion object {
-        val DIFF = object : DiffUtil.ItemCallback<HexDump.DumpLine>() {
-            override fun areItemsTheSame(
-                oldItem: HexDump.DumpLine,
-                newItem: HexDump.DumpLine
-            ): Boolean = oldItem.offset == newItem.offset
+        val DIFF =
+            object : DiffUtil.ItemCallback<HexDump.DumpLine>() {
+                override fun areItemsTheSame(
+                    oldItem: HexDump.DumpLine,
+                    newItem: HexDump.DumpLine,
+                ): Boolean = oldItem.offset == newItem.offset
 
-            override fun areContentsTheSame(
-                oldItem: HexDump.DumpLine,
-                newItem: HexDump.DumpLine
-            ): Boolean = oldItem == newItem
-        }
+                override fun areContentsTheSame(
+                    oldItem: HexDump.DumpLine,
+                    newItem: HexDump.DumpLine,
+                ): Boolean = oldItem == newItem
+            }
     }
 }

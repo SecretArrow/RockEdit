@@ -7,7 +7,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MarkdownRendererTest {
-
     @Test
     fun headingsRenderAtCorrectLevel() {
         assertEquals("<h1>Title</h1>\n", MarkdownRenderer.render("# Title"))

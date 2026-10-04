@@ -15,23 +15,26 @@ import java.net.URL
  */
 class WebDavRemoteClient(
     private val connection: RemoteConnection,
-    private val https: Boolean = connection.port == 443
+    private val https: Boolean = connection.port == 443,
 ) : RemoteClient {
-
     private fun url(path: String): String =
         RemotePath.webDavUrl(connection.host, RemotePath.resolvePort(connection.type, connection.port), path, https)
 
-    private fun open(method: String, path: String): HttpURLConnection {
+    private fun open(
+        method: String,
+        path: String,
+    ): HttpURLConnection {
         val conn = URL(url(path)).openConnection() as HttpURLConnection
         conn.requestMethod = method
         conn.connectTimeout = TIMEOUT_MS
         conn.readTimeout = TIMEOUT_MS
         val user = connection.user.ifEmpty { "anonymous" }
         val auth = "$user:${connection.password}"
-        val encoded = android.util.Base64.encodeToString(
-            auth.toByteArray(Charsets.UTF_8),
-            android.util.Base64.NO_WRAP
-        )
+        val encoded =
+            android.util.Base64.encodeToString(
+                auth.toByteArray(Charsets.UTF_8),
+                android.util.Base64.NO_WRAP,
+            )
         conn.setRequestProperty("Authorization", "Basic $encoded")
         conn.setRequestProperty("User-Agent", "RockEdit/0.6")
         return conn
@@ -48,7 +51,8 @@ class WebDavRemoteClient(
             }
             val xml = conn.inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
             val self = dir.trimEnd('/')
-            return WebDavParser.parsePropfind(xml)
+            return WebDavParser
+                .parsePropfind(xml)
                 .map { resource ->
                     val resPath = WebDavParser.hrefToPath(resource.href)
                     val name = WebDavParser.nameFromPath(resPath)
@@ -57,10 +61,9 @@ class WebDavRemoteClient(
                         path = resPath,
                         isFolder = resource.isCollection,
                         size = resource.size,
-                        lastModified = resource.lastModified
+                        lastModified = resource.lastModified,
                     )
-                }
-                .filter { it.path != RemotePath.normalize(self) && it.name.isNotEmpty() }
+                }.filter { it.path != RemotePath.normalize(self) && it.name.isNotEmpty() }
         } finally {
             conn.disconnect()
         }
@@ -83,7 +86,10 @@ class WebDavRemoteClient(
         }
     }
 
-    override fun write(path: String, data: ByteArray) {
+    override fun write(
+        path: String,
+        data: ByteArray,
+    ) {
         val conn = open("PUT", path)
         conn.doOutput = true
         conn.setFixedLengthStreamingMode(data.size)

@@ -17,7 +17,6 @@ import com.secretarrow.rockedit.databinding.ActivitySettingsBinding
  * the author's HTML behaves like in a browser.
  */
 class PreviewActivity : AppCompatActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         val settings = App.settings(this)
         if (settings.isBlackTheme()) setTheme(R.style.Theme_RockEdit_Black)
@@ -35,44 +34,47 @@ class PreviewActivity : AppCompatActivity() {
         val fileName = intent.getStringExtra(EXTRA_FILE_NAME)
 
         binding.settingsContainer.removeAllViews()
-        val webView = WebView(this).apply {
-            layoutParams = android.widget.FrameLayout.LayoutParams(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            this.settings.javaScriptEnabled = true
-        }
+        val webView =
+            WebView(this).apply {
+                layoutParams =
+                    android.widget.FrameLayout.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    )
+                this.settings.javaScriptEnabled = true
+            }
         binding.settingsContainer.addView(webView)
 
-        val html = when {
-            fileName != null && looksLikeMarkdown(fileName) ->
-                MarkdownRenderer.renderDocument(text, dark = isDarkTheme(settings), title = title)
-            fileName != null && looksLikeHtml(fileName) -> text
-            else ->
-                "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/></head><body><pre>" +
-                    escapeForPre(text) + "</pre></body></html>"
-        }
+        val html =
+            when {
+                fileName != null && looksLikeMarkdown(fileName) ->
+                    MarkdownRenderer.renderDocument(text, dark = isDarkTheme(settings), title = title)
+                fileName != null && looksLikeHtml(fileName) -> text
+                else ->
+                    "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/></head><body><pre>" +
+                        escapeForPre(text) + "</pre></body></html>"
+            }
         webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null)
     }
 
-    private fun isDarkTheme(settings: SettingsRepository): Boolean = when (settings.theme) {
-        SettingsRepository.THEME_DARK, SettingsRepository.THEME_BLACK -> true
-        SettingsRepository.THEME_LIGHT -> false
-        else -> {
-            val mask = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
-            mask == Configuration.UI_MODE_NIGHT_YES
+    private fun isDarkTheme(settings: SettingsRepository): Boolean =
+        when (settings.theme) {
+            SettingsRepository.THEME_DARK, SettingsRepository.THEME_BLACK -> true
+            SettingsRepository.THEME_LIGHT -> false
+            else -> {
+                val mask = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                mask == Configuration.UI_MODE_NIGHT_YES
+            }
         }
-    }
 
-    private fun looksLikeMarkdown(name: String): Boolean =
-        FileNames.split(name).second.lowercase() in setOf("md", "markdown")
+    private fun looksLikeMarkdown(name: String): Boolean = FileNames.split(name).second.lowercase() in setOf("md", "markdown")
 
-    private fun looksLikeHtml(name: String): Boolean =
-        FileNames.split(name).second.lowercase() in setOf("html", "htm")
+    private fun looksLikeHtml(name: String): Boolean = FileNames.split(name).second.lowercase() in setOf("html", "htm")
 
-    private fun escapeForPre(text: String): String = text
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
+    private fun escapeForPre(text: String): String =
+        text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
 
     companion object {
         const val EXTRA_TEXT = "extra_text"

@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TextStatsTest {
-
     @Test
     fun charCountCountsCodeUnits() {
         assertEquals(5, TextStats.charCount("hello"))

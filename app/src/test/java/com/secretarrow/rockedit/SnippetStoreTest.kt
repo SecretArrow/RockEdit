@@ -18,7 +18,6 @@ import org.junit.Test
  * recovery and every tabstop-expansion branch.
  */
 class SnippetStoreTest {
-
     private fun store(): SnippetStore = SnippetStore(InMemoryKeyValueStore())
 
     private fun ok(result: SnippetStore.MutateResult): List<SnippetStore.Snippet> {
@@ -43,7 +42,7 @@ class SnippetStoreTest {
     fun blankNameIsRejected() {
         assertEquals(
             ErrorCode.BLANK_NAME,
-            fail(store().create("  ", "kotlin", "body")).code
+            fail(store().create("  ", "kotlin", "body")).code,
         )
     }
 
@@ -57,7 +56,7 @@ class SnippetStoreTest {
     fun blankBodyIsRejected() {
         assertEquals(
             ErrorCode.BODY_BLANK,
-            fail(store().create("snip", "kotlin", "   ")).code
+            fail(store().create("snip", "kotlin", "   ")).code,
         )
     }
 
@@ -70,7 +69,7 @@ class SnippetStoreTest {
     @Test
     fun duplicateNameIsCaseInsensitive() {
         val s = store()
-        assertTrue(ok(s.create("Greeting", "kotlin", "hello")) .isNotEmpty())
+        assertTrue(ok(s.create("Greeting", "kotlin", "hello")).isNotEmpty())
         val result = s.create("  greeting ", "kotlin", "hi")
         assertEquals(ErrorCode.DUPLICATE_NAME, fail(result).code)
         assertTrue(fail(result).message.contains("Greeting"))
@@ -141,7 +140,7 @@ class SnippetStoreTest {
     fun updateUnknownIdFails() {
         assertEquals(
             ErrorCode.NOT_FOUND,
-            fail(store().update("s404", name = "new")).code
+            fail(store().update("s404", name = "new")).code,
         )
     }
 
@@ -153,7 +152,7 @@ class SnippetStoreTest {
         assertEquals(ErrorCode.BLANK_NAME, fail(s.update("s1", name = " ")).code)
         assertEquals(
             ErrorCode.NAME_TOO_LONG,
-            fail(s.update("s1", name = "x".repeat(SnippetStore.MAX_NAME_CHARS + 1))).code
+            fail(s.update("s1", name = "x".repeat(SnippetStore.MAX_NAME_CHARS + 1))).code,
         )
         assertEquals(ErrorCode.DUPLICATE_NAME, fail(s.update("s1", name = "SECOND")).code)
     }
@@ -165,7 +164,7 @@ class SnippetStoreTest {
         assertEquals(ErrorCode.BODY_BLANK, fail(s.update("s1", body = "  ")).code)
         assertEquals(
             ErrorCode.BODY_TOO_LARGE,
-            fail(s.update("s1", body = "x".repeat(SnippetStore.MAX_BODY_CHARS + 1))).code
+            fail(s.update("s1", body = "x".repeat(SnippetStore.MAX_BODY_CHARS + 1))).code,
         )
     }
 
@@ -242,7 +241,7 @@ class SnippetStoreTest {
                 .put("name", "good")
                 .put("language", "kotlin")
                 .put("body", "ok")
-                .put("usage", -7)
+                .put("usage", -7),
         )
         kv.putString(SnippetStore.KEY, JSONObject().put("snippets", arr).toString())
         val s = SnippetStore(kv)
@@ -357,7 +356,7 @@ class SnippetStoreTest {
     fun expandRejectsBlankBody() {
         assertEquals(
             ErrorCode.BODY_BLANK,
-            (SnippetStore.Insert.expand("  ") as SnippetStore.Insert.InsertResult.Failure).code
+            (SnippetStore.Insert.expand("  ") as SnippetStore.Insert.InsertResult.Failure).code,
         )
     }
 

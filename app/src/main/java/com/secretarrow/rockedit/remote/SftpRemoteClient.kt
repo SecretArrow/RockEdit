@@ -9,14 +9,14 @@ import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
 import net.schmizz.sshj.xfer.FileSystemFile
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 /**
  * SFTP transport backed by sshj. Host keys are accepted on first use
  * (TOFU-free for simplicity); credentials are user-managed in the app.
  */
-class SftpRemoteClient(private val connection: RemoteConnection) : RemoteClient {
-
+class SftpRemoteClient(
+    private val connection: RemoteConnection,
+) : RemoteClient {
     private fun connect(): Pair<SSHClient, SFTPClient> {
         val ssh = SSHClient()
         ssh.addHostKeyVerifier(PromiscuousVerifier())
@@ -32,7 +32,8 @@ class SftpRemoteClient(private val connection: RemoteConnection) : RemoteClient 
         val dir = RemotePath.normalize(path)
         val (ssh, sftp) = connect()
         try {
-            return sftp.ls(dir)
+            return sftp
+                .ls(dir)
                 .filter { it.name != "." && it.name != ".." }
                 .map { entry ->
                     RemoteFile(
@@ -40,7 +41,7 @@ class SftpRemoteClient(private val connection: RemoteConnection) : RemoteClient 
                         path = RemotePath.child(dir, entry.name),
                         isFolder = entry.isDirectory,
                         size = if (entry.isDirectory) -1 else entry.attributes.size,
-                        lastModified = entry.attributes.mtime * 1000L
+                        lastModified = entry.attributes.mtime * 1000L,
                     )
                 }
         } finally {
@@ -63,7 +64,10 @@ class SftpRemoteClient(private val connection: RemoteConnection) : RemoteClient 
         }
     }
 
-    override fun write(path: String, data: ByteArray) {
+    override fun write(
+        path: String,
+        data: ByteArray,
+    ) {
         val (ssh, sftp) = connect()
         try {
             val temp = File.createTempFile("rockedit-up", ".tmp")
@@ -109,7 +113,10 @@ class SftpRemoteClient(private val connection: RemoteConnection) : RemoteClient 
         // Stateless: per-operation connections are closed after each call.
     }
 
-    private fun closeQuietly(ssh: SSHClient, sftp: SFTPClient) {
+    private fun closeQuietly(
+        ssh: SSHClient,
+        sftp: SFTPClient,
+    ) {
         try {
             sftp.close()
         } catch (_: Exception) {

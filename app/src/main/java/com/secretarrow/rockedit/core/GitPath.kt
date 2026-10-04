@@ -9,8 +9,11 @@ package com.secretarrow.rockedit.core
  * into that base, then the repository tree itself.
  */
 object GitPath {
-
-    data class Base(val owner: String, val repo: String, val branch: String) {
+    data class Base(
+        val owner: String,
+        val repo: String,
+        val branch: String,
+    ) {
         /** `/owner/repo/branch` — the mount point inside the browser. */
         val mountPath: String get() = "/$owner/$repo/$branch"
     }
@@ -29,7 +32,10 @@ object GitPath {
      * Repo-relative path of [path] when it is at or below the base mount
      * ("" for the mount itself), null otherwise.
      */
-    fun repoRelative(base: Base, path: String): String? {
+    fun repoRelative(
+        base: Base,
+        path: String,
+    ): String? {
         val p = RemotePath.normalize(path)
         val mount = base.mountPath
         if (p == mount) return ""
@@ -40,7 +46,10 @@ object GitPath {
      * When [path] is a strict prefix of the mount, returns the next synthetic
      * segment the browser should show ("owner", then "repo", then "branch").
      */
-    fun nextSegmentTowardBase(base: Base, path: String): String? {
+    fun nextSegmentTowardBase(
+        base: Base,
+        path: String,
+    ): String? {
         val p = RemotePath.normalize(path)
         val segments = base.mountPath.trimStart('/').split('/')
         val walked = p.trimStart('/').split('/').filter { it.isNotEmpty() }

@@ -30,7 +30,7 @@ data class EditorTab(
      * False when the tab exists only as metadata (restored session) and its
      * content still has to be read from [uri] on first activation.
      */
-    var loaded: Boolean = true
+    var loaded: Boolean = true,
 ) {
     val isDirty: Boolean get() = lastCommitted != savedText
 
@@ -40,20 +40,25 @@ data class EditorTab(
         fun newId(): Int = NEXT_ID.getAndIncrement()
 
         /** Untitled, empty document. */
-        fun untitled(name: String = "untitled"): EditorTab = EditorTab(
-            id = newId(),
-            uri = null,
-            name = name,
-            loaded = true
-        )
+        fun untitled(name: String = "untitled"): EditorTab =
+            EditorTab(
+                id = newId(),
+                uri = null,
+                name = name,
+                loaded = true,
+            )
 
         /** Placeholder tab restored from a persisted session; content loads lazily. */
-        fun pending(uri: String, name: String): EditorTab = EditorTab(
-            id = newId(),
-            uri = uri,
-            name = name,
-            loaded = false
-        )
+        fun pending(
+            uri: String,
+            name: String,
+        ): EditorTab =
+            EditorTab(
+                id = newId(),
+                uri = uri,
+                name = name,
+                loaded = false,
+            )
     }
 }
 
@@ -62,8 +67,9 @@ data class EditorTab(
  * between the UI layer and unit tests. Index-based; callers keep indexes only
  * for the duration of a synchronous operation.
  */
-class TabManager(private val maxTabs: Int = MAX_TABS) {
-
+class TabManager(
+    private val maxTabs: Int = MAX_TABS,
+) {
     private val tabs = mutableListOf<EditorTab>()
     private var activeIndex = -1
     private val nextUntitled = AtomicInteger(1)
@@ -159,8 +165,7 @@ class TabManager(private val maxTabs: Int = MAX_TABS) {
     }
 
     /** Dirty tabs that have a real file behind them (auto-save candidates). */
-    fun dirtyFileTabs(): List<EditorTab> =
-        tabs.filter { it.isDirty && it.uri != null && it.loaded }
+    fun dirtyFileTabs(): List<EditorTab> = tabs.filter { it.isDirty && it.uri != null && it.loaded }
 
     companion object {
         const val MAX_TABS = 10

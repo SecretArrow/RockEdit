@@ -15,8 +15,9 @@ import org.apache.commons.net.ftp.FTPSClient
  * per operation (simple and robust against flaky servers); timeouts keep
  * UI-driven usage responsive.
  */
-class FtpRemoteClient(private val connection: RemoteConnection) : RemoteClient {
-
+class FtpRemoteClient(
+    private val connection: RemoteConnection,
+) : RemoteClient {
     private val secure = connection.type == RemoteType.FTPS
 
     private fun connect(): FTPClient {
@@ -46,23 +47,29 @@ class FtpRemoteClient(private val connection: RemoteConnection) : RemoteClient {
                     path = RemotePath.child(dir, f.name),
                     isFolder = f.isDirectory,
                     size = f.size,
-                    lastModified = f.timestamp?.timeInMillis ?: 0L
+                    lastModified = f.timestamp?.timeInMillis ?: 0L,
                 )
             }
         }
     }
 
-    override fun read(path: String): ByteArray = withFtp { client ->
-        val stream = client.retrieveFileStream(RemotePath.normalize(path))
-            ?: throw IllegalStateException("FTP open failed: $path (${client.replyString})")
-        val bytes = stream.use { it.readBytes() }
-        client.completePendingCommand()
-        bytes
-    }
+    override fun read(path: String): ByteArray =
+        withFtp { client ->
+            val stream =
+                client.retrieveFileStream(RemotePath.normalize(path))
+                    ?: throw IllegalStateException("FTP open failed: $path (${client.replyString})")
+            val bytes = stream.use { it.readBytes() }
+            client.completePendingCommand()
+            bytes
+        }
 
-    override fun write(path: String, data: ByteArray) = withFtp { client ->
-        val stream = client.storeFileStream(RemotePath.normalize(path))
-            ?: throw IllegalStateException("FTP write failed: $path (${client.replyString})")
+    override fun write(
+        path: String,
+        data: ByteArray,
+    ) = withFtp { client ->
+        val stream =
+            client.storeFileStream(RemotePath.normalize(path))
+                ?: throw IllegalStateException("FTP write failed: $path (${client.replyString})")
         stream.use { it.write(data) }
         if (!client.completePendingCommand()) {
             throw IllegalStateException("FTP write incomplete: $path")
@@ -73,13 +80,14 @@ class FtpRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         withFtp { client -> client.makeDirectory(RemotePath.normalize(path)) }
     }
 
-    override fun delete(path: String) = withFtp { client ->
-        val target = RemotePath.normalize(path)
-        // Try file first, then directory (a plain rmdir works on empty dirs).
-        if (!client.deleteFile(target)) {
-            client.removeDirectory(target)
+    override fun delete(path: String) =
+        withFtp { client ->
+            val target = RemotePath.normalize(path)
+            // Try file first, then directory (a plain rmdir works on empty dirs).
+            if (!client.deleteFile(target)) {
+                client.removeDirectory(target)
+            }
         }
-    }
 
     override fun close() {
         // Stateless: per-operation connections are closed after each call.

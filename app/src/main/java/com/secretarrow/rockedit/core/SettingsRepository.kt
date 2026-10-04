@@ -5,8 +5,9 @@ package com.secretarrow.rockedit.core
  * Values are stored as plain strings so the Settings screen can map
  * list preferences directly onto them.
  */
-class SettingsRepository(private val kv: KeyValueStore) {
-
+class SettingsRepository(
+    private val kv: KeyValueStore,
+) {
     // ---- Theme ----------------------------------------------------------
     var theme: String
         get() = kv.getString(KEY_THEME, THEME_SYSTEM) ?: THEME_SYSTEM
@@ -19,7 +20,7 @@ class SettingsRepository(private val kv: KeyValueStore) {
                 THEME_LIGHT -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
                 THEME_DARK, THEME_BLACK -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
                 else -> androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-            }
+            },
         )
     }
 
@@ -61,11 +62,12 @@ class SettingsRepository(private val kv: KeyValueStore) {
         set(value) = kv.putString(KEY_LINE_BREAK, value)
 
     /** Resolves the setting into a concrete [LineBreak]. */
-    fun resolveLineBreak(): LineBreak = when (lineBreakDefault) {
-        LINE_BREAK_LF -> LineBreak.LF
-        LINE_BREAK_CRLF -> LineBreak.CRLF
-        else -> LineBreak.LF // placeholder: activity decides "auto" from file content
-    }
+    fun resolveLineBreak(): LineBreak =
+        when (lineBreakDefault) {
+            LINE_BREAK_LF -> LineBreak.LF
+            LINE_BREAK_CRLF -> LineBreak.CRLF
+            else -> LineBreak.LF // placeholder: activity decides "auto" from file content
+        }
 
     // ---- Files & tabs ------------------------------------------------------
 

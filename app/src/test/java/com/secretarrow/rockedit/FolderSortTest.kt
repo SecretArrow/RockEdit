@@ -5,24 +5,28 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FolderSortTest {
-
-    private fun e(name: String, isFolder: Boolean = false) = FolderSort.Entry(name, isFolder)
+    private fun e(
+        name: String,
+        isFolder: Boolean = false,
+    ) = FolderSort.Entry(name, isFolder)
 
     @Test
     fun foldersComeFirstThenAlphabeticalCaseInsensitive() {
-        val sorted = FolderSort.sort(
-            listOf(e("zebra.txt"), e("Banana"), e("apple.txt"), e("Antelope", isFolder = true)),
-            foldersFirst = true
-        )
+        val sorted =
+            FolderSort.sort(
+                listOf(e("zebra.txt"), e("Banana"), e("apple.txt"), e("Antelope", isFolder = true)),
+                foldersFirst = true,
+            )
         assertEquals(listOf("Antelope", "apple.txt", "Banana", "zebra.txt"), sorted.map { it.name })
     }
 
     @Test
     fun withoutFoldersFirstPureAlphabetical() {
-        val sorted = FolderSort.sort(
-            listOf(e("zebra.txt"), e("folder", true), e("apple.txt")),
-            foldersFirst = false
-        )
+        val sorted =
+            FolderSort.sort(
+                listOf(e("zebra.txt"), e("folder", true), e("apple.txt")),
+                foldersFirst = false,
+            )
         assertEquals(listOf("apple.txt", "folder", "zebra.txt"), sorted.map { it.name })
     }
 
@@ -34,10 +38,11 @@ class FolderSortTest {
 
     @Test
     fun filterHiddenRemovesDotFilesByDefault() {
-        val visible = FolderSort.filterHidden(
-            listOf(e(".git", true), e("src", true), e(".gitignore"), e("main.kt")),
-            showHidden = false
-        )
+        val visible =
+            FolderSort.filterHidden(
+                listOf(e(".git", true), e("src", true), e(".gitignore"), e("main.kt")),
+                showHidden = false,
+            )
         assertEquals(listOf("src", "main.kt"), visible.map { it.name })
     }
 
@@ -51,7 +56,7 @@ class FolderSortTest {
     fun breadcrumbJoinsRootAndSegments() {
         assertEquals(
             "Home / project / src",
-            FolderSort.breadcrumb("Home", listOf("project", "src"))
+            FolderSort.breadcrumb("Home", listOf("project", "src")),
         )
     }
 

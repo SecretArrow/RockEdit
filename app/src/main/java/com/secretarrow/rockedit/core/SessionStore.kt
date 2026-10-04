@@ -8,7 +8,7 @@ data class SessionCursor(
     val selStart: Int,
     val selEnd: Int,
     val scrollY: Int,
-    val updatedAt: Long
+    val updatedAt: Long,
 )
 
 /**
@@ -16,25 +16,28 @@ data class SessionCursor(
  * reopening a file restores the exact editing position (roadmap: session
  * resume). Backed by [KeyValueStore]; entries are capped LRU-style.
  */
-class SessionStore(private val kv: KeyValueStore, private val capacity: Int = MAX_FILES) {
-
+class SessionStore(
+    private val kv: KeyValueStore,
+    private val capacity: Int = MAX_FILES,
+) {
     /** Saves (or overwrites) the cursor state of [uri]. */
     fun saveCursor(
         uri: String,
         selStart: Int,
         selEnd: Int,
         scrollY: Int = 0,
-        timestamp: Long = System.currentTimeMillis()
+        timestamp: Long = System.currentTimeMillis(),
     ) {
         if (uri.isBlank()) return
         val map = parse(kv.getString(KEY, null) ?: "{}").toMutableMap()
         map.remove(uri)
         map[uri] = SessionCursor(uri, selStart.coerceAtLeast(0), selEnd.coerceAtLeast(0), scrollY, timestamp)
         // Evict oldest beyond capacity.
-        val trimmed = map.entries
-            .sortedByDescending { it.value.updatedAt }
-            .take(capacity)
-            .associate { it.toPair() }
+        val trimmed =
+            map.entries
+                .sortedByDescending { it.value.updatedAt }
+                .take(capacity)
+                .associate { it.toPair() }
         save(trimmed)
     }
 
@@ -56,7 +59,7 @@ class SessionStore(private val kv: KeyValueStore, private val capacity: Int = MA
                     .put("selStart", it.selStart)
                     .put("selEnd", it.selEnd)
                     .put("scrollY", it.scrollY)
-                    .put("updatedAt", it.updatedAt)
+                    .put("updatedAt", it.updatedAt),
             )
         }
         kv.putString(KEY, obj.toString())
@@ -76,13 +79,14 @@ class SessionStore(private val kv: KeyValueStore, private val capacity: Int = MA
                 while (keys.hasNext()) {
                     val uri = keys.next()
                     val entry = obj.optJSONObject(uri) ?: continue
-                    out[uri] = SessionCursor(
-                        uri = uri,
-                        selStart = entry.optInt("selStart", 0),
-                        selEnd = entry.optInt("selEnd", 0),
-                        scrollY = entry.optInt("scrollY", 0),
-                        updatedAt = entry.optLong("updatedAt", 0L)
-                    )
+                    out[uri] =
+                        SessionCursor(
+                            uri = uri,
+                            selStart = entry.optInt("selStart", 0),
+                            selEnd = entry.optInt("selEnd", 0),
+                            scrollY = entry.optInt("scrollY", 0),
+                            updatedAt = entry.optLong("updatedAt", 0L),
+                        )
                 }
                 out
             } catch (_: Exception) {

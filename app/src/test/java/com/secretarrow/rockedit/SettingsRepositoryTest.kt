@@ -8,7 +8,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SettingsRepositoryTest {
-
     @Test
     fun defaults() {
         val s = SettingsRepository(InMemoryKeyValueStore())

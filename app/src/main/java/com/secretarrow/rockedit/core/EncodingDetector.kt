@@ -7,7 +7,6 @@ import org.mozilla.universalchardet.UniversalDetector
  * wrapped so the algorithm stays unit testable on the JVM.
  */
 object EncodingDetector {
-
     const val DEFAULT_CHARSET = "UTF-8"
 
     /**
@@ -15,23 +14,24 @@ object EncodingDetector {
      * menus, in presentation order (UTF-8 first). All names are supported by
      * both the JVM unit tests and the Android runtime.
      */
-    val COMMON_CHARSETS: List<String> = listOf(
-        "UTF-8",
-        "UTF-16LE",
-        "UTF-16BE",
-        "UTF-32LE",
-        "UTF-32BE",
-        "ISO-8859-1",
-        "US-ASCII",
-        "windows-1252",
-        "windows-1251",
-        "Shift_JIS",
-        "GBK",
-        "GB18030",
-        "Big5",
-        "EUC-KR",
-        "KOI8-R"
-    )
+    val COMMON_CHARSETS: List<String> =
+        listOf(
+            "UTF-8",
+            "UTF-16LE",
+            "UTF-16BE",
+            "UTF-32LE",
+            "UTF-32BE",
+            "ISO-8859-1",
+            "US-ASCII",
+            "windows-1252",
+            "windows-1251",
+            "Shift_JIS",
+            "GBK",
+            "GB18030",
+            "Big5",
+            "EUC-KR",
+            "KOI8-R",
+        )
 
     /**
      * Detects the charset name from raw bytes.
@@ -53,21 +53,25 @@ object EncodingDetector {
      * Decodes bytes using the named charset, falling back to UTF-8 with
      * replacement characters so the editor never crashes on odd files.
      */
-    fun decode(bytes: ByteArray, charsetName: String): String {
-        return try {
+    fun decode(
+        bytes: ByteArray,
+        charsetName: String,
+    ): String =
+        try {
             val cs = charset(charsetName)
             String(bytes, cs)
         } catch (_: Exception) {
             String(bytes, Charsets.UTF_8)
         }
-    }
 
     /** Encodes text with the named charset, falling back to UTF-8. */
-    fun encode(text: String, charsetName: String): ByteArray {
-        return try {
+    fun encode(
+        text: String,
+        charsetName: String,
+    ): ByteArray =
+        try {
             text.toByteArray(charset(charsetName))
         } catch (_: Exception) {
             text.toByteArray(Charsets.UTF_8)
         }
-    }
 }

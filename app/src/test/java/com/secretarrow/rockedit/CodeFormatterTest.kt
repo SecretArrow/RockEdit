@@ -18,19 +18,18 @@ import org.junit.Test
  * empty/blank input, size cap, timeout, fallback routing, misconfiguration.
  */
 class CodeFormatterTest {
-
     /** Minimal formatter used to test the shared pipeline in isolation. */
     private class StubFormatter(
         override val id: String,
         override val supportedLanguages: Set<String>,
         private val result: FormatResult,
-        override val isFallback: Boolean = false
+        override val isFallback: Boolean = false,
     ) : AbstractCodeFormatter() {
         override fun formatValidated(
             language: String,
             text: String,
             options: FormatOptions,
-            deadline: Deadline
+            deadline: Deadline,
         ): FormatResult {
             if (deadline.isExpired()) return timeoutResult(deadline.budgetMs)
             return result
@@ -41,17 +40,19 @@ class CodeFormatterTest {
 
     @Test
     fun registryRoutesExactLanguage() {
-        val registry = FormatterRegistry(
-            listOf(StubFormatter("f-json", setOf("json"), FormatResult.Skipped("x")))
-        )
+        val registry =
+            FormatterRegistry(
+                listOf(StubFormatter("f-json", setOf("json"), FormatResult.Skipped("x"))),
+            )
         assertEquals("f-json", registry.formatterFor("json")?.id)
     }
 
     @Test
     fun registryIsCaseInsensitiveAndTrims() {
-        val registry = FormatterRegistry(
-            listOf(StubFormatter("f-json", setOf("json"), FormatResult.Skipped("x")))
-        )
+        val registry =
+            FormatterRegistry(
+                listOf(StubFormatter("f-json", setOf("json"), FormatResult.Skipped("x"))),
+            )
         assertEquals("f-json", registry.formatterFor("  JSON ")?.id)
     }
 
@@ -94,18 +95,20 @@ class CodeFormatterTest {
     fun registryFallbackFormatterNeverCrashes() {
         // A formatter that literally throws must surface as INTERNAL_ERROR,
         // never propagate an exception to the caller.
-        val bomb = object : AbstractCodeFormatter() {
-            override val id = "bomb"
-            override val supportedLanguages = setOf("bomb")
-            override fun formatValidated(
-                language: String,
-                text: String,
-                options: FormatOptions,
-                deadline: Deadline
-            ): FormatResult {
-                error("exploded")
+        val bomb =
+            object : AbstractCodeFormatter() {
+                override val id = "bomb"
+                override val supportedLanguages = setOf("bomb")
+
+                override fun formatValidated(
+                    language: String,
+                    text: String,
+                    options: FormatOptions,
+                    deadline: Deadline,
+                ): FormatResult {
+                    error("exploded")
+                }
             }
-        }
         val registry = FormatterRegistry(listOf(bomb, WhitespaceFormatter()))
         val result = registry.format(FormatRequest("hello", "bomb"))
         assertTrue(result is FormatResult.Failure)
@@ -139,7 +142,11 @@ class CodeFormatterTest {
         // A clock that jumps 10 seconds on every read forces the deadline to
         // expire immediately after construction.
         var clock = 1_000_000L
-        val formatter = JsonFormatter { clock += 10_000L; clock }
+        val formatter =
+            JsonFormatter {
+                clock += 10_000L
+                clock
+            }
         val result = formatter.format(FormatRequest("""{"a":1}""", "json", FormatOptions(), timeBudgetMs = 5_000L))
         assertTrue(result is FormatResult.Failure)
         assertEquals(FormatErrorCode.TIMEOUT, (result as FormatResult.Failure).error.code)

@@ -4,7 +4,6 @@ package com.secretarrow.rockedit.core
  * Pure helpers for file names and text-file decisions.
  */
 object FileNames {
-
     /**
      * Splits a file name into base name and extension (without the dot).
      * "notes.txt" -> ("notes", "txt"); "Makefile" -> ("Makefile", "");
@@ -21,9 +20,11 @@ object FileNames {
      * collapses to "_" and guarantees a non-empty result.
      */
     fun sanitize(name: String): String {
-        val cleaned = name.trim()
-            .replace(Regex("[/\\\\:*?\"<>|\\u0000]"), "_")
-            .replace(Regex("\\s+"), " ")
+        val cleaned =
+            name
+                .trim()
+                .replace(Regex("[/\\\\:*?\"<>|\\u0000]"), "_")
+                .replace(Regex("\\s+"), " ")
         return if (cleaned.isEmpty()) "untitled.txt" else cleaned
     }
 
@@ -36,10 +37,53 @@ object FileNames {
         return ext.isEmpty() || ext in TEXT_EXTENSIONS
     }
 
-    val TEXT_EXTENSIONS = setOf(
-        "txt", "md", "markdown", "log", "ini", "cfg", "conf", "json", "xml", "yaml", "yml",
-        "html", "htm", "css", "scss", "js", "ts", "jsx", "tsx", "java", "kt", "kts", "gradle",
-        "py", "rb", "go", "rs", "c", "h", "cpp", "hpp", "cs", "php", "sh", "bash", "bat",
-        "sql", "properties", "toml", "csv", "tsv", "gitignore", "pro", "smali", "lisp", "lua"
-    )
+    val TEXT_EXTENSIONS =
+        setOf(
+            "txt",
+            "md",
+            "markdown",
+            "log",
+            "ini",
+            "cfg",
+            "conf",
+            "json",
+            "xml",
+            "yaml",
+            "yml",
+            "html",
+            "htm",
+            "css",
+            "scss",
+            "js",
+            "ts",
+            "jsx",
+            "tsx",
+            "java",
+            "kt",
+            "kts",
+            "gradle",
+            "py",
+            "rb",
+            "go",
+            "rs",
+            "c",
+            "h",
+            "cpp",
+            "hpp",
+            "cs",
+            "php",
+            "sh",
+            "bash",
+            "bat",
+            "sql",
+            "properties",
+            "toml",
+            "csv",
+            "tsv",
+            "gitignore",
+            "pro",
+            "smali",
+            "lisp",
+            "lua",
+        )
 }

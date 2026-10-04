@@ -3,13 +3,13 @@ package com.secretarrow.rockedit
 import com.secretarrow.rockedit.core.EditorConfigParser
 import com.secretarrow.rockedit.core.EditorConfigParser.IndentStyle
 import com.secretarrow.rockedit.core.FormatOptions
-import com.secretarrow.rockedit.core.IndentStyle as FormatterIndentStyle
 import com.secretarrow.rockedit.core.LineBreak
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import com.secretarrow.rockedit.core.IndentStyle as FormatterIndentStyle
 
 /**
  * Per-branch tests for [EditorConfigParser] (v0.11.0): blank files, comments,
@@ -18,7 +18,6 @@ import org.junit.Test
  * and the mapping onto [FormatOptions].
  */
 class EditorConfigParserTest {
-
     // ---------------------------------------------------------------- parse
 
     @Test
@@ -69,9 +68,10 @@ class EditorConfigParserTest {
 
     @Test
     fun invalidValuesAreIgnoredKeyByKey() {
-        val config = EditorConfigParser.parse(
-            "[*]\nindent_style = spacey\nindent_size = 0\nindent_size2 = 9\ntab_width = -1\nend_of_line = banana\ntrim_trailing_whitespace = maybe\n"
-        )
+        val config =
+            EditorConfigParser.parse(
+                "[*]\nindent_style = spacey\nindent_size = 0\nindent_size2 = 9\ntab_width = -1\nend_of_line = banana\ntrim_trailing_whitespace = maybe\n",
+            )
         val section = config.sections[0]
         assertNull(section.indentStyle)
         assertNull(section.indentSize)
@@ -130,19 +130,21 @@ class EditorConfigParserTest {
 
     @Test
     fun lastMatchingSectionWins() {
-        val config = EditorConfigParser.parse(
-            "[*]\nindent_size = 2\n[*.md]\nindent_size = 4\n"
-        )
+        val config =
+            EditorConfigParser.parse(
+                "[*]\nindent_size = 2\n[*.md]\nindent_size = 4\n",
+            )
         assertEquals(4, EditorConfigParser.resolve(config, "notes.md").indentSize)
         assertEquals(2, EditorConfigParser.resolve(config, "Main.kt").indentSize)
     }
 
     @Test
     fun resolveWithoutMatchYieldsAllNulls() {
-        val resolved = EditorConfigParser.resolve(
-            EditorConfigParser.parse("[*.md]\nindent_size = 4\n"),
-            "Main.kt"
-        )
+        val resolved =
+            EditorConfigParser.resolve(
+                EditorConfigParser.parse("[*.md]\nindent_size = 4\n"),
+                "Main.kt",
+            )
         assertNull(resolved.indentSize)
         assertNull(resolved.indentStyle)
         assertNull(resolved.endOfLine)
@@ -152,13 +154,14 @@ class EditorConfigParserTest {
 
     @Test
     fun toFormatOptionsMapsAllFields() {
-        val resolved = EditorConfigParser.Resolved(
-            indentStyle = IndentStyle.TAB,
-            indentSize = 2,
-            endOfLine = LineBreak.CRLF,
-            trimTrailing = false,
-            insertFinalNewline = false
-        )
+        val resolved =
+            EditorConfigParser.Resolved(
+                indentStyle = IndentStyle.TAB,
+                indentSize = 2,
+                endOfLine = LineBreak.CRLF,
+                trimTrailing = false,
+                insertFinalNewline = false,
+            )
         val options = EditorConfigParser.toFormatOptions(resolved, FormatOptions())
         assertEquals(FormatterIndentStyle.TABS, options.indentStyle)
         assertEquals(2, options.indentSize)
@@ -188,9 +191,10 @@ class EditorConfigParserTest {
     @Test
     fun parseNeverThrowsOnHostileInput() {
         // Long nonsense input: must complete, not throw.
-        val hostile = buildString {
-            repeat(200) { append("[[[\nnoequalsign\n=\n[*.x]\n@@@\n") }
-        }
+        val hostile =
+            buildString {
+                repeat(200) { append("[[[\nnoequalsign\n=\n[*.x]\n@@@\n") }
+            }
         val config = EditorConfigParser.parse(hostile)
         assertTrue(config.sections.isNotEmpty() || config.malformedLines > 0)
     }

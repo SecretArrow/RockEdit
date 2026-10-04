@@ -4,13 +4,15 @@ package com.secretarrow.rockedit.core
  * Pure cursor navigation helpers for the editor.
  */
 object CursorNav {
-
     /**
      * Returns the character offset that starts [line] (1-based).
      * When [line] is beyond the last line, returns the end of text.
      * Returns 0 for line <= 1.
      */
-    fun offsetForLine(text: String, line: Int): Int {
+    fun offsetForLine(
+        text: String,
+        line: Int,
+    ): Int {
         if (line <= 1) return 0
         var current = 1
         var i = 0
@@ -30,7 +32,10 @@ object CursorNav {
     /**
      * Returns the 1-based line number that contains [offset].
      */
-    fun lineForOffset(text: String, offset: Int): Int {
+    fun lineForOffset(
+        text: String,
+        offset: Int,
+    ): Int {
         val safe = offset.coerceIn(0, text.length)
         var line = 1
         for (i in 0 until safe) {

@@ -4,13 +4,16 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /** Transport protocols supported by the Storage Manager. */
-enum class RemoteType(val defaultPort: Int, val displayName: String) {
+enum class RemoteType(
+    val defaultPort: Int,
+    val displayName: String,
+) {
     FTP(21, "FTP"),
     FTPS(21, "FTPS (explicit TLS)"),
     SFTP(22, "SFTP (SSH)"),
     WEBDAV(80, "WebDAV"),
     GITHUB(443, "GitHub (PAT)"),
-    GITLAB(443, "GitLab (PAT)")
+    GITLAB(443, "GitLab (PAT)"),
 }
 
 /**
@@ -26,7 +29,7 @@ data class RemoteConnection(
     val port: Int,
     val user: String,
     val password: String,
-    val initialPath: String = "/"
+    val initialPath: String = "/",
 ) {
     companion object {
         fun newId(): Long = System.currentTimeMillis()
@@ -38,9 +41,11 @@ data class RemoteConnection(
  * connection URI building. Fully unit tested.
  */
 object RemotePath {
-
     /** Joins a directory path and a child name, keeping the path normalized. */
-    fun child(dir: String, name: String): String {
+    fun child(
+        dir: String,
+        name: String,
+    ): String {
         val base = if (dir.isEmpty() || dir == "/") "" else dir.trimEnd('/')
         return "$base/$name"
     }
@@ -76,15 +81,22 @@ object RemotePath {
      * Resolves the effective port: explicit (positive) wins, else the type
      * default; WebDAV over https prefixes are not guessed here.
      */
-    fun resolvePort(type: RemoteType, explicit: Int): Int =
-        if (explicit > 0) explicit else type.defaultPort
+    fun resolvePort(
+        type: RemoteType,
+        explicit: Int,
+    ): Int = if (explicit > 0) explicit else type.defaultPort
 
     /**
      * Builds the WebDAV base URL for a connection. [https] upgrades the
      * scheme (user choice stored in the port semantics: ports 443/8443 imply
      * https when the user leaves the default).
      */
-    fun webDavUrl(host: String, port: Int, path: String, https: Boolean): String {
+    fun webDavUrl(
+        host: String,
+        port: Int,
+        path: String,
+        https: Boolean,
+    ): String {
         val scheme = if (https) "https" else "http"
         val suffix = if (path.startsWith("/")) path else "/$path"
         return "$scheme://${host.trim()}:$port${normalize(suffix)}"
@@ -99,11 +111,11 @@ object RemotePath {
 class RemoteConnectionStore(
     private val kv: KeyValueStore,
     private val encryptor: RemoteEncryptor,
-    private val capacity: Int = MAX_CONNECTIONS
+    private val capacity: Int = MAX_CONNECTIONS,
 ) {
-
     interface RemoteEncryptor {
         fun encrypt(plain: String): String
+
         fun decrypt(cipher: String): String
     }
 
@@ -113,13 +125,15 @@ class RemoteConnectionStore(
     fun save(connection: RemoteConnection): List<RemoteConnection> {
         // Store a concrete port and a normalized path so readers never have
         // to guess defaults after a reload.
-        val normalized = connection.copy(
-            port = RemotePath.resolvePort(connection.type, connection.port),
-            initialPath = RemotePath.normalize(connection.initialPath)
-        )
-        val encrypted = normalized.copy(
-            password = if (normalized.password.isEmpty()) "" else encryptor.encrypt(normalized.password)
-        )
+        val normalized =
+            connection.copy(
+                port = RemotePath.resolvePort(connection.type, connection.port),
+                initialPath = RemotePath.normalize(connection.initialPath),
+            )
+        val encrypted =
+            normalized.copy(
+                password = if (normalized.password.isEmpty()) "" else encryptor.encrypt(normalized.password),
+            )
         val current = list().toMutableList()
         val idx = current.indexOfFirst { it.id == connection.id }
         if (idx >= 0) current[idx] = encrypted else current.add(encrypted)
@@ -135,15 +149,17 @@ class RemoteConnectionStore(
     }
 
     /** Returns the decrypted connection or null. */
-    fun find(id: Long): RemoteConnection? =
-        list().firstOrNull { it.id == id }?.let { it.copy(password = decryptPassword(it)) }
+    fun find(id: Long): RemoteConnection? = list().firstOrNull { it.id == id }?.let { it.copy(password = decryptPassword(it)) }
 
     private fun decryptPassword(encryptedConnection: RemoteConnection): String =
-        if (encryptedConnection.password.isEmpty()) ""
-        else try {
-            encryptor.decrypt(encryptedConnection.password)
-        } catch (_: Exception) {
+        if (encryptedConnection.password.isEmpty()) {
             ""
+        } else {
+            try {
+                encryptor.decrypt(encryptedConnection.password)
+            } catch (_: Exception) {
+                ""
+            }
         }
 
     private fun persist(connections: List<RemoteConnection>) {
@@ -158,32 +174,34 @@ class RemoteConnectionStore(
                     .put(F_PORT, c.port)
                     .put(F_USER, c.user)
                     .put(F_PASSWORD, c.password)
-                    .put(F_PATH, c.initialPath)
+                    .put(F_PATH, c.initialPath),
             )
         }
         kv.putString(KEY, arr.toString())
     }
 
-    private fun parse(raw: String): List<RemoteConnection> = try {
-        val arr = JSONArray(raw)
-        (0 until arr.length()).mapNotNull { i ->
-            val o = arr.getJSONObject(i)
-            val type = RemoteType.entries.firstOrNull { it.name == o.optString(F_TYPE) }
-                ?: return@mapNotNull null
-            RemoteConnection(
-                id = o.getLong(F_ID),
-                name = o.optString(F_NAME),
-                type = type,
-                host = o.optString(F_HOST),
-                port = o.optInt(F_PORT, type.defaultPort),
-                user = o.optString(F_USER),
-                password = o.optString(F_PASSWORD),
-                initialPath = RemotePath.normalize(o.optString(F_PATH, "/"))
-            )
+    private fun parse(raw: String): List<RemoteConnection> =
+        try {
+            val arr = JSONArray(raw)
+            (0 until arr.length()).mapNotNull { i ->
+                val o = arr.getJSONObject(i)
+                val type =
+                    RemoteType.entries.firstOrNull { it.name == o.optString(F_TYPE) }
+                        ?: return@mapNotNull null
+                RemoteConnection(
+                    id = o.getLong(F_ID),
+                    name = o.optString(F_NAME),
+                    type = type,
+                    host = o.optString(F_HOST),
+                    port = o.optInt(F_PORT, type.defaultPort),
+                    user = o.optString(F_USER),
+                    password = o.optString(F_PASSWORD),
+                    initialPath = RemotePath.normalize(o.optString(F_PATH, "/")),
+                )
+            }
+        } catch (_: Exception) {
+            emptyList()
         }
-    } catch (_: Exception) {
-        emptyList()
-    }
 
     companion object {
         const val KEY = "remote_connections"
@@ -205,7 +223,7 @@ data class RemoteFile(
     val path: String,
     val isFolder: Boolean,
     val size: Long = -1,
-    val lastModified: Long = 0
+    val lastModified: Long = 0,
 )
 
 /** Interface implemented by the transport clients (FTP/FTPS/SFTP/WebDAV). */
@@ -217,7 +235,10 @@ interface RemoteClient : AutoCloseable {
     fun read(path: String): ByteArray
 
     /** Writes a whole file. */
-    fun write(path: String, data: ByteArray)
+    fun write(
+        path: String,
+        data: ByteArray,
+    )
 
     /** Creates a directory (no-op-safe when it exists). */
     fun mkdir(path: String)

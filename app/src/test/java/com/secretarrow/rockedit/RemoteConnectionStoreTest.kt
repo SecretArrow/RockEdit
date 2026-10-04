@@ -1,7 +1,7 @@
 package com.secretarrow.rockedit
 
-import com.secretarrow.rockedit.core.PlainEncryptor
 import com.secretarrow.rockedit.core.InMemoryKeyValueStore
+import com.secretarrow.rockedit.core.PlainEncryptor
 import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteConnectionStore
 import com.secretarrow.rockedit.core.RemotePath
@@ -12,7 +12,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RemotePathTest {
-
     @Test
     fun childJoinsAndNormalizes() {
         assertEquals("/b", RemotePath.child("/", "b"))
@@ -57,18 +56,20 @@ class RemotePathTest {
     fun webDavUrlBuildsSchemeAndPath() {
         assertEquals(
             "http://host:8080/dav/dir",
-            RemotePath.webDavUrl("host", 8080, "/dav/dir", https = false)
+            RemotePath.webDavUrl("host", 8080, "/dav/dir", https = false),
         )
         assertEquals(
             "https://host:443/dav",
-            RemotePath.webDavUrl("host", 443, "dav", https = true)
+            RemotePath.webDavUrl("host", 443, "dav", https = true),
         )
     }
 }
 
 class RemoteConnectionStoreTest {
-
-    private fun connection(name: String, password: String = "secret") = RemoteConnection(
+    private fun connection(
+        name: String,
+        password: String = "secret",
+    ) = RemoteConnection(
         id = RemoteConnection.newId(),
         name = name,
         type = RemoteType.SFTP,
@@ -76,7 +77,7 @@ class RemoteConnectionStoreTest {
         port = 0,
         user = "user",
         password = password,
-        initialPath = "docs/"
+        initialPath = "docs/",
     )
 
     @Test
@@ -124,9 +125,11 @@ class RemoteConnectionStoreTest {
     @Test
     fun defaultsAndNormalization() {
         val store = RemoteConnectionStore(InMemoryKeyValueStore(), PlainEncryptor)
-        val saved = store.save(
-            connection("home").copy(port = 0, initialPath = "docs/")
-        ).first()
+        val saved =
+            store
+                .save(
+                    connection("home").copy(port = 0, initialPath = "docs/"),
+                ).first()
         assertEquals(22, saved.port)
         assertEquals("/docs", saved.initialPath)
     }

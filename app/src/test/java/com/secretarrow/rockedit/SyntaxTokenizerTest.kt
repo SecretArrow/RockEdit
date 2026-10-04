@@ -8,12 +8,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SyntaxTokenizerTest {
+    private fun tokens(
+        text: String,
+        langId: String,
+    ) = SyntaxTokenizer.tokenize(text, SyntaxRegistry.languageById(langId)!!)
 
-    private fun tokens(text: String, langId: String) =
-        SyntaxTokenizer.tokenize(text, SyntaxRegistry.languageById(langId)!!)
-
-    private fun typesOf(text: String, langId: String) =
-        tokens(text, langId).map { it.type }
+    private fun typesOf(
+        text: String,
+        langId: String,
+    ) = tokens(text, langId).map { it.type }
 
     @Test
     fun kotlinKeywordAndNumber() {

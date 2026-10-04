@@ -14,14 +14,19 @@ import org.junit.Test
  * with CRLF, and case transforms.
  */
 class TextUtilitiesTest {
-
-    private fun ok(op: Op, input: String): TextUtilities.TextResult.Success {
+    private fun ok(
+        op: Op,
+        input: String,
+    ): TextUtilities.TextResult.Success {
         val result = TextUtilities.run(op, input)
         assertTrue("expected Success, was $result", result is TextUtilities.TextResult.Success)
         return result as TextUtilities.TextResult.Success
     }
 
-    private fun fail(op: Op, input: String): TextUtilities.TextError {
+    private fun fail(
+        op: Op,
+        input: String,
+    ): TextUtilities.TextError {
         val result = TextUtilities.run(op, input)
         assertTrue("expected Failure, was $result", result is TextUtilities.TextResult.Failure)
         return (result as TextUtilities.TextResult.Failure).error
@@ -126,7 +131,7 @@ class TextUtilitiesTest {
     fun htmlEncodeCoversTheFiveReserved() {
         assertEquals(
             "&lt;a &amp; &quot;q&quot;&#39;&gt;",
-            ok(Op.HTML_ENCODE, "<a & \"q\"'>").text
+            ok(Op.HTML_ENCODE, "<a & \"q\"'>").text,
         )
     }
 
@@ -153,7 +158,7 @@ class TextUtilitiesTest {
         assertEquals("900150983cd24fb0d6963f7d28e17f72", ok(Op.MD5, "abc").text)
         assertEquals(
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-            ok(Op.SHA256, "abc").text
+            ok(Op.SHA256, "abc").text,
         )
         assertEquals(40, ok(Op.SHA1, "abc").text.length)
     }

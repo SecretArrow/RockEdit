@@ -13,7 +13,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.secretarrow.rockedit.ui.EditorActivity
@@ -34,8 +33,10 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class MultiTabE2eTest {
-
-    private fun newTestFile(name: String, content: String): Intent {
+    private fun newTestFile(
+        name: String,
+        content: String,
+    ): Intent {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val file = File(context.filesDir, name)
         file.writeText(content)
@@ -52,9 +53,14 @@ class MultiTabE2eTest {
         var names = listOf<String>()
         scenario.onActivity { activity ->
             val bar = activity.findViewById<LinearLayout>(R.id.tab_bar)
-            names = (0 until bar.childCount).mapNotNull { c ->
-                bar.getChildAt(c).findViewById<TextView>(R.id.tab_name)?.text?.toString()
-            }
+            names =
+                (0 until bar.childCount).mapNotNull { c ->
+                    bar
+                        .getChildAt(c)
+                        .findViewById<TextView>(R.id.tab_name)
+                        ?.text
+                        ?.toString()
+                }
         }
         return names
     }
@@ -62,7 +68,7 @@ class MultiTabE2eTest {
     private fun waitForTabChip(
         scenario: ActivityScenario<EditorActivity>,
         namePart: String,
-        timeoutMs: Long = 8000
+        timeoutMs: Long = 8000,
     ) {
         val deadline = System.currentTimeMillis() + timeoutMs
         var matched = false
@@ -78,7 +84,7 @@ class MultiTabE2eTest {
         }
         assertTrue(
             "Tab chip never appeared: $namePart; chips were ${chipNames(scenario)}; last error: $lastError",
-            matched
+            matched,
         )
     }
 
@@ -86,11 +92,14 @@ class MultiTabE2eTest {
         onView(
             allOf(
                 withId(R.id.tab_chip),
-                withChild(withText(containsString(namePart)))
-            )
+                withChild(withText(containsString(namePart))),
+            ),
         )
 
-    private fun waitForEditorText(expected: String, timeoutMs: Long = 8000) {
+    private fun waitForEditorText(
+        expected: String,
+        timeoutMs: Long = 8000,
+    ) {
         val deadline = System.currentTimeMillis() + timeoutMs
         var found = false
         while (System.currentTimeMillis() < deadline && !found) {

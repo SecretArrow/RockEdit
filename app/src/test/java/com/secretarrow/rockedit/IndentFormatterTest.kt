@@ -17,11 +17,15 @@ import org.junit.Test
  * keywords, one-line blocks, unbalanced blocks, lenient mode.
  */
 class IndentFormatterTest {
+    private val fmt =
+        com.secretarrow.rockedit.core
+            .IndentFormatter()
 
-    private val fmt = com.secretarrow.rockedit.core.IndentFormatter()
-
-    private fun run(text: String, language: String, options: FormatOptions = FormatOptions()) =
-        fmt.format(FormatRequest(text, language, options.copy(insertFinalNewline = false)))
+    private fun run(
+        text: String,
+        language: String,
+        options: FormatOptions = FormatOptions(),
+    ) = fmt.format(FormatRequest(text, language, options.copy(insertFinalNewline = false)))
 
     private fun ok(result: FormatResult): String {
         assertTrue("expected Success but was $result", result is FormatResult.Success)
@@ -36,7 +40,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "python"))
         assertEquals(
             "def f():\n    if x:\n        return 1\n    else:\n        return 2",
-            out
+            out,
         )
     }
 
@@ -112,7 +116,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "vyper"))
         assertEquals(
             "# pragma version ^0.4.0\n\n@external\ndef f():\n    pass",
-            out
+            out,
         )
     }
 
@@ -144,7 +148,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "ruby"))
         assertEquals(
             "class Foo\n    def bar\n        if z\n            puts 1\n        end\n    end\nend",
-            out
+            out,
         )
     }
 
@@ -161,7 +165,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "ruby"))
         assertEquals(
             "def bar\n    10.times do |i|\n        puts i\n    end\nend",
-            out
+            out,
         )
     }
 
@@ -171,7 +175,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "lua"))
         assertEquals(
             "function f(x)\n    if x then\n        print(1)\n    end\nend",
-            out
+            out,
         )
     }
 
@@ -181,7 +185,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "elixir"))
         assertEquals(
             "defmodule M do\n    def f(x) do\n        x + 1\n    end\nend",
-            out
+            out,
         )
     }
 
@@ -191,7 +195,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "julia"))
         assertEquals(
             "function f(x)\n    if x\n        return 1\n    else\n        return 2\n    end\nend",
-            out
+            out,
         )
     }
 
@@ -201,7 +205,7 @@ class IndentFormatterTest {
         val out = ok(run(src, "latex"))
         assertEquals(
             "\\begin{document}\n    \\begin{itemize}\n        \\item one\n    \\end{itemize}\n\\end{document}",
-            out
+            out,
         )
     }
 

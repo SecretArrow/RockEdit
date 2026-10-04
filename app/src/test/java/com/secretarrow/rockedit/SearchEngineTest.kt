@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class SearchEngineTest {
-
     private val ci = SearchEngine.Options(caseSensitive = false)
     private val cs = SearchEngine.Options(caseSensitive = true)
 

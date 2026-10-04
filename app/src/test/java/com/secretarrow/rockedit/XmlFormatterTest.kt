@@ -17,11 +17,12 @@ import org.junit.Test
  * XXE rejection and parser error positions.
  */
 class XmlFormatterTest {
-
     private val formatter = XmlFormatter()
 
-    private fun format(text: String, options: FormatOptions = FormatOptions()): FormatResult =
-        formatter.format(FormatRequest(text, "xml", options))
+    private fun format(
+        text: String,
+        options: FormatOptions = FormatOptions(),
+    ): FormatResult = formatter.format(FormatRequest(text, "xml", options))
 
     // ------------------------------------------------------------ pretty
 
@@ -38,7 +39,7 @@ class XmlFormatterTest {
         // so assert presence and values, not relative order.
         assertTrue(out.contains("b=\"2\""))
         assertTrue(out.contains("a=\"1\""))
-        assertTrue(out.contains("<root") && out.contains("/>") )
+        assertTrue(out.contains("<root") && out.contains("/>"))
     }
 
     @Test
@@ -151,15 +152,17 @@ class XmlFormatterTest {
 
     @Test
     fun minifyStripsWhitespaceBetweenElements() {
-        val out = (format("<root>\n  <a>1</a>\n  <b>2</b>\n</root>\n", FormatOptions(minify = true)) as FormatResult.Success)
-            .formattedText
+        val out =
+            (format("<root>\n  <a>1</a>\n  <b>2</b>\n</root>\n", FormatOptions(minify = true)) as FormatResult.Success)
+                .formattedText
         assertEquals("<root><a>1</a><b>2</b></root>\n", out)
     }
 
     @Test
     fun minifyKeepsTextContent() {
-        val out = (format("<root>  spaced  text  </root>", FormatOptions(minify = true)) as FormatResult.Success)
-            .formattedText
+        val out =
+            (format("<root>  spaced  text  </root>", FormatOptions(minify = true)) as FormatResult.Success)
+                .formattedText
         assertTrue(out.contains("spaced  text"))
     }
 

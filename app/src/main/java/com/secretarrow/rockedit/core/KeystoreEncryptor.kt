@@ -14,7 +14,6 @@ import javax.crypto.spec.GCMParameterSpec
  * stored as Base64(iv + ciphertext); the key never leaves secure hardware.
  */
 object KeystoreEncryptor : RemoteConnectionStore.RemoteEncryptor {
-
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
     private const val KEY_ALIAS = "rockedit_remote_credentials"
     private const val IV_SIZE = 12
@@ -43,14 +42,14 @@ object KeystoreEncryptor : RemoteConnectionStore.RemoteEncryptor {
         (keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let { return it.secretKey }
         val generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
         generator.init(
-            KeyGenParameterSpec.Builder(
-                KEY_ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            )
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            KeyGenParameterSpec
+                .Builder(
+                    KEY_ALIAS,
+                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+                ).setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
-                .build()
+                .build(),
         )
         return generator.generateKey()
     }
@@ -62,5 +61,6 @@ object KeystoreEncryptor : RemoteConnectionStore.RemoteEncryptor {
  */
 object PlainEncryptor : RemoteConnectionStore.RemoteEncryptor {
     override fun encrypt(plain: String): String = "plain:$plain"
+
     override fun decrypt(cipher: String): String = cipher.removePrefix("plain:")
 }

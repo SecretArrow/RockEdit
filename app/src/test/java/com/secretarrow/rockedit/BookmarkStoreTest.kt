@@ -8,7 +8,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BookmarkStoreTest {
-
     private fun store() = BookmarkStore(InMemoryKeyValueStore())
 
     @Test
@@ -82,11 +81,12 @@ class BookmarkStoreTest {
 
     @Test
     fun parseSkipsMalformedEntries() {
-        val json = "[" +
-            "{\"uri\":\"u\",\"line\":7,\"label\":\"ok\",\"createdAt\":1}," +
-            "{\"line\":8}," +               // missing uri
-            "{\"uri\":\"v\",\"line\":-3}," + // invalid line
-            "\"junk\"]"                      // not an object
+        val json =
+            "[" +
+                "{\"uri\":\"u\",\"line\":7,\"label\":\"ok\",\"createdAt\":1}," +
+                "{\"line\":8}," + // missing uri
+                "{\"uri\":\"v\",\"line\":-3}," + // invalid line
+                "\"junk\"]" // not an object
         val all = BookmarkStore.parse(json)
         assertEquals(1, all.size)
         assertEquals(7, all[0].line)

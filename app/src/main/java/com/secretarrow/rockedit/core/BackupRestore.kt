@@ -22,28 +22,39 @@ import org.json.JSONObject
  * }
  * ```
  */
-class BackupRestore(private val kv: KeyValueStore) {
-
+class BackupRestore(
+    private val kv: KeyValueStore,
+) {
     /** One backed-up key with its storage type. */
-    data class BackupKey(val key: String, val type: EntryType) {
+    data class BackupKey(
+        val key: String,
+        val type: EntryType,
+    ) {
         enum class EntryType { STRING, BOOLEAN, JSON }
     }
 
-    data class RestoreResult(val applied: Int, val skipped: Int)
+    data class RestoreResult(
+        val applied: Int,
+        val skipped: Int,
+    )
 
-    fun export(keys: List<BackupKey>, timestamp: Long = System.currentTimeMillis()): String {
+    fun export(
+        keys: List<BackupKey>,
+        timestamp: Long = System.currentTimeMillis(),
+    ): String {
         val entries = JSONArray()
         for (bk in keys) {
             if (!kv.contains(bk.key)) continue
-            val value: Any = when (bk.type) {
-                BackupKey.EntryType.BOOLEAN -> kv.getBoolean(bk.key, false)
-                else -> kv.getString(bk.key, "") ?: continue
-            }
+            val value: Any =
+                when (bk.type) {
+                    BackupKey.EntryType.BOOLEAN -> kv.getBoolean(bk.key, false)
+                    else -> kv.getString(bk.key, "") ?: continue
+                }
             entries.put(
                 JSONObject()
                     .put(F_KEY, bk.key)
                     .put(F_TYPE, bk.type.name.lowercase())
-                    .put(F_VALUE, value)
+                    .put(F_VALUE, value),
             )
         }
         return JSONObject()
@@ -58,14 +69,18 @@ class BackupRestore(private val kv: KeyValueStore) {
      * Restores entries from [json]. Keys not in [allowedKeys] are skipped
      * (safety against importing garbage); malformed values count as skipped.
      */
-    fun restore(json: String, allowedKeys: Set<String>): RestoreResult {
+    fun restore(
+        json: String,
+        allowedKeys: Set<String>,
+    ): RestoreResult {
         var applied = 0
         var skipped = 0
-        val obj = try {
-            JSONObject(json)
-        } catch (_: Exception) {
-            return RestoreResult(0, 0)
-        }
+        val obj =
+            try {
+                JSONObject(json)
+            } catch (_: Exception) {
+                return RestoreResult(0, 0)
+            }
         val entries = obj.optJSONArray(F_ENTRIES) ?: return RestoreResult(0, 0)
         for (i in 0 until entries.length()) {
             val entry = entries.optJSONObject(i)
@@ -114,31 +129,32 @@ class BackupRestore(private val kv: KeyValueStore) {
          * The full default backup plan: every settings key plus the payload
          * keys of the recents / sessions / bookmarks / open-tabs stores.
          */
-        fun defaultKeys(): List<BackupKey> = buildList {
-            for (key in listOf(
-                SettingsRepository.KEY_LINE_NUMBERS,
-                SettingsRepository.KEY_WORD_WRAP,
-                SettingsRepository.KEY_FULL_SCREEN,
-                SettingsRepository.KEY_SYNTAX_HIGHLIGHT,
-                SettingsRepository.KEY_AUTO_SAVE,
-                SettingsRepository.KEY_REMEMBER_TABS,
-                SettingsRepository.KEY_SORT_FOLDERS_FIRST,
-                SettingsRepository.KEY_SHOW_HIDDEN_FILES
-            )) {
-                add(BackupKey(key, BackupKey.EntryType.BOOLEAN))
+        fun defaultKeys(): List<BackupKey> =
+            buildList {
+                for (key in listOf(
+                    SettingsRepository.KEY_LINE_NUMBERS,
+                    SettingsRepository.KEY_WORD_WRAP,
+                    SettingsRepository.KEY_FULL_SCREEN,
+                    SettingsRepository.KEY_SYNTAX_HIGHLIGHT,
+                    SettingsRepository.KEY_AUTO_SAVE,
+                    SettingsRepository.KEY_REMEMBER_TABS,
+                    SettingsRepository.KEY_SORT_FOLDERS_FIRST,
+                    SettingsRepository.KEY_SHOW_HIDDEN_FILES,
+                )) {
+                    add(BackupKey(key, BackupKey.EntryType.BOOLEAN))
+                }
+                for (key in listOf(
+                    SettingsRepository.KEY_THEME,
+                    SettingsRepository.KEY_LINE_BREAK,
+                    SettingsRepository.KEY_FONT_SIZE,
+                    SettingsRepository.KEY_LAST_FOLDER_URI,
+                )) {
+                    add(BackupKey(key, BackupKey.EntryType.STRING))
+                }
+                add(BackupKey(RecentFilesStore.KEY, BackupKey.EntryType.JSON))
+                add(BackupKey(SessionStore.KEY, BackupKey.EntryType.JSON))
+                add(BackupKey(BookmarkStore.KEY, BackupKey.EntryType.JSON))
+                add(BackupKey(TabPersistence.KEY, BackupKey.EntryType.JSON))
             }
-            for (key in listOf(
-                SettingsRepository.KEY_THEME,
-                SettingsRepository.KEY_LINE_BREAK,
-                SettingsRepository.KEY_FONT_SIZE,
-                SettingsRepository.KEY_LAST_FOLDER_URI
-            )) {
-                add(BackupKey(key, BackupKey.EntryType.STRING))
-            }
-            add(BackupKey(RecentFilesStore.KEY, BackupKey.EntryType.JSON))
-            add(BackupKey(SessionStore.KEY, BackupKey.EntryType.JSON))
-            add(BackupKey(BookmarkStore.KEY, BackupKey.EntryType.JSON))
-            add(BackupKey(TabPersistence.KEY, BackupKey.EntryType.JSON))
-        }
     }
 }

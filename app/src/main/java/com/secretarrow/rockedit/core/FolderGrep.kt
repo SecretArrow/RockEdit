@@ -31,7 +31,6 @@ import java.util.regex.PatternSyntaxException
  *   fidelity is out of scope for the search core.
  */
 object FolderGrep {
-
     const val PREVIEW_MAX_CHARS = 200
     const val BINARY_SNIFF_BYTES = 8_192
     const val DEFAULT_MAX_MATCHES_PER_FILE = 100
@@ -40,22 +39,28 @@ object FolderGrep {
 
     enum class ErrorCode { EMPTY_QUERY, PARSE_ERROR, INTERNAL_ERROR }
 
-    data class GrepError(val code: ErrorCode, val message: String)
+    data class GrepError(
+        val code: ErrorCode,
+        val message: String,
+    )
 
     data class GrepOptions(
         val isRegex: Boolean = false,
         val ignoreCase: Boolean = false,
         val maxMatchesPerFile: Int = DEFAULT_MAX_MATCHES_PER_FILE,
-        val maxTotalMatches: Int = DEFAULT_MAX_TOTAL_MATCHES
+        val maxTotalMatches: Int = DEFAULT_MAX_TOTAL_MATCHES,
     )
 
-    data class GrepFile(val path: String, val content: String)
+    data class GrepFile(
+        val path: String,
+        val content: String,
+    )
 
     data class GrepHit(
         val path: String,
         val lineNumber: Int,
         val column: Int,
-        val preview: String
+        val preview: String,
     )
 
     data class GrepSummary(
@@ -64,25 +69,35 @@ object FolderGrep {
         val filesWithHits: Int,
         val skippedBinary: Int,
         val truncatedMatches: Boolean,
-        val truncatedFiles: Boolean
+        val truncatedFiles: Boolean,
     )
 
     sealed class GrepOutcome {
-        data class Done(val summary: GrepSummary) : GrepOutcome()
-        data class Failure(val error: GrepError) : GrepOutcome()
+        data class Done(
+            val summary: GrepSummary,
+        ) : GrepOutcome()
+
+        data class Failure(
+            val error: GrepError,
+        ) : GrepOutcome()
     }
 
-    fun run(files: List<GrepFile>, query: String, options: GrepOptions = GrepOptions()): GrepOutcome {
+    fun run(
+        files: List<GrepFile>,
+        query: String,
+        options: GrepOptions = GrepOptions(),
+    ): GrepOutcome {
         if (query.isBlank()) {
             return GrepOutcome.Failure(GrepError(ErrorCode.EMPTY_QUERY, "query is empty"))
         }
-        val matcherFactory = try {
-            buildMatcher(query, options)
-        } catch (e: PatternSyntaxException) {
-            return GrepOutcome.Failure(
-                GrepError(ErrorCode.PARSE_ERROR, e.description ?: e.message ?: "invalid pattern")
-            )
-        }
+        val matcherFactory =
+            try {
+                buildMatcher(query, options)
+            } catch (e: PatternSyntaxException) {
+                return GrepOutcome.Failure(
+                    GrepError(ErrorCode.PARSE_ERROR, e.description ?: e.message ?: "invalid pattern"),
+                )
+            }
         return try {
             GrepOutcome.Done(scan(files, matcherFactory, options))
         } catch (e: OutOfMemoryError) {
@@ -92,7 +107,10 @@ object FolderGrep {
         }
     }
 
-    private fun buildMatcher(query: String, options: GrepOptions): (String) -> Matcher {
+    private fun buildMatcher(
+        query: String,
+        options: GrepOptions,
+    ): (String) -> Matcher {
         val effective = if (options.isRegex) query else Pattern.quote(query)
         val bits = if (options.ignoreCase) Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE else 0
         val pattern = Pattern.compile(effective, bits)
@@ -102,7 +120,7 @@ object FolderGrep {
     private fun scan(
         files: List<GrepFile>,
         matcherFactory: (String) -> Matcher,
-        options: GrepOptions
+        options: GrepOptions,
     ): GrepSummary {
         val hits = ArrayList<GrepHit>()
         var filesScanned = 0
@@ -161,8 +179,8 @@ object FolderGrep {
                             path = file.path,
                             lineNumber = lineNumber,
                             column = matcher.start(),
-                            preview = clipPreview(line)
-                        )
+                            preview = clipPreview(line),
+                        ),
                     )
                     fileHits++
                     val mEnd = matcher.end()
@@ -193,7 +211,7 @@ object FolderGrep {
             filesWithHits = filesWithHits,
             skippedBinary = skippedBinary,
             truncatedMatches = truncatedMatches,
-            truncatedFiles = truncatedFiles
+            truncatedFiles = truncatedFiles,
         )
     }
 

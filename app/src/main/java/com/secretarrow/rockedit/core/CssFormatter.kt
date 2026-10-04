@@ -13,24 +13,23 @@ package com.secretarrow.rockedit.core
  * - it does NOT validate property values: CSS is fault-tolerant by design
  *   and the formatter only ever touches whitespace and line structure.
  */
-class CssFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCodeFormatter(nowMs) {
-
+class CssFormatter(
+    nowMs: () -> Long = System::currentTimeMillis,
+) : AbstractCodeFormatter(nowMs) {
     override val id: String = "css"
     override val supportedLanguages: Set<String> = setOf("css")
 
     private enum class State { CODE, IN_STRING, IN_COMMENT }
 
-    private fun StringBuilder.endsWithSpace(): Boolean =
-        isNotEmpty() && this[length - 1] == ' '
+    private fun StringBuilder.endsWithSpace(): Boolean = isNotEmpty() && this[length - 1] == ' '
 
-    private fun StringBuilder.endsWithNewline(): Boolean =
-        isNotEmpty() && this[length - 1] == '\n'
+    private fun StringBuilder.endsWithNewline(): Boolean = isNotEmpty() && this[length - 1] == '\n'
 
     override fun formatValidated(
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         val out = StringBuilder(text.length + 32)
         var state = State.CODE
@@ -104,177 +103,182 @@ class CssFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCode
                         i++
                     }
                 }
-                State.CODE -> when {
-                    c == '/' && i + 1 < text.length && text[i + 1] == '*' -> {
-                        if (!options.minify) {
+                State.CODE ->
+                    when {
+                        c == '/' && i + 1 < text.length && text[i + 1] == '*' -> {
+                            if (!options.minify) {
+                                emitPad()
+                                out.append("/*")
+                            }
+                            state = State.IN_COMMENT
+                            commentStartLine = line
+                            i += 2
+                        }
+                        c == '"' || c == '\'' -> {
                             emitPad()
-                            out.append("/*")
-                        }
-                        state = State.IN_COMMENT
-                        commentStartLine = line
-                        i += 2
-                    }
-                    c == '"' || c == '\'' -> {
-                        emitPad()
-                        out.append(c)
-                        state = State.IN_STRING
-                        quote = c
-                        stringStartLine = line
-                        i++
-                    }
-                    c == '\n' -> {
-                        line++
-                        if (parenDepth == 0) {
-                            // Minify drops structural whitespace entirely.
-                            if (options.minify) {
-                                // skip
-                            } else if (!atLineStart && !out.endsWithSpace() && !out.endsWithNewline()) {
-                                out.append(' ') // collapse whitespace runs to a single space
-                            }
-                        } else {
-                            out.append(c) // inside url(...): copy verbatim
-                            atLineStart = false
-                        }
-                        i++
-                    }
-                    c == ' ' || c == '\t' -> {
-                        if (parenDepth == 0) {
-                            if (options.minify) {
-                                // skip
-                            } else if (!atLineStart && !out.endsWithSpace() && !out.endsWithNewline()) {
-                                out.append(' ')
-                            }
-                        } else {
                             out.append(c)
-                            atLineStart = false
+                            state = State.IN_STRING
+                            quote = c
+                            stringStartLine = line
+                            i++
                         }
-                        i++
-                    }
-                    c == '{' -> {
-                        emitPad()
-                        braceDepth++
-                        braceLines.addLast(line)
-                        if (options.minify) {
-                            if (out.endsWithSpace()) out.setLength(out.length - 1)
-                            out.append('{')
-                        } else {
-                            if (!atLineStart && !out.endsWithSpace()) out.append(' ')
-                            out.append('{')
-                            prettyNewline()
+                        c == '\n' -> {
+                            line++
+                            if (parenDepth == 0) {
+                                // Minify drops structural whitespace entirely.
+                                if (options.minify) {
+                                    // skip
+                                } else if (!atLineStart && !out.endsWithSpace() && !out.endsWithNewline()) {
+                                    out.append(' ') // collapse whitespace runs to a single space
+                                }
+                            } else {
+                                out.append(c) // inside url(...): copy verbatim
+                                atLineStart = false
+                            }
+                            i++
                         }
-                        i++
-                    }
-                    c == '}' -> {
-                        if (braceDepth == 0) {
-                            return FormatResult.Failure(
-                                FormatError(
-                                    FormatErrorCode.PARSE_ERROR,
-                                    "'}' without a matching '{'",
-                                    line,
-                                    null
+                        c == ' ' || c == '\t' -> {
+                            if (parenDepth == 0) {
+                                if (options.minify) {
+                                    // skip
+                                } else if (!atLineStart && !out.endsWithSpace() && !out.endsWithNewline()) {
+                                    out.append(' ')
+                                }
+                            } else {
+                                out.append(c)
+                                atLineStart = false
+                            }
+                            i++
+                        }
+                        c == '{' -> {
+                            emitPad()
+                            braceDepth++
+                            braceLines.addLast(line)
+                            if (options.minify) {
+                                if (out.endsWithSpace()) out.setLength(out.length - 1)
+                                out.append('{')
+                            } else {
+                                if (!atLineStart && !out.endsWithSpace()) out.append(' ')
+                                out.append('{')
+                                prettyNewline()
+                            }
+                            i++
+                        }
+                        c == '}' -> {
+                            if (braceDepth == 0) {
+                                return FormatResult.Failure(
+                                    FormatError(
+                                        FormatErrorCode.PARSE_ERROR,
+                                        "'}' without a matching '{'",
+                                        line,
+                                        null,
+                                    ),
                                 )
-                            )
+                            }
+                            braceDepth--
+                            braceLines.removeLast()
+                            if (options.minify) {
+                                if (out.endsWithSpace()) out.setLength(out.length - 1)
+                                out.append('}')
+                            } else {
+                                if (!out.endsWithNewline()) prettyNewline()
+                                out.append(pad(options, braceDepth.coerceAtLeast(0))).append('}')
+                                prettyNewline()
+                            }
+                            i++
                         }
-                        braceDepth--
-                        braceLines.removeLast()
-                        if (options.minify) {
-                            if (out.endsWithSpace()) out.setLength(out.length - 1)
-                            out.append('}')
-                        } else {
-                            if (!out.endsWithNewline()) prettyNewline()
-                            out.append(pad(options, braceDepth.coerceAtLeast(0))).append('}')
-                            prettyNewline()
+                        c == ';' -> {
+                            if (parenDepth == 0) {
+                                emitPad()
+                                out.append(';')
+                                prettyNewline()
+                            } else {
+                                // ';' inside url(data:...;base64,...) is part of the
+                                // token: copy verbatim, never break the line.
+                                emitPad()
+                                out.append(';')
+                            }
+                            i++
                         }
-                        i++
-                    }
-                    c == ';' -> {
-                        if (parenDepth == 0) {
+                        c == ':' && braceDepth > 0 && parenDepth == 0 -> {
+                            // Inside a declaration block, normalize "color:red" and
+                            // "color : red" to "color: red". Colons in selectors
+                            // (:hover) and @media conditions (inside parens) are
+                            // copied verbatim.
                             emitPad()
-                            out.append(';')
-                            prettyNewline()
-                        } else {
-                            // ';' inside url(data:...;base64,...) is part of the
-                            // token: copy verbatim, never break the line.
-                            emitPad()
-                            out.append(';')
+                            out.append(':')
+                            if (!options.minify) out.append(' ')
+                            i++
                         }
-                        i++
+                        c == '(' -> {
+                            if (parenDepth == 0) parenStartLine = line
+                            parenDepth++
+                            emitPad()
+                            out.append(c)
+                            i++
+                        }
+                        c == ')' -> {
+                            if (parenDepth > 0) parenDepth-- // stray ')' stays lenient, not fatal
+                            emitPad()
+                            out.append(c)
+                            i++
+                        }
+                        else -> {
+                            emitPad()
+                            out.append(c)
+                            i++
+                        }
                     }
-                    c == ':' && braceDepth > 0 && parenDepth == 0 -> {
-                        // Inside a declaration block, normalize "color:red" and
-                        // "color : red" to "color: red". Colons in selectors
-                        // (:hover) and @media conditions (inside parens) are
-                        // copied verbatim.
-                        emitPad()
-                        out.append(':')
-                        if (!options.minify) out.append(' ')
-                        i++
-                    }
-                    c == '(' -> {
-                        if (parenDepth == 0) parenStartLine = line
-                        parenDepth++
-                        emitPad()
-                        out.append(c)
-                        i++
-                    }
-                    c == ')' -> {
-                        if (parenDepth > 0) parenDepth-- // stray ')' stays lenient, not fatal
-                        emitPad()
-                        out.append(c)
-                        i++
-                    }
-                    else -> {
-                        emitPad()
-                        out.append(c)
-                        i++
-                    }
-                }
             }
         }
 
         // EOF — every remaining state has an explicit, located diagnosis.
         return when (state) {
-            State.IN_COMMENT -> FormatResult.Failure(
-                FormatError(
-                    FormatErrorCode.PARSE_ERROR,
-                    "comment opened at line $commentStartLine is never closed",
-                    commentStartLine,
-                    null
-                )
-            )
-            State.IN_STRING -> FormatResult.Failure(
-                FormatError(
-                    FormatErrorCode.PARSE_ERROR,
-                    "string opened at line $stringStartLine is never closed",
-                    stringStartLine,
-                    null
-                )
-            )
-            State.CODE -> when {
-                parenDepth > 0 -> FormatResult.Failure(
+            State.IN_COMMENT ->
+                FormatResult.Failure(
                     FormatError(
                         FormatErrorCode.PARSE_ERROR,
-                        "'(' opened at line $parenStartLine is never closed",
-                        parenStartLine,
-                        null
-                    )
+                        "comment opened at line $commentStartLine is never closed",
+                        commentStartLine,
+                        null,
+                    ),
                 )
-                braceDepth > 0 -> {
-                    val openerLine = braceLines.firstOrNull() ?: line
-                    FormatResult.Failure(
-                        FormatError(
-                            FormatErrorCode.PARSE_ERROR,
-                            "block '{' opened at line $openerLine is never closed",
-                            openerLine,
-                            null
+            State.IN_STRING ->
+                FormatResult.Failure(
+                    FormatError(
+                        FormatErrorCode.PARSE_ERROR,
+                        "string opened at line $stringStartLine is never closed",
+                        stringStartLine,
+                        null,
+                    ),
+                )
+            State.CODE ->
+                when {
+                    parenDepth > 0 ->
+                        FormatResult.Failure(
+                            FormatError(
+                                FormatErrorCode.PARSE_ERROR,
+                                "'(' opened at line $parenStartLine is never closed",
+                                parenStartLine,
+                                null,
+                            ),
                         )
-                    )
+                    braceDepth > 0 -> {
+                        val openerLine = braceLines.firstOrNull() ?: line
+                        FormatResult.Failure(
+                            FormatError(
+                                FormatErrorCode.PARSE_ERROR,
+                                "block '{' opened at line $openerLine is never closed",
+                                openerLine,
+                                null,
+                            ),
+                        )
+                    }
+                    else -> {
+                        val formatted = applyFinalTouches(out, options)
+                        FormatResult.Success(formatted, formatted != text, 0L)
+                    }
                 }
-                else -> {
-                    val formatted = applyFinalTouches(out, options)
-                    FormatResult.Success(formatted, formatted != text, 0L)
-                }
-            }
         }
     }
 }

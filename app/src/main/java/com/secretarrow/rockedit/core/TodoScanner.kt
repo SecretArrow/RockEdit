@@ -35,7 +35,6 @@ package com.secretarrow.rockedit.core
  *   mirrors DiffEngine); a trailing newline produces no extra line.
  */
 object TodoScanner {
-
     /** Hard input cap for the public [scan] entry point. */
     const val MAX_INPUT_CHARS = 1_000_000
 
@@ -70,7 +69,7 @@ object TodoScanner {
         val marker: String,
         val tag: String?,
         val message: String,
-        val offset: Int
+        val offset: Int,
     )
 
     /**
@@ -84,7 +83,7 @@ object TodoScanner {
     data class TodoOptions(
         val markers: Set<String> = DEFAULT_MARKERS,
         val caseSensitive: Boolean = false,
-        val maxItems: Int = DEFAULT_MAX_ITEMS
+        val maxItems: Int = DEFAULT_MAX_ITEMS,
     ) {
         /** Trimmed, uppercase marker set actually used for matching. */
         val normalizedMarkers: Set<String>
@@ -93,12 +92,12 @@ object TodoScanner {
             val trimmed = markers.map { it.trim() }
             if (trimmed.isEmpty() || trimmed.any { it.isEmpty() }) {
                 throw IllegalArgumentException(
-                    "every marker must be non-blank after trimming, got $markers"
+                    "every marker must be non-blank after trimming, got $markers",
                 )
             }
             if (maxItems < 1 || maxItems > MAX_ITEMS_LIMIT) {
                 throw IllegalArgumentException(
-                    "maxItems must be in 1..$MAX_ITEMS_LIMIT, got $maxItems"
+                    "maxItems must be in 1..$MAX_ITEMS_LIMIT, got $maxItems",
                 )
             }
             normalizedMarkers = trimmed.map { it.uppercase() }.toSet()
@@ -112,8 +111,15 @@ object TodoScanner {
     }
 
     sealed interface ScanResult {
-        data class Success(val items: List<TodoItem>, val truncated: Boolean) : ScanResult
-        data class Failure(val code: ErrorCode, val message: String) : ScanResult
+        data class Success(
+            val items: List<TodoItem>,
+            val truncated: Boolean,
+        ) : ScanResult
+
+        data class Failure(
+            val code: ErrorCode,
+            val message: String,
+        ) : ScanResult
     }
 
     /**
@@ -121,19 +127,25 @@ object TodoScanner {
      * map). Runs in a single pass without regex line splitting so offsets
      * stay exact; stops as soon as [TodoOptions.maxItems] hits are found.
      */
-    fun scan(text: String, options: TodoOptions = TodoOptions()): ScanResult =
-        scanWithCap(text, options, MAX_INPUT_CHARS)
+    fun scan(
+        text: String,
+        options: TodoOptions = TodoOptions(),
+    ): ScanResult = scanWithCap(text, options, MAX_INPUT_CHARS)
 
     /**
      * Same algorithm with a caller-provided input cap; internal so tests can
      * exercise the INPUT_TOO_LARGE branch without building 1M characters.
      * The public [scan] delegates with [MAX_INPUT_CHARS].
      */
-    internal fun scanWithCap(text: String, options: TodoOptions, cap: Int): ScanResult {
+    internal fun scanWithCap(
+        text: String,
+        options: TodoOptions,
+        cap: Int,
+    ): ScanResult {
         if (text.length > cap) {
             return ScanResult.Failure(
                 ErrorCode.INPUT_TOO_LARGE,
-                "input has ${text.length} characters, limit is $cap"
+                "input has ${text.length} characters, limit is $cap",
             )
         }
         if (options.normalizedMarkers.isEmpty()) {
@@ -142,8 +154,9 @@ object TodoScanner {
         }
         // Longest marker first so overlapping definitions resolve the same
         // way at every position; lexicographic order keeps ties deterministic.
-        val ordered = options.normalizedMarkers
-            .sortedWith(compareByDescending<String> { it.length }.thenBy { it })
+        val ordered =
+            options.normalizedMarkers
+                .sortedWith(compareByDescending<String> { it.length }.thenBy { it })
         val items = ArrayList<TodoItem>()
         val caseSensitive = options.caseSensitive
         val maxItems = options.maxItems
@@ -163,9 +176,17 @@ object TodoScanner {
             if (next < n) {
                 next += if (text[next] == '\r' && next + 1 < n && text[next + 1] == '\n') 2 else 1
             }
-            val capped = scanLine(
-                text, lineStart, lineEnd, lineNumber, ordered, caseSensitive, maxItems, items
-            )
+            val capped =
+                scanLine(
+                    text,
+                    lineStart,
+                    lineEnd,
+                    lineNumber,
+                    ordered,
+                    caseSensitive,
+                    maxItems,
+                    items,
+                )
             if (capped) {
                 truncated = true
                 break
@@ -191,7 +212,7 @@ object TodoScanner {
         orderedMarkers: List<String>,
         caseSensitive: Boolean,
         maxItems: Int,
-        items: MutableList<TodoItem>
+        items: MutableList<TodoItem>,
     ): Boolean {
         var pos = lineStart
         while (pos < lineEnd) {
@@ -200,9 +221,14 @@ object TodoScanner {
                 val markerLength = marker.length
                 if (pos + markerLength > lineEnd) continue
                 if (!charsEqual(text[pos], marker[0], caseSensitive)) continue
-                val matches = text.regionMatches(
-                    pos, marker, 0, markerLength, ignoreCase = !caseSensitive
-                )
+                val matches =
+                    text.regionMatches(
+                        pos,
+                        marker,
+                        0,
+                        markerLength,
+                        ignoreCase = !caseSensitive,
+                    )
                 if (!matches) continue
                 // Word boundary: no letter/digit/underscore directly before
                 // or after. Line edges count as boundaries (terminator/EOF).
@@ -235,8 +261,8 @@ object TodoScanner {
                         marker = marker,
                         tag = tag,
                         message = message,
-                        offset = pos
-                    )
+                        offset = pos,
+                    ),
                 )
                 advance = markerLength
                 if (items.size >= maxItems) return true
@@ -248,15 +274,22 @@ object TodoScanner {
     }
 
     /** Index of the first ')' in [from, end), or -1 when unclosed. */
-    private fun findTagClose(text: String, from: Int, end: Int): Int {
+    private fun findTagClose(
+        text: String,
+        from: Int,
+        end: Int,
+    ): Int {
         for (i in from until end) {
             if (text[i] == ')') return i
         }
         return -1
     }
 
-    private fun charsEqual(a: Char, b: Char, caseSensitive: Boolean): Boolean =
-        if (caseSensitive) a == b else a.equals(b, ignoreCase = true)
+    private fun charsEqual(
+        a: Char,
+        b: Char,
+        caseSensitive: Boolean,
+    ): Boolean = if (caseSensitive) a == b else a.equals(b, ignoreCase = true)
 
     /** Word characters terminate markers: letters, digits, underscore. */
     private fun isWordChar(c: Char): Boolean = c.isLetterOrDigit() || c == '_'

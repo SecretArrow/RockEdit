@@ -11,7 +11,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GitPathTest {
-
     private val base = GitPath.Base("octocat", "hello", "main")
 
     @Test
@@ -53,13 +52,13 @@ class GitPathTest {
 }
 
 class GitApiTest {
-
-    private val contentsJson = """
+    private val contentsJson =
+        """
         [
           {"name":"src","path":"src","type":"dir","size":0},
           {"name":"README.md","path":"README.md","type":"file","size":1024}
         ]
-    """.trimIndent()
+        """.trimIndent()
 
     @Test
     fun githubContentsParsesFoldersAndFiles() {
@@ -78,10 +77,14 @@ class GitApiTest {
 
     @Test
     fun githubFileEntryExtractsShaAndDecodesContent() {
-        val payload = java.util.Base64.getEncoder().encodeToString("hello world".toByteArray())
-        val entry = GitHubApi.parseFileEntry(
-            """{"sha":"abc123","content":"$payload\n"}"""
-        )
+        val payload =
+            java.util.Base64
+                .getEncoder()
+                .encodeToString("hello world".toByteArray())
+        val entry =
+            GitHubApi.parseFileEntry(
+                """{"sha":"abc123","content":"$payload\n"}""",
+            )
         assertEquals("abc123", entry?.first)
         assertEquals("hello world", String(GitHubApi.decodeContent(entry!!.second)))
     }
@@ -111,12 +114,13 @@ class GitApiTest {
 
     @Test
     fun gitlabTreeParsesEntries() {
-        val tree = """
+        val tree =
+            """
             [
               {"id":"1","name":"docs","type":"tree","path":"docs"},
               {"id":"2","name":"app.rb","type":"blob","path":"app.rb"}
             ]
-        """.trimIndent()
+            """.trimIndent()
         val files = GitLabApi.parseTree(tree, "/o/r/main")
         assertEquals(2, files.size)
         assertTrue(files[0].isFolder)
@@ -126,9 +130,10 @@ class GitApiTest {
 
     @Test
     fun gitlabCommitBodyCarriesActionAndEncoding() {
-        val body = JSONObject(
-            GitLabApi.buildCommitBody("main", "msg", "create", "a.md", "QQ==")
-        )
+        val body =
+            JSONObject(
+                GitLabApi.buildCommitBody("main", "msg", "create", "a.md", "QQ=="),
+            )
         val action = body.getJSONArray("actions").getJSONObject(0)
         assertEquals("create", action.getString("action"))
         assertEquals("base64", action.getString("encoding"))

@@ -18,12 +18,12 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
+import com.secretarrow.rockedit.core.FileNames
 import com.secretarrow.rockedit.core.FolderSort
 import com.secretarrow.rockedit.databinding.ActivityFolderBrowserBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.secretarrow.rockedit.core.FileNames
 
 /**
  * SAF folder browser (roadmap: open files from a folder tree without leaving
@@ -31,7 +31,6 @@ import com.secretarrow.rockedit.core.FileNames
  * Tapping a file hands it to the editor, which opens it in a new tab.
  */
 class FolderBrowserActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityFolderBrowserBinding
     private lateinit var adapter: FolderEntryAdapter
     private var rootTree: DocumentFile? = null
@@ -60,9 +59,10 @@ class FolderBrowserActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { finish() }
 
-        adapter = FolderEntryAdapter(
-            onClick = { entry -> onEntryClicked(entry) }
-        )
+        adapter =
+            FolderEntryAdapter(
+                onClick = { entry -> onEntryClicked(entry) },
+            )
         binding.entries.layoutManager = LinearLayoutManager(this)
         binding.entries.adapter = adapter
 
@@ -95,7 +95,7 @@ class FolderBrowserActivity : AppCompatActivity() {
         try {
             contentResolver.takePersistableUriPermission(
                 uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         } catch (_: SecurityException) {
             // Provider did not offer persistable grants; browsing still works now.
@@ -154,27 +154,32 @@ class FolderBrowserActivity : AppCompatActivity() {
         binding.breadcrumb.text = title
         supportActionBar?.title = getString(R.string.open_folder)
         lifecycleScope.launch {
-            val entries = withContext(Dispatchers.IO) {
-                val dir = currentDir()
-                if (dir == null) emptyList()
-                else try {
-                    dir.listFiles().mapNotNull { child ->
-                        val name = child.name ?: return@mapNotNull null
-                        FolderSort.Entry(
-                            name = name,
-                            isFolder = child.isDirectory,
-                            size = child.length(),
-                            lastModified = child.lastModified()
-                        )
+            val entries =
+                withContext(Dispatchers.IO) {
+                    val dir = currentDir()
+                    if (dir == null) {
+                        emptyList()
+                    } else {
+                        try {
+                            dir.listFiles().mapNotNull { child ->
+                                val name = child.name ?: return@mapNotNull null
+                                FolderSort.Entry(
+                                    name = name,
+                                    isFolder = child.isDirectory,
+                                    size = child.length(),
+                                    lastModified = child.lastModified(),
+                                )
+                            }
+                        } catch (_: Exception) {
+                            emptyList()
+                        }
                     }
-                } catch (_: Exception) {
-                    emptyList()
                 }
-            }
-            val visible = FolderSort.sort(
-                FolderSort.filterHidden(entries, settings.showHiddenFiles),
-                settings.sortFoldersFirst
-            )
+            val visible =
+                FolderSort.sort(
+                    FolderSort.filterHidden(entries, settings.showHiddenFiles),
+                    settings.sortFoldersFirst,
+                )
             adapter.submitList(visible)
             val empty = visible.isEmpty()
             binding.emptyView.visibility = if (empty) View.VISIBLE else View.GONE
@@ -199,6 +204,7 @@ class FolderBrowserActivity : AppCompatActivity() {
             }
         }
     }
+
     companion object {
         private const val STATE_PATH = "state.path"
     }
@@ -206,20 +212,29 @@ class FolderBrowserActivity : AppCompatActivity() {
 
 /** List adapter for folder entries. */
 class FolderEntryAdapter(
-    private val onClick: (FolderSort.Entry) -> Unit
+    private val onClick: (FolderSort.Entry) -> Unit,
 ) : ListAdapter<FolderSort.Entry, FolderEntryAdapter.ViewHolder>(DIFF) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_folder_entry, parent, false)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            LayoutInflater
+                .from(parent.context)
+                .inflate(R.layout.item_folder_entry, parent, false)
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         holder.bind(getItem(position))
     }
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(
+        view: View,
+    ) : RecyclerView.ViewHolder(view) {
         private val icon: TextView = view.findViewById(R.id.entry_icon)
         private val name: TextView = view.findViewById(R.id.entry_name)
         private val meta: TextView = view.findViewById(R.id.entry_meta)
@@ -228,13 +243,14 @@ class FolderEntryAdapter(
             val context = itemView.context
             icon.text = if (entry.isFolder) context.getString(R.string.folder_icon) else ""
             name.text = entry.name
-            meta.text = if (entry.isFolder) {
-                context.getString(R.string.folder_kind)
-            } else {
-                val ext = FileNames.split(entry.name).second
-                val size = formatSize(entry.size)
-                if (ext.isEmpty()) size else context.getString(R.string.file_kind, ext, size)
-            }
+            meta.text =
+                if (entry.isFolder) {
+                    context.getString(R.string.folder_kind)
+                } else {
+                    val ext = FileNames.split(entry.name).second
+                    val size = formatSize(entry.size)
+                    if (ext.isEmpty()) size else context.getString(R.string.file_kind, ext, size)
+                }
             itemView.setOnClickListener { onClick(entry) }
         }
 
@@ -251,12 +267,17 @@ class FolderEntryAdapter(
     }
 
     companion object {
-        val DIFF = object : DiffUtil.ItemCallback<FolderSort.Entry>() {
-            override fun areItemsTheSame(oldItem: FolderSort.Entry, newItem: FolderSort.Entry) =
-                oldItem.name == newItem.name && oldItem.isFolder == newItem.isFolder
+        val DIFF =
+            object : DiffUtil.ItemCallback<FolderSort.Entry>() {
+                override fun areItemsTheSame(
+                    oldItem: FolderSort.Entry,
+                    newItem: FolderSort.Entry,
+                ) = oldItem.name == newItem.name && oldItem.isFolder == newItem.isFolder
 
-            override fun areContentsTheSame(oldItem: FolderSort.Entry, newItem: FolderSort.Entry) =
-                oldItem == newItem
-        }
+                override fun areContentsTheSame(
+                    oldItem: FolderSort.Entry,
+                    newItem: FolderSort.Entry,
+                ) = oldItem == newItem
+            }
     }
 }

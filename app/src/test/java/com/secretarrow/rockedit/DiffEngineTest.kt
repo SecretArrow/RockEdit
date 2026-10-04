@@ -15,7 +15,6 @@ import org.junit.Test
  * determinism.
  */
 class DiffEngineTest {
-
     private fun done(outcome: DiffEngine.DiffOutcome): DiffEngine.DiffOutcome.Done {
         assertTrue("expected Done, was $outcome", outcome is DiffEngine.DiffOutcome.Done)
         return outcome as DiffEngine.DiffOutcome.Done
@@ -80,9 +79,10 @@ class DiffEngineTest {
 
     @Test
     fun middleChangeProducesMinimalDeleteInsert() {
-        val result = done(
-            DiffEngine.diff("alpha\nbravo\ncharlie", "alpha\nBRAVO\ncharlie")
-        )
+        val result =
+            done(
+                DiffEngine.diff("alpha\nbravo\ncharlie", "alpha\nBRAVO\ncharlie"),
+            )
         assertEquals(4, result.ops.size)
         assertEquals(DiffKind.EQUAL, result.ops[0].kind)
         assertEquals(DiffKind.DELETE, result.ops[1].kind)
@@ -110,9 +110,10 @@ class DiffEngineTest {
 
     @Test
     fun interleavedChangesStayMinimal() {
-        val result = done(
-            DiffEngine.diff("a\nX\nb\nY\nc", "a\nb\nc")
-        )
+        val result =
+            done(
+                DiffEngine.diff("a\nX\nb\nY\nc", "a\nb\nc"),
+            )
         assertEquals(0, result.stats.addedLines)
         assertEquals(2, result.stats.removedLines)
         assertEquals(3, result.stats.unchangedLines)
@@ -143,9 +144,10 @@ class DiffEngineTest {
 
     @Test
     fun ignoreWhitespaceKeepsOriginalText() {
-        val result = done(
-            DiffEngine.diff("a   b", "a b", DiffEngine.DiffOptions(ignoreWhitespace = true))
-        )
+        val result =
+            done(
+                DiffEngine.diff("a   b", "a b", DiffEngine.DiffOptions(ignoreWhitespace = true)),
+            )
         assertEquals(1, result.ops.size)
         assertEquals(DiffKind.EQUAL, result.ops[0].kind)
         assertEquals("a   b", result.ops[0].text)
@@ -171,9 +173,10 @@ class DiffEngineTest {
 
     @Test
     fun maxLinesAllowsTextWithinBudget() {
-        val result = done(
-            DiffEngine.diff("a\nb\nc", "a\nb\nc", DiffEngine.DiffOptions(maxLines = 3))
-        )
+        val result =
+            done(
+                DiffEngine.diff("a\nb\nc", "a\nb\nc", DiffEngine.DiffOptions(maxLines = 3)),
+            )
         assertFalse(result.stats.hasChanges)
     }
 
@@ -194,9 +197,10 @@ class DiffEngineTest {
 
     @Test
     fun fallbackInsertOldStartPointsAfterDeletedBlock() {
-        val result = done(
-            DiffEngine.diff("1\n2\n3", "a\nb", DiffEngine.DiffOptions(maxMatrixCells = 4))
-        )
+        val result =
+            done(
+                DiffEngine.diff("1\n2\n3", "a\nb", DiffEngine.DiffOptions(maxMatrixCells = 4)),
+            )
         assertTrue(result.fellBack)
         assertEquals(0, result.ops[0].oldStart)
         assertEquals(0, result.ops[0].newStart)
@@ -234,7 +238,7 @@ class DiffEngineTest {
         }
         assertEquals(
             result.stats.addedLines + result.stats.removedLines + result.stats.unchangedLines,
-            total
+            total,
         )
     }
 

@@ -10,9 +10,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class EditorTabTest {
-
-    private fun tab(uri: String?, name: String = uri ?: "untitled"): EditorTab =
-        EditorTab(id = EditorTab.newId(), uri = uri, name = name)
+    private fun tab(
+        uri: String?,
+        name: String = uri ?: "untitled",
+    ): EditorTab = EditorTab(id = EditorTab.newId(), uri = uri, name = name)
 
     // ------------------------------------------------------------- dirty flag
 

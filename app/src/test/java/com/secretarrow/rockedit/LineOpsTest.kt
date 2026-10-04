@@ -1,12 +1,10 @@
 package com.secretarrow.rockedit
 
-import com.secretarrow.rockedit.core.InMemoryKeyValueStore
 import com.secretarrow.rockedit.core.LineOps
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class LineOpsTest {
-
     // ------------------------------------------------------- duplicate line
 
     @Test

@@ -12,7 +12,6 @@ import org.junit.Test
  * errors, the 1 MiB cap, binary sniffing and every DumpOptions failure.
  */
 class HexDumpTest {
-
     private fun lines(result: HexDump.ResultLines): List<HexDump.DumpLine> {
         assertTrue("expected Success, was $result", result is HexDump.ResultLines.Success)
         return (result as HexDump.ResultLines.Success).lines
@@ -33,15 +32,14 @@ class HexDumpTest {
         return result as HexDump.ParseResult.Failure
     }
 
-    private fun expectIllegal(block: () -> Unit): String {
-        return try {
+    private fun expectIllegal(block: () -> Unit): String =
+        try {
             block()
             fail("expected IllegalArgumentException")
             error("unreachable: expected IllegalArgumentException")
         } catch (expected: IllegalArgumentException) {
             expected.message ?: ""
         }
-    }
 
     // ------------------------------------------------------------- dump
 
@@ -70,7 +68,7 @@ class HexDumpTest {
         assertEquals("................", result[0].asciiText)
         assertEquals(
             "00000000  0001 0203 0405 0607 0809 0a0b 0c0d 0e0f  ................",
-            HexDump.toDumpText(data)
+            HexDump.toDumpText(data),
         )
     }
 
@@ -156,9 +154,10 @@ class HexDumpTest {
     fun toDumpTextThrowsForOversizeAndInvalidOptions() {
         val oversize = expectIllegal { HexDump.toDumpText(ByteArray(HexDump.MAX_BYTES + 1)) }
         assertTrue(oversize.contains("1048577"))
-        val invalid = expectIllegal {
-            HexDump.toDumpText(byteArrayOf(1), HexDump.DumpOptions(bytesPerLine = 3))
-        }
+        val invalid =
+            expectIllegal {
+                HexDump.toDumpText(byteArrayOf(1), HexDump.DumpOptions(bytesPerLine = 3))
+            }
         assertTrue(invalid.contains("bytesPerLine"))
     }
 

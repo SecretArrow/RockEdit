@@ -30,19 +30,27 @@ package com.secretarrow.rockedit.core
  * backslash (r"\") can false-trigger the string scanner; Ruby heredoc
  * bodies are not tracked.
  */
-class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCodeFormatter(nowMs) {
-
+class IndentFormatter(
+    nowMs: () -> Long = System::currentTimeMillis,
+) : AbstractCodeFormatter(nowMs) {
     override val id: String = "indent"
 
-    override val supportedLanguages: Set<String> = setOf(
-        "python", "vyper", "ruby", "lua", "elixir", "julia", "latex"
-    )
+    override val supportedLanguages: Set<String> =
+        setOf(
+            "python",
+            "vyper",
+            "ruby",
+            "lua",
+            "elixir",
+            "julia",
+            "latex",
+        )
 
     override fun formatValidated(
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         val config = FormatterLanguages.indentConfigFor(language)
         return when (config.style) {
@@ -57,17 +65,18 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
         config: FormatterLanguages.IndentLanguage,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         val source = LineBreak.normalize(text, LineBreak.LF)
-        val scanner = LineScanner(
-            lineComments = config.lineComments,
-            blockComments = emptyList(),
-            stringDelims = config.stringDelims,
-            multilineDelims = config.multilineStringDelims,
-            openChars = listOf('(', '[', '{'),
-            closeChars = listOf(')', ']', '}')
-        )
+        val scanner =
+            LineScanner(
+                lineComments = config.lineComments,
+                blockComments = emptyList(),
+                stringDelims = config.stringDelims,
+                multilineDelims = config.multilineStringDelims,
+                openChars = listOf('(', '[', '{'),
+                closeChars = listOf(')', ']', '}'),
+            )
         val lines = source.split('\n')
         val widths = IntArray(lines.size)
         val kinds = Array(lines.size) { LineKind.BLANK }
@@ -89,23 +98,25 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
                 else -> {
                     val tabbed = raw.startsWith('\t') || raw.startsWith(" \t")
                     if (tabbed && pendingError == null && !options.lenient) {
-                        pendingError = FormatError(
-                            FormatErrorCode.PARSE_ERROR,
-                            "tab character used for indentation: Python requires consistent spaces",
-                            lineNo,
-                            null
-                        )
+                        pendingError =
+                            FormatError(
+                                FormatErrorCode.PARSE_ERROR,
+                                "tab character used for indentation: Python requires consistent spaces",
+                                lineNo,
+                                null,
+                            )
                     }
                     // Tabs count as indentSize spaces so lenient mode can
                     // rescale them; middle-of-line tabs never count.
                     val leading = raw.takeWhile { it == ' ' || it == '\t' }
                     widths[index] = leading.count { it == '\t' } * options.indentSize +
                         leading.count { it == ' ' }
-                    kinds[index] = if (isContinuation || !scan.hasCode) {
-                        LineKind.SOFT
-                    } else {
-                        LineKind.CODE
-                    }
+                    kinds[index] =
+                        if (isContinuation || !scan.hasCode) {
+                            LineKind.SOFT
+                        } else {
+                            LineKind.CODE
+                        }
                 }
             }
         }
@@ -131,22 +142,24 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
                 else -> {
                     val remainder = widths[index] % unit
                     if (remainder != 0 && kinds[index] == LineKind.CODE && pendingError == null && !options.lenient) {
-                        pendingError = FormatError(
-                            FormatErrorCode.PARSE_ERROR,
-                            "inconsistent indentation: ${widths[index]} spaces is not a multiple of the file's $unit-space unit",
-                            index + 1,
-                            null
-                        )
+                        pendingError =
+                            FormatError(
+                                FormatErrorCode.PARSE_ERROR,
+                                "inconsistent indentation: ${widths[index]} spaces is not a multiple of the file's $unit-space unit",
+                                index + 1,
+                                null,
+                            )
                     }
                     // CODE lines on the unit grid are rescaled exactly;
                     // anything off-grid (aligned continuations, odd
                     // comments) keeps its original width so the author's
                     // alignment intent survives.
-                    val newWidth = if (remainder == 0) {
-                        widths[index] / unit * options.indentSize
-                    } else {
-                        widths[index]
-                    }
+                    val newWidth =
+                        if (remainder == 0) {
+                            widths[index] / unit * options.indentSize
+                        } else {
+                            widths[index]
+                        }
                     val body = if (options.trimTrailingWhitespace) raw.trim() else raw.trimStart()
                     appendLine(out, index, lines.size, " ".repeat(newWidth) + body)
                 }
@@ -157,7 +170,11 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
         return FormatResult.Success(formatted, formatted != source, 0L)
     }
 
-    private fun detectIndentUnit(lines: List<String>, kinds: Array<LineKind>, widths: IntArray): Int {
+    private fun detectIndentUnit(
+        lines: List<String>,
+        kinds: Array<LineKind>,
+        widths: IntArray,
+    ): Int {
         // Only CODE lines participate: comment-only and continuation lines
         // may use arbitrary widths without saying anything about the unit.
         var gcd = 0
@@ -174,7 +191,10 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
         return gcd
     }
 
-    private fun gcdOf(a: Int, b: Int): Int = if (b == 0) a else gcdOf(b, a % b)
+    private fun gcdOf(
+        a: Int,
+        b: Int,
+    ): Int = if (b == 0) a else gcdOf(b, a % b)
 
     // ------------------------------------------------------------- KEYWORD
 
@@ -182,17 +202,18 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
         config: FormatterLanguages.IndentLanguage,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         val source = LineBreak.normalize(text, LineBreak.LF)
-        val scanner = LineScanner(
-            lineComments = config.lineComments,
-            blockComments = emptyList(),
-            stringDelims = config.stringDelims,
-            multilineDelims = config.multilineStringDelims,
-            openChars = emptyList(),
-            closeChars = emptyList()
-        )
+        val scanner =
+            LineScanner(
+                lineComments = config.lineComments,
+                blockComments = emptyList(),
+                stringDelims = config.stringDelims,
+                multilineDelims = config.multilineStringDelims,
+                openChars = emptyList(),
+                closeChars = emptyList(),
+            )
         val lines = source.split('\n')
         val out = StringBuilder(source.length + 16)
         var depth = 0
@@ -222,12 +243,13 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
             if (isCloser || isDedent) renderDepth -= 1
             if (renderDepth < 0) {
                 if (!options.lenient && pendingError == null) {
-                    pendingError = FormatError(
-                        FormatErrorCode.PARSE_ERROR,
-                        "unbalanced block keyword ('$trimmed' closes a block that is not open)",
-                        lineNo,
-                        null
-                    )
+                    pendingError =
+                        FormatError(
+                            FormatErrorCode.PARSE_ERROR,
+                            "unbalanced block keyword ('$trimmed' closes a block that is not open)",
+                            lineNo,
+                            null,
+                        )
                 }
                 renderDepth = 0
             }
@@ -258,8 +280,8 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
                     FormatErrorCode.PARSE_ERROR,
                     "unclosed block: $depth block keyword(s) never close before end of file",
                     lines.size,
-                    null
-                )
+                    null,
+                ),
             )
         }
         val formatted = applyFinalTouches(out, options, trimTrailing = false)
@@ -271,22 +293,28 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
     private fun formatWhitespaceOnly(
         lines: List<String>,
         kinds: Array<LineKind>,
-        options: FormatOptions
+        options: FormatOptions,
     ): FormatResult {
         val out = StringBuilder()
         for (index in lines.indices) {
-            val content = when {
-                kinds[index] == LineKind.VERBATIM -> lines[index]
-                options.trimTrailingWhitespace -> lines[index].trimEnd(' ', '\t')
-                else -> lines[index]
-            }
+            val content =
+                when {
+                    kinds[index] == LineKind.VERBATIM -> lines[index]
+                    options.trimTrailingWhitespace -> lines[index].trimEnd(' ', '\t')
+                    else -> lines[index]
+                }
             appendLine(out, index, lines.size, content)
         }
         val formatted = applyFinalTouches(out, options, trimTrailing = false)
         return FormatResult.Success(formatted, formatted != lines.joinToString("\n"), 0L)
     }
 
-    private fun appendLine(out: StringBuilder, index: Int, total: Int, content: String) {
+    private fun appendLine(
+        out: StringBuilder,
+        index: Int,
+        total: Int,
+        content: String,
+    ) {
         out.append(content)
         if (index < total - 1) out.append('\n')
     }

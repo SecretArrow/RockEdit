@@ -7,40 +7,43 @@ import android.content.Context
  * to keep the build fast and the code approachable.
  */
 object App {
-
     private const val PREFS_NAME = "rockedit_prefs"
 
-    fun keyValueStore(context: Context): KeyValueStore =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).toKeyValueStore()
+    fun keyValueStore(context: Context): KeyValueStore = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).toKeyValueStore()
 
-    fun settings(context: Context): SettingsRepository =
-        SettingsRepository(keyValueStore(context))
+    fun settings(context: Context): SettingsRepository = SettingsRepository(keyValueStore(context))
 
-    fun recents(context: Context): RecentFilesStore =
-        RecentFilesStore(keyValueStore(context))
+    fun recents(context: Context): RecentFilesStore = RecentFilesStore(keyValueStore(context))
 
-    fun sessions(context: Context): SessionStore =
-        SessionStore(keyValueStore(context))
+    fun sessions(context: Context): SessionStore = SessionStore(keyValueStore(context))
 
-    fun bookmarks(context: Context): BookmarkStore =
-        BookmarkStore(keyValueStore(context))
+    fun bookmarks(context: Context): BookmarkStore = BookmarkStore(keyValueStore(context))
 
-    fun remoteConnections(context: Context): RemoteConnectionStore =
-        RemoteConnectionStore(keyValueStore(context), KeystoreEncryptor)
+    fun remoteConnections(context: Context): RemoteConnectionStore = RemoteConnectionStore(keyValueStore(context), KeystoreEncryptor)
 
     private fun android.content.SharedPreferences.toKeyValueStore(): KeyValueStore =
         object : KeyValueStore {
-            override fun getString(key: String, defValue: String?): String? =
-                this@toKeyValueStore.getString(key, defValue)
+            override fun getString(
+                key: String,
+                defValue: String?,
+            ): String? = this@toKeyValueStore.getString(key, defValue)
 
-            override fun putString(key: String, value: String) {
+            override fun putString(
+                key: String,
+                value: String,
+            ) {
                 edit().putString(key, value).apply()
             }
 
-            override fun getBoolean(key: String, defValue: Boolean): Boolean =
-                this@toKeyValueStore.getBoolean(key, defValue)
+            override fun getBoolean(
+                key: String,
+                defValue: Boolean,
+            ): Boolean = this@toKeyValueStore.getBoolean(key, defValue)
 
-            override fun putBoolean(key: String, value: Boolean) {
+            override fun putBoolean(
+                key: String,
+                value: Boolean,
+            ) {
                 edit().putBoolean(key, value).apply()
             }
 
@@ -52,7 +55,6 @@ object App {
                 edit().clear().apply()
             }
 
-            override fun contains(key: String): Boolean =
-                this@toKeyValueStore.contains(key)
+            override fun contains(key: String): Boolean = this@toKeyValueStore.contains(key)
         }
 }

@@ -14,11 +14,15 @@ import org.junit.Test
  * block comments, unbalanced forms, lenient mode, idempotency.
  */
 class LispFormatterTest {
+    private val fmt =
+        com.secretarrow.rockedit.core
+            .LispFormatter()
 
-    private val fmt = com.secretarrow.rockedit.core.LispFormatter()
-
-    private fun run(text: String, language: String, options: FormatOptions = FormatOptions()) =
-        fmt.format(FormatRequest(text, language, options.copy(insertFinalNewline = false)))
+    private fun run(
+        text: String,
+        language: String,
+        options: FormatOptions = FormatOptions(),
+    ) = fmt.format(FormatRequest(text, language, options.copy(insertFinalNewline = false)))
 
     private fun ok(result: FormatResult): String {
         assertTrue("expected Success but was $result", result is FormatResult.Success)
@@ -42,7 +46,7 @@ class LispFormatterTest {
                 "        (ok true)\n" +
                 "    )\n" +
                 ")",
-            out
+            out,
         )
     }
 
@@ -52,7 +56,7 @@ class LispFormatterTest {
         val out = ok(run(src, "michelson"))
         assertEquals(
             "(parameter unit)\n(storage unit)\n(code\n    (PUSH unit (UNIT))\n)",
-            out
+            out,
         )
     }
 

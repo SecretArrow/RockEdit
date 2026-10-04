@@ -4,24 +4,35 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /** One recently opened file. [uri] is a content:// URI string. */
-data class RecentFile(val uri: String, val name: String, val lastOpened: Long)
+data class RecentFile(
+    val uri: String,
+    val name: String,
+    val lastOpened: Long,
+)
 
 /**
  * Recently opened files list, capped and de-duplicated (most recent first).
  * Backed by [KeyValueStore] so it runs in plain JVM unit tests.
  */
-class RecentFilesStore(private val kv: KeyValueStore, private val capacity: Int = MAX_ITEMS) {
-
+class RecentFilesStore(
+    private val kv: KeyValueStore,
+    private val capacity: Int = MAX_ITEMS,
+) {
     fun list(): List<RecentFile> = parse(kv.getString(KEY, null) ?: "[]")
 
     /** Adds or moves [uri] to the top. Returns the new list. */
-    fun add(uri: String, name: String, timestamp: Long = System.currentTimeMillis()): List<RecentFile> {
+    fun add(
+        uri: String,
+        name: String,
+        timestamp: Long = System.currentTimeMillis(),
+    ): List<RecentFile> {
         if (uri.isBlank()) return list()
         val rest = list().filterNot { it.uri == uri }
-        val updated = buildList {
-            add(RecentFile(uri, name.ifBlank { FileNames.sanitize(uri.substringAfterLast('/')) }, timestamp))
-            addAll(rest)
-        }.take(capacity)
+        val updated =
+            buildList {
+                add(RecentFile(uri, name.ifBlank { FileNames.sanitize(uri.substringAfterLast('/')) }, timestamp))
+                addAll(rest)
+            }.take(capacity)
         save(updated)
         return updated
     }
@@ -45,7 +56,7 @@ class RecentFilesStore(private val kv: KeyValueStore, private val capacity: Int 
                 JSONObject()
                     .put("uri", it.uri)
                     .put("name", it.name)
-                    .put("lastOpened", it.lastOpened)
+                    .put("lastOpened", it.lastOpened),
             )
         }
         kv.putString(KEY, arr.toString())

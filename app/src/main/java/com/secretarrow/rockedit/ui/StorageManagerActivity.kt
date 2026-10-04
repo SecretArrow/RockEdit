@@ -1,7 +1,6 @@
 package com.secretarrow.rockedit.ui
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,8 +19,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.RemoteConnection
-import com.secretarrow.rockedit.core.RemoteType
 import com.secretarrow.rockedit.core.RemotePath
+import com.secretarrow.rockedit.core.RemoteType
 import com.secretarrow.rockedit.databinding.ActivityStorageManagerBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,7 +32,6 @@ import kotlinx.coroutines.withContext
  * browser. Passwords are stored encrypted (Android Keystore).
  */
 class StorageManagerActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityStorageManagerBinding
     private lateinit var adapter: RemoteConnectionAdapter
 
@@ -49,10 +47,11 @@ class StorageManagerActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { finish() }
 
-        adapter = RemoteConnectionAdapter(
-            onClick = { connection -> openBrowser(connection) },
-            onLongClick = { connection -> confirmDelete(connection) }
-        )
+        adapter =
+            RemoteConnectionAdapter(
+                onClick = { connection -> openBrowser(connection) },
+                onLongClick = { connection -> confirmDelete(connection) },
+            )
         binding.connections.layoutManager = LinearLayoutManager(this)
         binding.connections.adapter = adapter
 
@@ -67,9 +66,10 @@ class StorageManagerActivity : AppCompatActivity() {
 
     private fun refresh() {
         lifecycleScope.launch {
-            val items = withContext(Dispatchers.IO) {
-                App.remoteConnections(this@StorageManagerActivity).list()
-            }
+            val items =
+                withContext(Dispatchers.IO) {
+                    App.remoteConnections(this@StorageManagerActivity).list()
+                }
             adapter.submitList(items)
             val empty = items.isEmpty()
             binding.emptyView.visibility = if (empty) View.VISIBLE else View.GONE
@@ -78,13 +78,15 @@ class StorageManagerActivity : AppCompatActivity() {
     }
 
     private fun openBrowser(connection: RemoteConnection) {
-        val intent = Intent(this, RemoteBrowserActivity::class.java)
-            .putExtra(RemoteBrowserActivity.EXTRA_CONNECTION_ID, connection.id)
+        val intent =
+            Intent(this, RemoteBrowserActivity::class.java)
+                .putExtra(RemoteBrowserActivity.EXTRA_CONNECTION_ID, connection.id)
         startActivity(intent)
     }
 
     private fun confirmDelete(connection: RemoteConnection) {
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.storage_delete)
             .setMessage(getString(R.string.storage_delete_confirm, connection.name))
             .setPositiveButton(R.string.discard) { _, _ ->
@@ -94,8 +96,7 @@ class StorageManagerActivity : AppCompatActivity() {
                     }
                     refresh()
                 }
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -112,34 +113,38 @@ class StorageManagerActivity : AppCompatActivity() {
 
         val types = RemoteType.entries
         var selectedType = existing?.type ?: RemoteType.FTP
-        val typeButtons = types.map { type ->
-            TextView(this).apply {
-                text = type.displayName
-                setPadding(dp(12), dp(10), dp(12), dp(10))
-                isClickable = true
-                isFocusable = true
-                typeContainer.addView(this)
+        val typeButtons =
+            types.map { type ->
+                TextView(this).apply {
+                    text = type.displayName
+                    setPadding(dp(12), dp(10), dp(12), dp(10))
+                    isClickable = true
+                    isFocusable = true
+                    typeContainer.addView(this)
+                }
             }
-        }
+
         fun selectType(type: RemoteType) {
             selectedType = type
             val index = types.indexOf(type)
             typeButtons.forEachIndexed { i, button ->
                 button.setBackgroundColor(
-                    getColor(if (i == index) R.color.tab_chip_active else R.color.tab_chip_inactive)
+                    getColor(if (i == index) R.color.tab_chip_active else R.color.tab_chip_inactive),
                 )
             }
             if (portInput.text.isNullOrEmpty()) {
                 portInput.hint = type.defaultPort.toString()
             }
-            pathInput.hint = when (type) {
-                RemoteType.GITHUB, RemoteType.GITLAB -> getString(R.string.storage_git_path)
-                else -> getString(R.string.storage_initial_path)
-            }
-            hostInput.hint = when (type) {
-                RemoteType.GITLAB -> getString(R.string.storage_gitlab_host)
-                else -> getString(R.string.storage_host)
-            }
+            pathInput.hint =
+                when (type) {
+                    RemoteType.GITHUB, RemoteType.GITLAB -> getString(R.string.storage_git_path)
+                    else -> getString(R.string.storage_initial_path)
+                }
+            hostInput.hint =
+                when (type) {
+                    RemoteType.GITLAB -> getString(R.string.storage_gitlab_host)
+                    else -> getString(R.string.storage_host)
+                }
         }
         typeButtons.forEachIndexed { index, button ->
             button.setOnClickListener { selectType(types[index]) }
@@ -154,27 +159,32 @@ class StorageManagerActivity : AppCompatActivity() {
             selectType(c.type)
         } ?: selectType(RemoteType.FTP)
 
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(
-                if (existing == null) R.string.storage_add else R.string.storage_edit
-            )
-            .setView(view)
+                if (existing == null) R.string.storage_add else R.string.storage_edit,
+            ).setView(view)
             .setPositiveButton(R.string.save) { _, _ ->
                 val host = hostInput.text.toString().trim()
                 if (host.isEmpty()) {
                     toast(getString(R.string.storage_host_required))
                     return@setPositiveButton
                 }
-                val connection = RemoteConnection(
-                    id = existing?.id ?: RemoteConnection.newId(),
-                    name = nameInput.text.toString().trim().ifEmpty { host },
-                    type = selectedType,
-                    host = host,
-                    port = portInput.text.toString().toIntOrNull() ?: 0,
-                    user = userInput.text.toString(),
-                    password = passwordInput.text.toString(),
-                    initialPath = RemotePath.normalize(pathInput.text.toString())
-                )
+                val connection =
+                    RemoteConnection(
+                        id = existing?.id ?: RemoteConnection.newId(),
+                        name =
+                            nameInput.text
+                                .toString()
+                                .trim()
+                                .ifEmpty { host },
+                        type = selectedType,
+                        host = host,
+                        port = portInput.text.toString().toIntOrNull() ?: 0,
+                        user = userInput.text.toString(),
+                        password = passwordInput.text.toString(),
+                        initialPath = RemotePath.normalize(pathInput.text.toString()),
+                    )
                 lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
                         App.remoteConnections(this@StorageManagerActivity).save(connection)
@@ -182,8 +192,7 @@ class StorageManagerActivity : AppCompatActivity() {
                     refresh()
                     toast(getString(R.string.storage_saved))
                 }
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -196,20 +205,29 @@ class StorageManagerActivity : AppCompatActivity() {
 
 class RemoteConnectionAdapter(
     private val onClick: (RemoteConnection) -> Unit,
-    private val onLongClick: (RemoteConnection) -> Unit
+    private val onLongClick: (RemoteConnection) -> Unit,
 ) : ListAdapter<RemoteConnection, RemoteConnectionAdapter.ViewHolder>(DIFF) {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_connection, parent, false)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            LayoutInflater
+                .from(parent.context)
+                .inflate(R.layout.item_connection, parent, false)
         return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         holder.bind(getItem(position))
     }
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(
+        view: View,
+    ) : RecyclerView.ViewHolder(view) {
         private val name: TextView = view.findViewById(R.id.conn_name)
         private val meta: TextView = view.findViewById(R.id.conn_meta)
 
@@ -225,12 +243,17 @@ class RemoteConnectionAdapter(
     }
 
     companion object {
-        val DIFF = object : DiffUtil.ItemCallback<RemoteConnection>() {
-            override fun areItemsTheSame(oldItem: RemoteConnection, newItem: RemoteConnection) =
-                oldItem.id == newItem.id
+        val DIFF =
+            object : DiffUtil.ItemCallback<RemoteConnection>() {
+                override fun areItemsTheSame(
+                    oldItem: RemoteConnection,
+                    newItem: RemoteConnection,
+                ) = oldItem.id == newItem.id
 
-            override fun areContentsTheSame(oldItem: RemoteConnection, newItem: RemoteConnection) =
-                oldItem == newItem
-        }
+                override fun areContentsTheSame(
+                    oldItem: RemoteConnection,
+                    newItem: RemoteConnection,
+                ) = oldItem == newItem
+            }
     }
 }

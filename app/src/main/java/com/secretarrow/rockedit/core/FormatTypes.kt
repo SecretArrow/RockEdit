@@ -23,7 +23,7 @@ data class FormatOptions(
      * best-effort result instead of a PARSE_ERROR. Default is strict:
      * suspicious input is rejected with a specific error and line number.
      */
-    val lenient: Boolean = false
+    val lenient: Boolean = false,
 ) {
     init {
         require(indentSize in MIN_INDENT_SIZE..MAX_INDENT_SIZE) {
@@ -50,7 +50,7 @@ data class FormatRequest(
     val text: String,
     val language: String,
     val options: FormatOptions = FormatOptions(),
-    val timeBudgetMs: Long = DEFAULT_TIME_BUDGET_MS
+    val timeBudgetMs: Long = DEFAULT_TIME_BUDGET_MS,
 ) {
     init {
         require(language.isNotBlank()) { "language must not be blank" }
@@ -78,7 +78,7 @@ enum class FormatErrorCode {
     UNSUPPORTED_LANGUAGE,
     PARSE_ERROR,
     TIMEOUT,
-    INTERNAL_ERROR
+    INTERNAL_ERROR,
 }
 
 /**
@@ -89,7 +89,7 @@ data class FormatError(
     val code: FormatErrorCode,
     val message: String,
     val line: Int? = null,
-    val column: Int? = null
+    val column: Int? = null,
 )
 
 /**
@@ -104,12 +104,16 @@ sealed class FormatResult {
     data class Success(
         val formattedText: String,
         val changed: Boolean,
-        val durationMs: Long
+        val durationMs: Long,
     ) : FormatResult()
 
-    data class Failure(val error: FormatError) : FormatResult()
+    data class Failure(
+        val error: FormatError,
+    ) : FormatResult()
 
-    data class Skipped(val reason: String) : FormatResult()
+    data class Skipped(
+        val reason: String,
+    ) : FormatResult()
 }
 
 /**
@@ -122,7 +126,7 @@ sealed class FormatResult {
 class Deadline internal constructor(
     private val deadlineAtMs: Long,
     private val nowMs: () -> Long,
-    val budgetMs: Long
+    val budgetMs: Long,
 ) {
     fun isExpired(): Boolean = nowMs() >= deadlineAtMs
 
@@ -131,7 +135,7 @@ class Deadline internal constructor(
     companion object {
         fun fromBudget(
             budgetMs: Long,
-            nowMs: () -> Long = System::currentTimeMillis
+            nowMs: () -> Long = System::currentTimeMillis,
         ): Deadline {
             val safe = budgetMs.coerceIn(FormatRequest.MIN_TIME_BUDGET_MS, FormatRequest.MAX_TIME_BUDGET_MS)
             return Deadline(nowMs() + safe, nowMs, safe)

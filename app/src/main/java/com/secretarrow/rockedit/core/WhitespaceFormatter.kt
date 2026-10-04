@@ -14,8 +14,9 @@ package com.secretarrow.rockedit.core
  *
  * Registered with `isFallback = true` under the wildcard language "*".
  */
-class WhitespaceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCodeFormatter(nowMs) {
-
+class WhitespaceFormatter(
+    nowMs: () -> Long = System::currentTimeMillis,
+) : AbstractCodeFormatter(nowMs) {
     override val id: String = "whitespace"
     override val supportedLanguages: Set<String> = setOf(WILDCARD)
     override val isFallback: Boolean = true
@@ -24,7 +25,7 @@ class WhitespaceFormatter(nowMs: () -> Long = System::currentTimeMillis) : Abstr
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         if (deadline.isExpired()) return timeoutResult(deadline.budgetMs)
         val formatted = applyFinalTouches(text, options)

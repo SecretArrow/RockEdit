@@ -6,11 +6,14 @@ import android.provider.OpenableColumns
 
 /** Resolves friendly display names for content URIs. */
 object DisplayNames {
-
-    fun resolve(context: Context, uri: Uri): String {
+    fun resolve(
+        context: Context,
+        uri: Uri,
+    ): String {
         var name: String = uri.lastPathSegment ?: "file.txt"
         try {
-            context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            context.contentResolver
+                .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
                 ?.use { cursor ->
                     if (cursor.moveToFirst()) {
                         val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)

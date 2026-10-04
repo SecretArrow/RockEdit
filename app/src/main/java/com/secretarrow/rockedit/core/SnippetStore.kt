@@ -26,14 +26,15 @@ import org.json.JSONObject
  * `${` degrades the remainder to literal text, and a malformed index
  * (`${x:...}`) is kept verbatim so no user text is ever lost.
  */
-class SnippetStore(private val kv: KeyValueStore) {
-
+class SnippetStore(
+    private val kv: KeyValueStore,
+) {
     data class Snippet(
         val id: String,
         val name: String,
         val language: String,
         val body: String,
-        val usageCount: Int
+        val usageCount: Int,
     )
 
     enum class ErrorCode {
@@ -42,12 +43,18 @@ class SnippetStore(private val kv: KeyValueStore) {
         DUPLICATE_NAME,
         BODY_BLANK,
         BODY_TOO_LARGE,
-        NOT_FOUND
+        NOT_FOUND,
     }
 
     sealed interface MutateResult {
-        data class Success(val snippets: List<Snippet>) : MutateResult
-        data class Failure(val code: ErrorCode, val message: String) : MutateResult
+        data class Success(
+            val snippets: List<Snippet>,
+        ) : MutateResult
+
+        data class Failure(
+            val code: ErrorCode,
+            val message: String,
+        ) : MutateResult
     }
 
     /**
@@ -57,21 +64,26 @@ class SnippetStore(private val kv: KeyValueStore) {
      */
     fun list(language: String? = null): List<Snippet> {
         val all = load()
-        val filtered = if (language.isNullOrBlank()) {
-            all
-        } else {
-            val wanted = normalizeLanguage(language)
-            all.filter { it.language == wanted || it.language == LANG_ALL }
-        }
+        val filtered =
+            if (language.isNullOrBlank()) {
+                all
+            } else {
+                val wanted = normalizeLanguage(language)
+                all.filter { it.language == wanted || it.language == LANG_ALL }
+            }
         return filtered.sortedWith(
             compareByDescending<Snippet> { it.usageCount }
-                .thenBy { it.name.lowercase() }
+                .thenBy { it.name.lowercase() },
         )
     }
 
     fun find(id: String): Snippet? = load().firstOrNull { it.id == id }
 
-    fun create(name: String, language: String, body: String): MutateResult {
+    fun create(
+        name: String,
+        language: String,
+        body: String,
+    ): MutateResult {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty()) {
             return MutateResult.Failure(ErrorCode.BLANK_NAME, "snippet name is blank")
@@ -79,7 +91,7 @@ class SnippetStore(private val kv: KeyValueStore) {
         if (trimmedName.length > MAX_NAME_CHARS) {
             return MutateResult.Failure(
                 ErrorCode.NAME_TOO_LONG,
-                "name has ${trimmedName.length} characters, limit is $MAX_NAME_CHARS"
+                "name has ${trimmedName.length} characters, limit is $MAX_NAME_CHARS",
             )
         }
         if (body.isBlank()) {
@@ -88,7 +100,7 @@ class SnippetStore(private val kv: KeyValueStore) {
         if (body.length > MAX_BODY_CHARS) {
             return MutateResult.Failure(
                 ErrorCode.BODY_TOO_LARGE,
-                "body has ${body.length} characters, limit is $MAX_BODY_CHARS"
+                "body has ${body.length} characters, limit is $MAX_BODY_CHARS",
             )
         }
         val all = load().toMutableList()
@@ -96,16 +108,17 @@ class SnippetStore(private val kv: KeyValueStore) {
         if (duplicate != null) {
             return MutateResult.Failure(
                 ErrorCode.DUPLICATE_NAME,
-                "a snippet named \"${duplicate.name}\" already exists"
+                "a snippet named \"${duplicate.name}\" already exists",
             )
         }
-        val snippet = Snippet(
-            id = nextId(all),
-            name = trimmedName,
-            language = normalizeLanguage(language),
-            body = body,
-            usageCount = 0
-        )
+        val snippet =
+            Snippet(
+                id = nextId(all),
+                name = trimmedName,
+                language = normalizeLanguage(language),
+                body = body,
+                usageCount = 0,
+            )
         all.add(snippet)
         save(all)
         return MutateResult.Success(all)
@@ -119,7 +132,7 @@ class SnippetStore(private val kv: KeyValueStore) {
         id: String,
         name: String? = null,
         language: String? = null,
-        body: String? = null
+        body: String? = null,
     ): MutateResult {
         val all = load().toMutableList()
         val index = all.indexOfFirst { it.id == id }
@@ -136,16 +149,17 @@ class SnippetStore(private val kv: KeyValueStore) {
             if (newName.length > MAX_NAME_CHARS) {
                 return MutateResult.Failure(
                     ErrorCode.NAME_TOO_LONG,
-                    "name has ${newName.length} characters, limit is $MAX_NAME_CHARS"
+                    "name has ${newName.length} characters, limit is $MAX_NAME_CHARS",
                 )
             }
-            val clash = all.firstOrNull {
-                it.id != id && it.name.equals(newName, ignoreCase = true)
-            }
+            val clash =
+                all.firstOrNull {
+                    it.id != id && it.name.equals(newName, ignoreCase = true)
+                }
             if (clash != null) {
                 return MutateResult.Failure(
                     ErrorCode.DUPLICATE_NAME,
-                    "a snippet named \"${clash.name}\" already exists"
+                    "a snippet named \"${clash.name}\" already exists",
                 )
             }
         }
@@ -157,7 +171,7 @@ class SnippetStore(private val kv: KeyValueStore) {
             if (body.length > MAX_BODY_CHARS) {
                 return MutateResult.Failure(
                     ErrorCode.BODY_TOO_LARGE,
-                    "body has ${body.length} characters, limit is $MAX_BODY_CHARS"
+                    "body has ${body.length} characters, limit is $MAX_BODY_CHARS",
                 )
             }
             newBody = body
@@ -197,12 +211,22 @@ class SnippetStore(private val kv: KeyValueStore) {
      * (`start > endInclusive`) that marks a caret insertion point.
      */
     object Insert {
-
-        data class Stop(val index: Int, val start: Int, val endInclusive: Int)
+        data class Stop(
+            val index: Int,
+            val start: Int,
+            val endInclusive: Int,
+        )
 
         sealed interface InsertResult {
-            data class Success(val text: String, val stops: List<Stop>) : InsertResult
-            data class Failure(val code: ErrorCode, val message: String) : InsertResult
+            data class Success(
+                val text: String,
+                val stops: List<Stop>,
+            ) : InsertResult
+
+            data class Failure(
+                val code: ErrorCode,
+                val message: String,
+            ) : InsertResult
         }
 
         fun expand(body: String): InsertResult {
@@ -212,7 +236,7 @@ class SnippetStore(private val kv: KeyValueStore) {
             if (body.length > MAX_BODY_CHARS) {
                 return InsertResult.Failure(
                     ErrorCode.BODY_TOO_LARGE,
-                    "body has ${body.length} characters, limit is $MAX_BODY_CHARS"
+                    "body has ${body.length} characters, limit is $MAX_BODY_CHARS",
                 )
             }
             val out = StringBuilder(body.length + 64)
@@ -277,8 +301,7 @@ class SnippetStore(private val kv: KeyValueStore) {
          * Final caret offset after insertion: the last `$0` stop when the
          * body declares one, otherwise the end of the expanded text.
          */
-        fun finalCaret(result: InsertResult.Success): Int =
-            result.stops.lastOrNull { it.index == 0 }?.start ?: result.text.length
+        fun finalCaret(result: InsertResult.Success): Int = result.stops.lastOrNull { it.index == 0 }?.start ?: result.text.length
     }
 
     // ------------------------------------------------------------ internals
@@ -301,12 +324,13 @@ class SnippetStore(private val kv: KeyValueStore) {
                         Snippet(
                             id = id,
                             name = name,
-                            language = normalizeLanguage(
-                                o.optString(F_LANGUAGE, LANG_ALL)
-                            ),
+                            language =
+                                normalizeLanguage(
+                                    o.optString(F_LANGUAGE, LANG_ALL),
+                                ),
                             body = body,
-                            usageCount = o.optInt(F_USAGE, 0).coerceAtLeast(0)
-                        )
+                            usageCount = o.optInt(F_USAGE, 0).coerceAtLeast(0),
+                        ),
                     )
                 }
             }
@@ -325,7 +349,7 @@ class SnippetStore(private val kv: KeyValueStore) {
                     .put(F_NAME, s.name)
                     .put(F_LANGUAGE, s.language)
                     .put(F_BODY, s.body)
-                    .put(F_USAGE, s.usageCount)
+                    .put(F_USAGE, s.usageCount),
             )
         }
         kv.putString(KEY, JSONObject().put(F_SNIPPETS, arr).toString())
@@ -355,7 +379,6 @@ class SnippetStore(private val kv: KeyValueStore) {
         private const val F_BODY = "body"
         private const val F_USAGE = "usage"
 
-        fun normalizeLanguage(language: String): String =
-            language.trim().lowercase().ifEmpty { LANG_ALL }
+        fun normalizeLanguage(language: String): String = language.trim().lowercase().ifEmpty { LANG_ALL }
     }
 }

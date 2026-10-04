@@ -5,7 +5,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class CursorNavTest {
-
     @Test
     fun offsetForLineBasic() {
         val text = "line1\nline2\nline3"

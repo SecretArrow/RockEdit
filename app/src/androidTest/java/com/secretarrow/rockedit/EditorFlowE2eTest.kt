@@ -26,21 +26,27 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class EditorFlowE2eTest {
-
-    private fun newTestFile(name: String, content: String): Pair<File, Intent> {
+    private fun newTestFile(
+        name: String,
+        content: String,
+    ): Pair<File, Intent> {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val file = File(context.filesDir, name)
         file.writeText(content)
         val uri = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", file)
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setClass(context, EditorActivity::class.java)
-            setDataAndType(uri, "text/plain")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-        }
+        val intent =
+            Intent(Intent.ACTION_VIEW).apply {
+                setClass(context, EditorActivity::class.java)
+                setDataAndType(uri, "text/plain")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            }
         return file to intent
     }
 
-    private fun waitForText(expected: String, timeoutMs: Long = 5000) {
+    private fun waitForText(
+        expected: String,
+        timeoutMs: Long = 5000,
+    ) {
         val deadline = System.currentTimeMillis() + timeoutMs
         var found = false
         while (System.currentTimeMillis() < deadline && !found) {
@@ -54,7 +60,11 @@ class EditorFlowE2eTest {
         assertTrue("Editor never showed text: $expected", found)
     }
 
-    private fun awaitFileContent(file: File, expected: String, timeoutMs: Long = 5000): String {
+    private fun awaitFileContent(
+        file: File,
+        expected: String,
+        timeoutMs: Long = 5000,
+    ): String {
         val deadline = System.currentTimeMillis() + timeoutMs
         var content = file.readText()
         while (System.currentTimeMillis() < deadline && !content.contains(expected)) {

@@ -13,7 +13,6 @@ import org.junit.Test
  * and ellipsis, truncation, and the input-size failure path.
  */
 class TodoScannerTest {
-
     private fun ok(result: TodoScanner.ScanResult): TodoScanner.ScanResult.Success {
         assertTrue("expected Success, was $result", result is TodoScanner.ScanResult.Success)
         return result as TodoScanner.ScanResult.Success
@@ -42,7 +41,7 @@ class TodoScannerTest {
         assertEquals(6, result.items.size)
         assertEquals(
             setOf("TODO", "FIXME", "HACK", "XXX", "BUG", "NOTE"),
-            result.items.map { it.marker }.toSet()
+            result.items.map { it.marker }.toSet(),
         )
         assertFalse(result.truncated)
     }
@@ -63,17 +62,19 @@ class TodoScannerTest {
 
     @Test
     fun caseSensitiveSkipsLowercase() {
-        val result = ok(
-            TodoScanner.scan("todo fix this", TodoScanner.TodoOptions(caseSensitive = true))
-        )
+        val result =
+            ok(
+                TodoScanner.scan("todo fix this", TodoScanner.TodoOptions(caseSensitive = true)),
+            )
         assertTrue(result.items.isEmpty())
     }
 
     @Test
     fun caseSensitiveFindsUppercaseOnly() {
-        val items = ok(
-            TodoScanner.scan("todo and TODO", TodoScanner.TodoOptions(caseSensitive = true))
-        ).items
+        val items =
+            ok(
+                TodoScanner.scan("todo and TODO", TodoScanner.TodoOptions(caseSensitive = true)),
+            ).items
         assertEquals(1, items.size)
         assertEquals("TODO", items.single().marker)
         assertEquals(10, items.single().column)
@@ -314,9 +315,10 @@ class TodoScannerTest {
 
     @Test
     fun inputAboveSmallCapFailsAndExactCapPasses() {
-        val over = failureOf(
-            TodoScanner.scanWithCap("0123456789ABC", TodoScanner.TodoOptions(), 10)
-        )
+        val over =
+            failureOf(
+                TodoScanner.scanWithCap("0123456789ABC", TodoScanner.TodoOptions(), 10),
+            )
         assertEquals(TodoScanner.ErrorCode.INPUT_TOO_LARGE, over.code)
         val exact = ok(TodoScanner.scanWithCap("0123456789", TodoScanner.TodoOptions(), 10))
         assertTrue(exact.items.isEmpty())
@@ -353,7 +355,7 @@ class TodoScannerTest {
         assertEquals(1, TodoScanner.TodoOptions(maxItems = 1).maxItems)
         assertEquals(
             TodoScanner.TodoOptions.MAX_ITEMS_LIMIT,
-            TodoScanner.TodoOptions(maxItems = TodoScanner.TodoOptions.MAX_ITEMS_LIMIT).maxItems
+            TodoScanner.TodoOptions(maxItems = TodoScanner.TodoOptions.MAX_ITEMS_LIMIT).maxItems,
         )
     }
 }

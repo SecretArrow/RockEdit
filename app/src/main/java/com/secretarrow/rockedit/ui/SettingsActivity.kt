@@ -18,7 +18,6 @@ import kotlinx.coroutines.withContext
 
 /** Settings screen backed by androidx.preference. */
 class SettingsActivity : AppCompatActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         val settings = App.settings(this)
         if (settings.isBlackTheme()) setTheme(R.style.Theme_RockEdit_Black)
@@ -38,7 +37,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {
-
         private val backupLauncher =
             registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
                 if (uri != null) exportTo(uri)
@@ -49,7 +47,10 @@ class SettingsActivity : AppCompatActivity() {
                 if (uri != null) restoreFrom(uri)
             }
 
-        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        override fun onCreatePreferences(
+            savedInstanceState: Bundle?,
+            rootKey: String?,
+        ) {
             setPreferencesFromResource(R.xml.preferences, rootKey)
             findPreference<Preference>("backup_data")?.setOnPreferenceClickListener {
                 backupLauncher.launch("rockedit-backup.json")
@@ -70,20 +71,24 @@ class SettingsActivity : AppCompatActivity() {
         private fun exportTo(uri: Uri) {
             val context = requireContext()
             lifecycleScope.launch {
-                val ok = withContext(Dispatchers.IO) {
-                    try {
-                        val kv = App.keyValueStore(context)
-                        val json = BackupRestore(kv).export(BackupRestore.defaultKeys())
-                        context.contentResolver.openOutputStream(uri, "wt")?.use {
-                            it.write(json.toByteArray(Charsets.UTF_8))
-                        } != null
-                    } catch (_: Exception) {
-                        false
+                val ok =
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val kv = App.keyValueStore(context)
+                            val json = BackupRestore(kv).export(BackupRestore.defaultKeys())
+                            context.contentResolver.openOutputStream(uri, "wt")?.use {
+                                it.write(json.toByteArray(Charsets.UTF_8))
+                            } != null
+                        } catch (_: Exception) {
+                            false
+                        }
                     }
-                }
                 toast(
-                    if (ok) getString(R.string.backup_done)
-                    else getString(R.string.backup_failed)
+                    if (ok) {
+                        getString(R.string.backup_done)
+                    } else {
+                        getString(R.string.backup_failed)
+                    },
                 )
             }
         }
@@ -91,22 +96,25 @@ class SettingsActivity : AppCompatActivity() {
         private fun restoreFrom(uri: Uri) {
             val context = requireContext()
             lifecycleScope.launch {
-                val message = withContext(Dispatchers.IO) {
-                    try {
-                        val kv = App.keyValueStore(context)
-                        val json = context.contentResolver.openInputStream(uri)
-                            ?.use { it.readBytes().toString(Charsets.UTF_8) }
-                        if (json == null) {
+                val message =
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val kv = App.keyValueStore(context)
+                            val json =
+                                context.contentResolver
+                                    .openInputStream(uri)
+                                    ?.use { it.readBytes().toString(Charsets.UTF_8) }
+                            if (json == null) {
+                                getString(R.string.restore_failed)
+                            } else {
+                                val allowed = BackupRestore.defaultKeys().map { it.key }.toSet()
+                                val result = BackupRestore(kv).restore(json, allowed)
+                                getString(R.string.restore_done, result.applied, result.skipped)
+                            }
+                        } catch (_: Exception) {
                             getString(R.string.restore_failed)
-                        } else {
-                            val allowed = BackupRestore.defaultKeys().map { it.key }.toSet()
-                            val result = BackupRestore(kv).restore(json, allowed)
-                            getString(R.string.restore_done, result.applied, result.skipped)
                         }
-                    } catch (_: Exception) {
-                        getString(R.string.restore_failed)
                     }
-                }
                 toast(message)
             }
         }

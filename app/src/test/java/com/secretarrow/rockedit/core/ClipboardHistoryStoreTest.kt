@@ -15,27 +15,23 @@ import org.junit.Test
  * storage recovery, and pinned-first listing.
  */
 class ClipboardHistoryStoreTest {
-
     private fun ok(result: ClipboardHistoryStore.AddResult): List<ClipboardHistoryStore.Entry> {
         assertTrue(
             "expected Success, was $result",
-            result is ClipboardHistoryStore.AddResult.Success
+            result is ClipboardHistoryStore.AddResult.Success,
         )
         return (result as ClipboardHistoryStore.AddResult.Success).entries
     }
 
-    private fun failureOf(
-        result: ClipboardHistoryStore.AddResult
-    ): ClipboardHistoryStore.AddResult.Failure {
+    private fun failureOf(result: ClipboardHistoryStore.AddResult): ClipboardHistoryStore.AddResult.Failure {
         assertTrue(
             "expected Failure, was $result",
-            result is ClipboardHistoryStore.AddResult.Failure
+            result is ClipboardHistoryStore.AddResult.Failure,
         )
         return result as ClipboardHistoryStore.AddResult.Failure
     }
 
-    private fun cappedEntries(): ClipboardHistoryStore =
-        ClipboardHistoryStore(InMemoryKeyValueStore(), maxEntries = 5)
+    private fun cappedEntries(): ClipboardHistoryStore = ClipboardHistoryStore(InMemoryKeyValueStore(), maxEntries = 5)
 
     // ---------------------------------------------------------- add & order
 
@@ -64,7 +60,14 @@ class ClipboardHistoryStoreTest {
         val s = ClipboardHistoryStore(InMemoryKeyValueStore())
         ok(s.add("a"))
         ok(s.add("b"))
-        assertEquals(2, s.list().map { it.id }.toSet().size)
+        assertEquals(
+            2,
+            s
+                .list()
+                .map { it.id }
+                .toSet()
+                .size,
+        )
     }
 
     // --------------------------------------------------------------- dedupe
@@ -113,7 +116,7 @@ class ClipboardHistoryStoreTest {
     fun blankTextIsRejected() {
         assertEquals(
             ClipboardHistoryStore.ErrorCode.BLANK_TEXT,
-            failureOf(ClipboardHistoryStore(InMemoryKeyValueStore()).add("")).code
+            failureOf(ClipboardHistoryStore(InMemoryKeyValueStore()).add("")).code,
         )
     }
 
@@ -282,11 +285,11 @@ class ClipboardHistoryStoreTest {
                 .put("id", "c10")
                 .put("text", "ok")
                 .put("createdAt", 5L)
-                .put("pinned", true)
+                .put("pinned", true),
         )
         kv.putString(
             ClipboardHistoryStore.KEY,
-            JSONObject().put("entries", arr).toString()
+            JSONObject().put("entries", arr).toString(),
         )
         val s = ClipboardHistoryStore(kv)
         val only = s.list().single()

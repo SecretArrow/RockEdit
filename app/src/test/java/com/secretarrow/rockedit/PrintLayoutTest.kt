@@ -6,7 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PrintLayoutTest {
-
     @Test
     fun paginateRespectsLinesPerPage() {
         val text = (1..100).joinToString("\n") { "line $it" }

@@ -29,8 +29,13 @@ interface CodeFormatter {
  * ALWAYS converted into [FormatResult.Failure] by the guard pipeline below —
  * they are never leaked to callers.
  */
-internal class TimeoutSignal(val budgetMs: Long) : RuntimeException("formatting timed out after ${budgetMs}ms")
-internal class DepthSignal(val maxDepth: Int) : RuntimeException("nesting exceeds $maxDepth levels")
+internal class TimeoutSignal(
+    val budgetMs: Long,
+) : RuntimeException("formatting timed out after ${budgetMs}ms")
+
+internal class DepthSignal(
+    val maxDepth: Int,
+) : RuntimeException("nesting exceeds $maxDepth levels")
 
 /**
  * Guard pipeline shared by all formatters.
@@ -44,9 +49,8 @@ internal class DepthSignal(val maxDepth: Int) : RuntimeException("nesting exceed
  *    any other Exception. No execution path can throw past this class.
  */
 abstract class AbstractCodeFormatter(
-    protected val nowMs: () -> Long = System::currentTimeMillis
+    protected val nowMs: () -> Long = System::currentTimeMillis,
 ) : CodeFormatter {
-
     final override fun format(request: FormatRequest): FormatResult {
         val started = nowMs()
 
@@ -59,8 +63,8 @@ abstract class AbstractCodeFormatter(
             return FormatResult.Failure(
                 FormatError(
                     FormatErrorCode.INPUT_TOO_LARGE,
-                    "input has ${request.text.length} characters, limit is ${FormatRequest.MAX_TEXT_CHARS}"
-                )
+                    "input has ${request.text.length} characters, limit is ${FormatRequest.MAX_TEXT_CHARS}",
+                ),
             )
         }
 
@@ -81,19 +85,19 @@ abstract class AbstractCodeFormatter(
             FormatResult.Failure(
                 FormatError(
                     FormatErrorCode.PARSE_ERROR,
-                    "input nesting is too deep (stack overflow); the file may be generated or corrupted"
-                )
+                    "input nesting is too deep (stack overflow); the file may be generated or corrupted",
+                ),
             )
         } catch (e: OutOfMemoryError) {
             FormatResult.Failure(
-                FormatError(FormatErrorCode.INPUT_TOO_LARGE, "not enough memory to format this input")
+                FormatError(FormatErrorCode.INPUT_TOO_LARGE, "not enough memory to format this input"),
             )
         } catch (e: Exception) {
             FormatResult.Failure(
                 FormatError(
                     FormatErrorCode.INTERNAL_ERROR,
-                    "unexpected failure in '${id}': ${e.message ?: e::class.java.simpleName}"
-                )
+                    "unexpected failure in '$id': ${e.message ?: e::class.java.simpleName}",
+                ),
             )
         }
     }
@@ -108,25 +112,30 @@ abstract class AbstractCodeFormatter(
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult
 
-    protected fun timeoutResult(budgetMs: Long): FormatResult = FormatResult.Failure(
-        FormatError(
-            FormatErrorCode.TIMEOUT,
-            "formatting exceeded its $budgetMs ms time budget; shrink the file or raise timeBudgetMs"
+    protected fun timeoutResult(budgetMs: Long): FormatResult =
+        FormatResult.Failure(
+            FormatError(
+                FormatErrorCode.TIMEOUT,
+                "formatting exceeded its $budgetMs ms time budget; shrink the file or raise timeBudgetMs",
+            ),
         )
-    )
 
-    protected fun depthResult(maxDepth: Int): FormatResult = FormatResult.Failure(
-        FormatError(
-            FormatErrorCode.PARSE_ERROR,
-            "nesting exceeds the maximum depth of $maxDepth levels"
+    protected fun depthResult(maxDepth: Int): FormatResult =
+        FormatResult.Failure(
+            FormatError(
+                FormatErrorCode.PARSE_ERROR,
+                "nesting exceeds the maximum depth of $maxDepth levels",
+            ),
         )
-    )
 
     /** Indentation unit for a nesting depth; empty string in minify mode. */
-    protected fun pad(options: FormatOptions, depth: Int): String {
+    protected fun pad(
+        options: FormatOptions,
+        depth: Int,
+    ): String {
         if (options.minify) return ""
         val unit = if (options.indentStyle == IndentStyle.TABS) "\t" else " ".repeat(options.indentSize)
         return unit.repeat(depth.coerceAtLeast(0))
@@ -148,7 +157,7 @@ abstract class AbstractCodeFormatter(
     protected fun applyFinalTouches(
         out: CharSequence,
         options: FormatOptions,
-        trimTrailing: Boolean = true
+        trimTrailing: Boolean = true,
     ): String {
         var s = out.toString()
         s = LineBreak.normalize(s, options.lineBreak)
@@ -171,8 +180,9 @@ abstract class AbstractCodeFormatter(
  * [format] is the outermost entry point and NEVER throws: even a broken
  * formatter implementation surfaces as [FormatErrorCode.INTERNAL_ERROR].
  */
-class FormatterRegistry(formatters: List<CodeFormatter>) {
-
+class FormatterRegistry(
+    formatters: List<CodeFormatter>,
+) {
     private val exact: Map<String, CodeFormatter>
     private val fallback: CodeFormatter?
 
@@ -206,24 +216,25 @@ class FormatterRegistry(formatters: List<CodeFormatter>) {
         // GUARD A — null request (defensive for Java/interop callers).
         if (request == null) {
             return FormatResult.Failure(
-                FormatError(FormatErrorCode.INTERNAL_ERROR, "format request is null")
+                FormatError(FormatErrorCode.INTERNAL_ERROR, "format request is null"),
             )
         }
         // GUARD B — blank language (unreachable via FormatRequest's own check,
         // kept as belt-and-suspenders for deeply defensive layering).
         if (request.language.isBlank()) {
             return FormatResult.Failure(
-                FormatError(FormatErrorCode.UNSUPPORTED_LANGUAGE, "language is blank")
+                FormatError(FormatErrorCode.UNSUPPORTED_LANGUAGE, "language is blank"),
             )
         }
         // GUARD C — no formatter at all (registry without fallback).
-        val formatter = formatterFor(request.language)
-            ?: return FormatResult.Failure(
-                FormatError(
-                    FormatErrorCode.UNSUPPORTED_LANGUAGE,
-                    "no formatter for language '${request.language}'"
+        val formatter =
+            formatterFor(request.language)
+                ?: return FormatResult.Failure(
+                    FormatError(
+                        FormatErrorCode.UNSUPPORTED_LANGUAGE,
+                        "no formatter for language '${request.language}'",
+                    ),
                 )
-            )
         // GUARD D — last-resort net: a formatter must never crash the editor.
         return try {
             formatter.format(request)
@@ -231,8 +242,8 @@ class FormatterRegistry(formatters: List<CodeFormatter>) {
             FormatResult.Failure(
                 FormatError(
                     FormatErrorCode.INTERNAL_ERROR,
-                    "unexpected failure in '${formatter.id}': ${t.message ?: t::class.java.simpleName}"
-                )
+                    "unexpected failure in '${formatter.id}': ${t.message ?: t::class.java.simpleName}",
+                ),
             )
         }
     }
@@ -253,8 +264,8 @@ class FormatterRegistry(formatters: List<CodeFormatter>) {
                     IndentFormatter(nowMs),
                     LispFormatter(nowMs),
                     YamlFormatter(nowMs),
-                    WhitespaceFormatter(nowMs)
-                )
+                    WhitespaceFormatter(nowMs),
+                ),
             )
     }
 }

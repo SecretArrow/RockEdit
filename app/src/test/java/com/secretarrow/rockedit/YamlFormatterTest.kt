@@ -14,11 +14,14 @@ import org.junit.Test
  * whitespace trimming outside block scalars, blank lines, CRLF, skip.
  */
 class YamlFormatterTest {
+    private val fmt =
+        com.secretarrow.rockedit.core
+            .YamlFormatter()
 
-    private val fmt = com.secretarrow.rockedit.core.YamlFormatter()
-
-    private fun run(text: String, options: FormatOptions = FormatOptions()) =
-        fmt.format(FormatRequest(text, "yaml", options.copy(insertFinalNewline = false)))
+    private fun run(
+        text: String,
+        options: FormatOptions = FormatOptions(),
+    ) = fmt.format(FormatRequest(text, "yaml", options.copy(insertFinalNewline = false)))
 
     private fun ok(result: FormatResult): String {
         assertTrue("expected Success but was $result", result is FormatResult.Success)

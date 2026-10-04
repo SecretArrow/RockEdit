@@ -15,11 +15,12 @@ import org.junit.Test
  * string/paren isolation, unbalanced-structure errors with lines, minify.
  */
 class CssFormatterTest {
-
     private val formatter = CssFormatter()
 
-    private fun format(text: String, options: FormatOptions = FormatOptions()): FormatResult =
-        formatter.format(FormatRequest(text, "css", options))
+    private fun format(
+        text: String,
+        options: FormatOptions = FormatOptions(),
+    ): FormatResult = formatter.format(FormatRequest(text, "css", options))
 
     // ------------------------------------------------------------ pretty
 
@@ -28,7 +29,7 @@ class CssFormatterTest {
         val out = (format("body{color:red;background:#fff;}") as FormatResult.Success).formattedText
         assertEquals(
             "body {\n    color: red;\n    background: #fff;\n}\n",
-            out
+            out,
         )
     }
 
@@ -43,7 +44,7 @@ class CssFormatterTest {
         val out = (format("@media (max-width:600px){.a{color:red}}") as FormatResult.Success).formattedText
         assertEquals(
             "@media (max-width:600px) {\n    .a {\n        color: red\n    }\n}\n",
-            out
+            out,
         )
     }
 
@@ -119,8 +120,9 @@ class CssFormatterTest {
 
     @Test
     fun minifyStripsCommentsAndWhitespace() {
-        val out = (format("/* c */\na { color : red ; margin : 0 }\n", FormatOptions(minify = true)) as FormatResult.Success)
-            .formattedText
+        val out =
+            (format("/* c */\na { color : red ; margin : 0 }\n", FormatOptions(minify = true)) as FormatResult.Success)
+                .formattedText
         assertEquals("a{color:red;margin:0}\n", out)
     }
 

@@ -11,10 +11,12 @@ import org.junit.Test
  * hsl conversion, named colors, offsets/sources, cap + truncation.
  */
 class ColorExtractorTest {
-
     private fun colors(text: String) = ColorExtractor.extract(text).colors
 
-    private fun argbOf(text: String, index: Int = 0): Long = colors(text)[index].argb
+    private fun argbOf(
+        text: String,
+        index: Int = 0,
+    ): Long = colors(text)[index].argb
 
     // ------------------------------------------------------------------ hex
 

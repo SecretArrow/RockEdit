@@ -5,12 +5,30 @@ package com.secretarrow.rockedit.core
  * without Android framework dependencies.
  */
 interface KeyValueStore {
-    fun getString(key: String, defValue: String?): String?
-    fun putString(key: String, value: String)
-    fun getBoolean(key: String, defValue: Boolean): Boolean
-    fun putBoolean(key: String, value: Boolean)
+    fun getString(
+        key: String,
+        defValue: String?,
+    ): String?
+
+    fun putString(
+        key: String,
+        value: String,
+    )
+
+    fun getBoolean(
+        key: String,
+        defValue: Boolean,
+    ): Boolean
+
+    fun putBoolean(
+        key: String,
+        value: Boolean,
+    )
+
     fun remove(key: String)
+
     fun clear()
+
     fun contains(key: String): Boolean
 }
 
@@ -18,17 +36,27 @@ interface KeyValueStore {
 class InMemoryKeyValueStore : KeyValueStore {
     private val map = HashMap<String, Any>()
 
-    override fun getString(key: String, defValue: String?): String? =
-        map[key] as? String ?: defValue
+    override fun getString(
+        key: String,
+        defValue: String?,
+    ): String? = map[key] as? String ?: defValue
 
-    override fun putString(key: String, value: String) {
+    override fun putString(
+        key: String,
+        value: String,
+    ) {
         map[key] = value
     }
 
-    override fun getBoolean(key: String, defValue: Boolean): Boolean =
-        map[key] as? Boolean ?: defValue
+    override fun getBoolean(
+        key: String,
+        defValue: Boolean,
+    ): Boolean = map[key] as? Boolean ?: defValue
 
-    override fun putBoolean(key: String, value: Boolean) {
+    override fun putBoolean(
+        key: String,
+        value: Boolean,
+    ) {
         map[key] = value
     }
 

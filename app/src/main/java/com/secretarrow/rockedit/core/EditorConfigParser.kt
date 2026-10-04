@@ -28,7 +28,6 @@ import java.util.regex.PatternSyntaxException
  *   guaranteed, so higher-level configs are out of scope v1.
  */
 object EditorConfigParser {
-
     enum class IndentStyle { SPACE, TAB }
 
     data class Section(
@@ -38,13 +37,13 @@ object EditorConfigParser {
         val tabWidth: Int? = null,
         val endOfLine: LineBreak? = null,
         val trimTrailing: Boolean? = null,
-        val insertFinalNewline: Boolean? = null
+        val insertFinalNewline: Boolean? = null,
     )
 
     data class EditorConfig(
         val isRoot: Boolean = false,
         val sections: List<Section> = emptyList(),
-        val malformedLines: Int = 0
+        val malformedLines: Int = 0,
     ) {
         fun isEmpty(): Boolean = sections.isEmpty()
     }
@@ -55,7 +54,7 @@ object EditorConfigParser {
         val indentSize: Int? = null,
         val endOfLine: LineBreak? = null,
         val trimTrailing: Boolean? = null,
-        val insertFinalNewline: Boolean? = null
+        val insertFinalNewline: Boolean? = null,
     )
 
     // ------------------------------------------------------------- parse
@@ -113,8 +112,11 @@ object EditorConfigParser {
                     }
                     if (current == null) {
                         // Header property before any section: only "root".
-                        if (key == "root") isRoot = value.equals("true", ignoreCase = true)
-                        else malformed++
+                        if (key == "root") {
+                            isRoot = value.equals("true", ignoreCase = true)
+                        } else {
+                            malformed++
+                        }
                         continue
                     }
                     current[key] = value
@@ -140,84 +142,104 @@ object EditorConfigParser {
         return value
     }
 
-    private fun buildSection(pattern: String, map: Map<String, String>): Section {
-        return Section(
+    private fun buildSection(
+        pattern: String,
+        map: Map<String, String>,
+    ): Section =
+        Section(
             pattern = pattern,
-            indentStyle = when (map["indent_style"]?.lowercase()) {
-                "space" -> IndentStyle.SPACE
-                "tab" -> IndentStyle.TAB
-                else -> null // missing or invalid: key ignored
-            },
+            indentStyle =
+                when (map["indent_style"]?.lowercase()) {
+                    "space" -> IndentStyle.SPACE
+                    "tab" -> IndentStyle.TAB
+                    else -> null // missing or invalid: key ignored
+                },
             indentSize = positiveInt(map["indent_size"], max = 8),
             tabWidth = positiveInt(map["tab_width"], max = 16),
-            endOfLine = when (map["end_of_line"]?.lowercase()) {
-                "lf" -> LineBreak.LF
-                "crlf" -> LineBreak.CRLF
-                "cr" -> LineBreak.CR
-                else -> null
-            },
+            endOfLine =
+                when (map["end_of_line"]?.lowercase()) {
+                    "lf" -> LineBreak.LF
+                    "crlf" -> LineBreak.CRLF
+                    "cr" -> LineBreak.CR
+                    else -> null
+                },
             trimTrailing = boolean(map["trim_trailing_whitespace"]),
-            insertFinalNewline = boolean(map["insert_final_newline"])
+            insertFinalNewline = boolean(map["insert_final_newline"]),
         )
-    }
 
-    private fun positiveInt(raw: String?, max: Int): Int? {
+    private fun positiveInt(
+        raw: String?,
+        max: Int,
+    ): Int? {
         if (raw == null) return null
         val v = raw.toIntOrNull() ?: return null
         return if (v in 1..max) v else null
     }
 
-    private fun boolean(raw: String?): Boolean? = when (raw?.lowercase()) {
-        "true" -> true
-        "false" -> false
-        else -> null
-    }
+    private fun boolean(raw: String?): Boolean? =
+        when (raw?.lowercase()) {
+            "true" -> true
+            "false" -> false
+            else -> null
+        }
 
     // ------------------------------------------------------------- resolve
 
     /** Merges every section matching [fileName], in file order (last wins). */
-    fun resolve(config: EditorConfig, fileName: String): Resolved {
+    fun resolve(
+        config: EditorConfig,
+        fileName: String,
+    ): Resolved {
         var resolved = Resolved()
         for (section in config.sections) {
             if (!matches(section.pattern, fileName)) continue
-            resolved = Resolved(
-                indentStyle = section.indentStyle ?: resolved.indentStyle,
-                indentSize = section.indentSize ?: resolved.indentSize,
-                endOfLine = section.endOfLine ?: resolved.endOfLine,
-                trimTrailing = section.trimTrailing ?: resolved.trimTrailing,
-                insertFinalNewline = section.insertFinalNewline ?: resolved.insertFinalNewline
-            )
+            resolved =
+                Resolved(
+                    indentStyle = section.indentStyle ?: resolved.indentStyle,
+                    indentSize = section.indentSize ?: resolved.indentSize,
+                    endOfLine = section.endOfLine ?: resolved.endOfLine,
+                    trimTrailing = section.trimTrailing ?: resolved.trimTrailing,
+                    insertFinalNewline = section.insertFinalNewline ?: resolved.insertFinalNewline,
+                )
         }
         return resolved
     }
 
     /** Maps a resolved config onto [base] options, keeping unspecified defaults. */
-    fun toFormatOptions(resolved: Resolved, base: FormatOptions): FormatOptions {
+    fun toFormatOptions(
+        resolved: Resolved,
+        base: FormatOptions,
+    ): FormatOptions {
         // Per spec: indent_size = "tab" falls back to tab_width; our parser
         // rejects the literal "tab" value, so tab_width alone drives nothing
         // beyond clamping — documented subset behavior.
-        val indentSize = (resolved.indentSize ?: base.indentSize)
-            .coerceIn(FormatOptions.MIN_INDENT_SIZE, FormatOptions.MAX_INDENT_SIZE)
-        val indentStyle = when (resolved.indentStyle) {
-            // Fully qualified: this object declares its own IndentStyle enum
-            // (SPACE/TAB); the formatter's enum (SPACES/TABS) is the target.
-            IndentStyle.TAB -> com.secretarrow.rockedit.core.IndentStyle.TABS
-            IndentStyle.SPACE -> com.secretarrow.rockedit.core.IndentStyle.SPACES
-            null -> base.indentStyle
-        }
+        val indentSize =
+            (resolved.indentSize ?: base.indentSize)
+                .coerceIn(FormatOptions.MIN_INDENT_SIZE, FormatOptions.MAX_INDENT_SIZE)
+        val indentStyle =
+            when (resolved.indentStyle) {
+                // Fully qualified: this object declares its own IndentStyle enum
+                // (SPACE/TAB); the formatter's enum (SPACES/TABS) is the target.
+                IndentStyle.TAB -> com.secretarrow.rockedit.core.IndentStyle.TABS
+                IndentStyle.SPACE -> com.secretarrow.rockedit.core.IndentStyle.SPACES
+                null -> base.indentStyle
+            }
         return base.copy(
             indentStyle = indentStyle,
             indentSize = indentSize,
             lineBreak = resolved.endOfLine ?: base.lineBreak,
             trimTrailingWhitespace = resolved.trimTrailing ?: base.trimTrailingWhitespace,
-            insertFinalNewline = resolved.insertFinalNewline ?: base.insertFinalNewline
+            insertFinalNewline = resolved.insertFinalNewline ?: base.insertFinalNewline,
         )
     }
 
     // ------------------------------------------------------------- globs
 
     /** Exact name, `*` (any run) and `?` (single char), case-insensitive. */
-    internal fun matches(pattern: String, fileName: String): Boolean {
+    internal fun matches(
+        pattern: String,
+        fileName: String,
+    ): Boolean {
         if (pattern == "*" || pattern.isEmpty()) return true
         val regex = buildGlobRegex(pattern) ?: return false
         return regex.matcher(fileName).matches()
@@ -234,7 +256,8 @@ object EditorConfigParser {
             }
         }
         return try {
-            java.util.regex.Pattern.compile(sb.toString(), java.util.regex.Pattern.CASE_INSENSITIVE)
+            java.util.regex.Pattern
+                .compile(sb.toString(), java.util.regex.Pattern.CASE_INSENSITIVE)
         } catch (e: PatternSyntaxException) {
             null // invalid pattern matches nothing (fail-safe)
         }

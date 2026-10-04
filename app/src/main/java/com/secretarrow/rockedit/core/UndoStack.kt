@@ -10,8 +10,9 @@ package com.secretarrow.rockedit.core
  *  - [redo] is the exact inverse of [undo].
  *  - Any [commit] invalidates the redo path (standard editor behaviour).
  */
-class UndoStack(private val limit: Int = DEFAULT_LIMIT) {
-
+class UndoStack(
+    private val limit: Int = DEFAULT_LIMIT,
+) {
     private val past = ArrayDeque<String>()
     private val future = ArrayDeque<String>()
 

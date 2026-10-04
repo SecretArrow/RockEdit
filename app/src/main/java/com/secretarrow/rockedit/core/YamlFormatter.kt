@@ -17,8 +17,9 @@ package com.secretarrow.rockedit.core
  * Block scalars (`|`, `>`, with optional indicators) are detected so their
  * content — where whitespace IS data — is preserved byte-for-byte.
  */
-class YamlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCodeFormatter(nowMs) {
-
+class YamlFormatter(
+    nowMs: () -> Long = System::currentTimeMillis,
+) : AbstractCodeFormatter(nowMs) {
     override val id: String = "yaml"
 
     override val supportedLanguages: Set<String> = setOf("yaml")
@@ -27,7 +28,7 @@ class YamlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
         val source = LineBreak.normalize(text, LineBreak.LF)
         val lines = source.split('\n')
@@ -60,15 +61,18 @@ class YamlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
             }
 
             val indent = raw.length - raw.trimStart(' ').length
-            if (raw.contains('\t') && raw.take(indent + 1).contains('\t') &&
-                pendingError == null && !options.lenient
+            if (raw.contains('\t') &&
+                raw.take(indent + 1).contains('\t') &&
+                pendingError == null &&
+                !options.lenient
             ) {
-                pendingError = FormatError(
-                    FormatErrorCode.PARSE_ERROR,
-                    "tab character in indentation: YAML forbids tabs where indentation is significant",
-                    lineNo,
-                    null
-                )
+                pendingError =
+                    FormatError(
+                        FormatErrorCode.PARSE_ERROR,
+                        "tab character in indentation: YAML forbids tabs where indentation is significant",
+                        lineNo,
+                        null,
+                    )
             }
 
             // A block scalar opener: key line ending in | or > plus optional
@@ -77,14 +81,15 @@ class YamlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
                 blockScalarBaseIndent = indent
             }
 
-            val content = if (raw.take(indent + 1).contains('\t')) {
-                // Lenient: convert leading tabs to spaces so structure survives.
-                val leading = raw.takeWhile { it == ' ' || it == '\t' }
-                val width = leading.count { it == '\t' } * options.indentSize + leading.count { it == ' ' }
-                " ".repeat(width) + trimmed
-            } else {
-                raw.trimEnd(' ', '\t')
-            }
+            val content =
+                if (raw.take(indent + 1).contains('\t')) {
+                    // Lenient: convert leading tabs to spaces so structure survives.
+                    val leading = raw.takeWhile { it == ' ' || it == '\t' }
+                    val width = leading.count { it == '\t' } * options.indentSize + leading.count { it == ' ' }
+                    " ".repeat(width) + trimmed
+                } else {
+                    raw.trimEnd(' ', '\t')
+                }
             appendLine(out, index, lines.size, content)
         }
 
@@ -93,7 +98,12 @@ class YamlFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
         return FormatResult.Success(formatted, formatted != source, 0L)
     }
 
-    private fun appendLine(out: StringBuilder, index: Int, total: Int, content: String) {
+    private fun appendLine(
+        out: StringBuilder,
+        index: Int,
+        total: Int,
+        content: String,
+    ) {
         out.append(content)
         if (index < total - 1) out.append('\n')
     }

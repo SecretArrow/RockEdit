@@ -1,10 +1,13 @@
 package com.secretarrow.rockedit.core
 
 /** Character set of a text file: how a new line is encoded on disk. */
-enum class LineBreak(val value: String) {
+enum class LineBreak(
+    val value: String,
+) {
     LF("\n"),
     CR("\r"),
-    CRLF("\r\n");
+    CRLF("\r\n"),
+    ;
 
     companion object {
         /**
@@ -12,7 +15,10 @@ enum class LineBreak(val value: String) {
          * The first line break wins (this is how most editors behave).
          * Returns [fallback] when the text contains no line break at all.
          */
-        fun detect(text: String, fallback: LineBreak = CRLF): LineBreak {
+        fun detect(
+            text: String,
+            fallback: LineBreak = CRLF,
+        ): LineBreak {
             var i = 0
             val n = text.length
             while (i < n) {
@@ -27,7 +33,10 @@ enum class LineBreak(val value: String) {
         }
 
         /** Converts every line break in [text] to [target]. */
-        fun normalize(text: String, target: LineBreak): String {
+        fun normalize(
+            text: String,
+            target: LineBreak,
+        ): String {
             if (text.isEmpty()) return text
             // Normalize everything to \n first, then expand to the target style.
             val unix = text.replace("\r\n", "\n").replace("\r", "\n")

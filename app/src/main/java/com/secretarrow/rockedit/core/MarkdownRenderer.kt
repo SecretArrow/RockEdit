@@ -7,12 +7,15 @@ package com.secretarrow.rockedit.core
  * and horizontal rules. Deterministic and side-effect free (pure JVM).
  */
 object MarkdownRenderer {
-
     /**
      * Renders [markdown] into a full HTML document. [dark] switches the
      * embedded stylesheet to a dark palette.
      */
-    fun renderDocument(markdown: String, dark: Boolean, title: String = "Preview"): String {
+    fun renderDocument(
+        markdown: String,
+        dark: Boolean,
+        title: String = "Preview",
+    ): String {
         val style = if (dark) DARK_STYLE else LIGHT_STYLE
         return buildString {
             append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"/>")
@@ -39,7 +42,9 @@ object MarkdownRenderer {
                         code.append(lines[i]).append('\n')
                         i++
                     }
-                    out.append("<pre><code>").append(escapeHtml(code.toString().trimEnd('\n')))
+                    out
+                        .append("<pre><code>")
+                        .append(escapeHtml(code.toString().trimEnd('\n')))
                         .append("</code></pre>\n")
                     i++ // skip the closing fence
                 }
@@ -56,11 +61,14 @@ object MarkdownRenderer {
                 line.startsWith(">") -> {
                     val quote = StringBuilder()
                     while (i < lines.size && lines[i].startsWith(">")) {
-                        quote.append(lines[i].removePrefix(">").removePrefix(" ").trim())
+                        quote
+                            .append(lines[i].removePrefix(">").removePrefix(" ").trim())
                             .append('\n')
                         i++
                     }
-                    out.append("<blockquote>").append(inline(quote.toString().trim()))
+                    out
+                        .append("<blockquote>")
+                        .append(inline(quote.toString().trim()))
                         .append("</blockquote>\n")
                 }
                 isListItem(line) -> {
@@ -68,9 +76,12 @@ object MarkdownRenderer {
                     val tag = if (ordered) "ol" else "ul"
                     out.append("<$tag>")
                     while (i < lines.size && isListItem(lines[i])) {
-                        val item = lines[i].trimStart()
-                            .dropWhile { it.isDigit() || it == '.' || it == '-' || it == '*' || it == '+' }
-                            .removePrefix(" ").trim()
+                        val item =
+                            lines[i]
+                                .trimStart()
+                                .dropWhile { it.isDigit() || it == '.' || it == '-' || it == '*' || it == '+' }
+                                .removePrefix(" ")
+                                .trim()
                         out.append("<li>").append(inline(item)).append("</li>")
                         i++
                     }
@@ -79,9 +90,12 @@ object MarkdownRenderer {
                 line.isBlank() -> i++
                 else -> {
                     val paragraph = StringBuilder()
-                    while (i < lines.size && lines[i].isNotBlank() &&
-                        !isHeading(lines[i]) && !isListItem(lines[i]) &&
-                        !lines[i].startsWith(">") && !lines[i].startsWith("```") &&
+                    while (i < lines.size &&
+                        lines[i].isNotBlank() &&
+                        !isHeading(lines[i]) &&
+                        !isListItem(lines[i]) &&
+                        !lines[i].startsWith(">") &&
+                        !lines[i].startsWith("```") &&
                         !isHorizontalRule(lines[i])
                     ) {
                         paragraph.append(lines[i].trim()).append('\n')
@@ -119,25 +133,28 @@ object MarkdownRenderer {
         result = result.replace(Regex("(?<!\\*)\\*([^*\\s][^*]*?)\\*(?!\\*)"), "<em>$1</em>")
         result = result.replace(Regex("(?<!_)_([^_\\s][^_]*?)_(?!_)"), "<em>$1</em>")
         // Images before links: ![alt](url)
-        result = result.replace(Regex("!\\[([^\\]]*)\\]\\(([^)\\s]+)\\)")) { match ->
-            val alt = match.groupValues[1]
-            val url = match.groupValues[2]
-            "<img alt=\"$alt\" src=\"$url\"/>"
-        }
+        result =
+            result.replace(Regex("!\\[([^\\]]*)\\]\\(([^)\\s]+)\\)")) { match ->
+                val alt = match.groupValues[1]
+                val url = match.groupValues[2]
+                "<img alt=\"$alt\" src=\"$url\"/>"
+            }
         // Links: [text](url)
-        result = result.replace(Regex("\\[([^\\]]+)\\]\\(([^)\\s]+)\\)")) { match ->
-            val label = match.groupValues[1]
-            val url = match.groupValues[2]
-            "<a href=\"$url\">$label</a>"
-        }
+        result =
+            result.replace(Regex("\\[([^\\]]+)\\]\\(([^)\\s]+)\\)")) { match ->
+                val label = match.groupValues[1]
+                val url = match.groupValues[2]
+                "<a href=\"$url\">$label</a>"
+            }
         return result
     }
 
-    private fun escapeHtml(text: String): String = text
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("\"", "&quot;")
+    private fun escapeHtml(text: String): String =
+        text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
 
     private fun isHeading(line: String): Boolean {
         val trimmed = line.trimStart()
@@ -148,17 +165,21 @@ object MarkdownRenderer {
 
     private fun isHorizontalRule(line: String): Boolean {
         val trimmed = line.trim()
-        return trimmed.length >= 3 && (
-            trimmed.all { it == '-' || it == ' ' } ||
-                trimmed.all { it == '*' || it == ' ' } ||
-                trimmed.all { it == '_' || it == ' ' }
-            ) && trimmed.any { it == '-' || it == '*' || it == '_' }
+        return trimmed.length >= 3 &&
+            (
+                trimmed.all { it == '-' || it == ' ' } ||
+                    trimmed.all { it == '*' || it == ' ' } ||
+                    trimmed.all { it == '_' || it == ' ' }
+            ) &&
+            trimmed.any { it == '-' || it == '*' || it == '_' }
     }
 
     private fun isListItem(line: String): Boolean {
         val trimmed = line.trimStart()
-        return trimmed.startsWith("- ") || trimmed.startsWith("* ") ||
-            trimmed.startsWith("+ ") || trimmed.startsWithFirstDigitDot()
+        return trimmed.startsWith("- ") ||
+            trimmed.startsWith("* ") ||
+            trimmed.startsWith("+ ") ||
+            trimmed.startsWithFirstDigitDot()
     }
 
     private fun String.startsWithFirstDigitDot(): Boolean {

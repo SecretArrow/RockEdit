@@ -16,18 +16,23 @@ import org.junit.Test
  * [SyntaxRegistry] so the Format action picks the engine automatically.
  */
 class SmartContractFormatterTest {
-
     private val registry = FormatterRegistry.default()
 
-    private fun run(text: String, language: String) =
-        registry.format(FormatRequest(text, language, FormatOptions(insertFinalNewline = false)))
+    private fun run(
+        text: String,
+        language: String,
+    ) = registry.format(FormatRequest(text, language, FormatOptions(insertFinalNewline = false)))
 
     private fun ok(result: FormatResult): String {
         assertTrue("expected Success but was $result", result is FormatResult.Success)
         return (result as FormatResult.Success).formattedText
     }
 
-    private fun expectBrace(language: String, src: String, expected: String) {
+    private fun expectBrace(
+        language: String,
+        src: String,
+        expected: String,
+    ) {
         assertEquals("brace", registry.formatterFor(language)?.id)
         val out = ok(run(src, language))
         assertEquals(expected, out)
@@ -51,7 +56,7 @@ class SmartContractFormatterTest {
                 "        require(to != address(0), \"zero\");\n" +
                 "        _balances[msg.sender] -= amount;\n" +
                 "        return true;\n" +
-                "    }\n}"
+                "    }\n}",
         )
     }
 
@@ -60,7 +65,7 @@ class SmartContractFormatterTest {
         assertEquals("brace", registry.formatterFor("sol")?.id)
         assertEquals(
             ok(run("contract A {\nuint x;\n}", "solidity")),
-            ok(run("contract A {\nuint x;\n}", "sol"))
+            ok(run("contract A {\nuint x;\n}", "sol")),
         )
     }
 
@@ -73,7 +78,7 @@ class SmartContractFormatterTest {
         val out = ok(run(src, "vyper"))
         assertEquals(
             "@external\ndef balance_of(owner: address) -> uint256:\n    return self.balances[owner]",
-            out
+            out,
         )
         assertEquals(out, ok(run(out, "vyper")))
     }
@@ -87,7 +92,7 @@ class SmartContractFormatterTest {
             "module examples::coin {\nstruct Coin has key {\nvalue: u64\n}\n\n" +
                 "public fun mint(value: u64): Coin {\nCoin { value }\n}\n}",
             "module examples::coin {\n    struct Coin has key {\n        value: u64\n    }\n\n" +
-                "    public fun mint(value: u64): Coin {\n        Coin { value }\n    }\n}"
+                "    public fun mint(value: u64): Coin {\n        Coin { value }\n    }\n}",
         )
     }
 
@@ -100,7 +105,7 @@ class SmartContractFormatterTest {
             "#[starknet::contract]\nmod Token {\n#[storage]\nstruct Storage {\n" +
                 "total_supply: u256,\n}\n}",
             "#[starknet::contract]\nmod Token {\n    #[storage]\n    struct Storage {\n" +
-                "        total_supply: u256,\n    }\n}"
+                "        total_supply: u256,\n    }\n}",
         )
     }
 
@@ -109,8 +114,9 @@ class SmartContractFormatterTest {
     @Test
     fun clarityContract() {
         assertEquals("lisp", registry.formatterFor("clarity")?.id)
-        val src = "(define-data-var counter int 0)\n(define-public (inc)\n(begin\n" +
-            "(var-set counter (+ 1 (var-get counter)))\n(ok (var-get counter))\n)\n)"
+        val src =
+            "(define-data-var counter int 0)\n(define-public (inc)\n(begin\n" +
+                "(var-set counter (+ 1 (var-get counter)))\n(ok (var-get counter))\n)\n)"
         val out = ok(run(src, "clarity"))
         // (inc) closes on the opener line, so the body sits one level in.
         assertTrue("begin must be indented one level", out.contains("\n    (begin"))
@@ -127,7 +133,7 @@ class SmartContractFormatterTest {
             "access(all) contract Counter {\naccess(all) var count: Int\n\n" +
                 "access(all) fun add() {\nself.count = self.count + 1\n}\n}",
             "access(all) contract Counter {\n    access(all) var count: Int\n\n" +
-                "    access(all) fun add() {\n        self.count = self.count + 1\n    }\n}"
+                "    access(all) fun add() {\n        self.count = self.count + 1\n    }\n}",
         )
     }
 
@@ -140,7 +146,7 @@ class SmartContractFormatterTest {
             "actor Counter {\nvar count : Nat = 0;\n\npublic func add() : async Nat {\n" +
                 "count += 1;\nreturn count;\n}\n}",
             "actor Counter {\n    var count : Nat = 0;\n\n" +
-                "    public func add() : async Nat {\n        count += 1;\n        return count;\n    }\n}"
+                "    public func add() : async Nat {\n        count += 1;\n        return count;\n    }\n}",
         )
     }
 
@@ -151,7 +157,7 @@ class SmartContractFormatterTest {
         expectBrace(
             "aiken",
             "validator spend {\nmint(datum: Option<Data>, rdmr: Data) {\nTrue\n}\n}",
-            "validator spend {\n    mint(datum: Option<Data>, rdmr: Data) {\n        True\n    }\n}"
+            "validator spend {\n    mint(datum: Option<Data>, rdmr: Data) {\n        True\n    }\n}",
         )
     }
 
@@ -163,7 +169,7 @@ class SmartContractFormatterTest {
             "leo",
             "program token.aleo {\ntransfer(receiver: address, amount: u64) {\nassert(amount > 0u64);\n}\n}",
             "program token.aleo {\n    transfer(receiver: address, amount: u64) {\n" +
-                "        assert(amount > 0u64);\n    }\n}"
+                "        assert(amount > 0u64);\n    }\n}",
         )
     }
 
@@ -175,7 +181,7 @@ class SmartContractFormatterTest {
             "fe",
             "contract Wallet {\nowner: address;\npub fn deposit(mut self, amount: u256) {\nassert(amount > 0);\n}\n}",
             "contract Wallet {\n    owner: address;\n" +
-                "    pub fn deposit(mut self, amount: u256) {\n        assert(amount > 0);\n    }\n}"
+                "    pub fn deposit(mut self, amount: u256) {\n        assert(amount > 0);\n    }\n}",
         )
     }
 
@@ -187,7 +193,7 @@ class SmartContractFormatterTest {
         val out = ok(run("(parameter unit)\n(storage unit)\n(code\n(PUSH unit (UNIT))\n)", "michelson"))
         assertEquals(
             "(parameter unit)\n(storage unit)\n(code\n    (PUSH unit (UNIT))\n)",
-            out
+            out,
         )
         assertEquals(out, ok(run(out, "michelson")))
     }
@@ -207,14 +213,15 @@ class SmartContractFormatterTest {
 
     @Test
     fun contractFileExtensionsResolveAndRoute() {
-        val cases = mapOf(
-            "Router.sol" to "brace",
-            "vault.vy" to "indent",
-            "coin.move" to "brace",
-            "token.cairo" to "brace",
-            "dao.clar" to "lisp",
-            "escrow.tz" to "lisp"
-        )
+        val cases =
+            mapOf(
+                "Router.sol" to "brace",
+                "vault.vy" to "indent",
+                "coin.move" to "brace",
+                "token.cairo" to "brace",
+                "dao.clar" to "lisp",
+                "escrow.tz" to "lisp",
+            )
         for ((name, engine) in cases) {
             val language = SyntaxRegistry.languageForFileName(name)
             assertTrue("extension must resolve for $name", language != null)
@@ -226,10 +233,31 @@ class SmartContractFormatterTest {
     fun everyRegistryLanguageHasAFormatter() {
         val registry = FormatterRegistry.default()
         for (id in listOf(
-            "kotlin", "java", "javascript", "typescript", "go", "rust", "python",
-            "ruby", "lua", "elixir", "julia", "latex", "clojure", "scheme", "lisp",
-            "yaml", "json", "xml", "css", "solidity", "vyper", "move", "cairo",
-            "clarity", "michelson"
+            "kotlin",
+            "java",
+            "javascript",
+            "typescript",
+            "go",
+            "rust",
+            "python",
+            "ruby",
+            "lua",
+            "elixir",
+            "julia",
+            "latex",
+            "clojure",
+            "scheme",
+            "lisp",
+            "yaml",
+            "json",
+            "xml",
+            "css",
+            "solidity",
+            "vyper",
+            "move",
+            "cairo",
+            "clarity",
+            "michelson",
         )) {
             assertTrue("no formatter for $id", registry.formatterFor(id) != null)
         }

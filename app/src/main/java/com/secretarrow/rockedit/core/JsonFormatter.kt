@@ -12,8 +12,9 @@ package com.secretarrow.rockedit.core
  *   and rendering, so huge or pathological inputs fail fast instead of
  *   hanging the caller.
  */
-class JsonFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCodeFormatter(nowMs) {
-
+class JsonFormatter(
+    nowMs: () -> Long = System::currentTimeMillis,
+) : AbstractCodeFormatter(nowMs) {
     override val id: String = "json"
     override val supportedLanguages: Set<String> = setOf("json")
 
@@ -21,15 +22,16 @@ class JsonFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
         language: String,
         text: String,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ): FormatResult {
-        val value = try {
-            JsonLexer(text, deadline).parseTopLevel()
-        } catch (e: JsonLexer.PositionError) {
-            return FormatResult.Failure(
-                FormatError(FormatErrorCode.PARSE_ERROR, "invalid JSON: ${e.message}", e.line, e.column)
-            )
-        }
+        val value =
+            try {
+                JsonLexer(text, deadline).parseTopLevel()
+            } catch (e: JsonLexer.PositionError) {
+                return FormatResult.Failure(
+                    FormatError(FormatErrorCode.PARSE_ERROR, "invalid JSON: ${e.message}", e.line, e.column),
+                )
+            }
         // TimeoutSignal / DepthSignal propagate to the guard pipeline on purpose.
         val out = StringBuilder(text.length + (text.length / 4) + 16)
         if (options.minify) {
@@ -46,7 +48,7 @@ class JsonFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
         out: StringBuilder,
         depth: Int,
         options: FormatOptions,
-        deadline: Deadline
+        deadline: Deadline,
     ) {
         if (depth > MAX_DEPTH) throw DepthSignal(MAX_DEPTH)
         if (deadline.isExpired()) throw TimeoutSignal(deadline.budgetMs)
@@ -90,7 +92,12 @@ class JsonFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
         }
     }
 
-    private fun renderCompact(value: JsonValue, out: StringBuilder, depth: Int, deadline: Deadline) {
+    private fun renderCompact(
+        value: JsonValue,
+        out: StringBuilder,
+        depth: Int,
+        deadline: Deadline,
+    ) {
         if (depth > MAX_DEPTH) throw DepthSignal(MAX_DEPTH)
         if (deadline.isExpired()) throw TimeoutSignal(deadline.budgetMs)
         when (value) {
@@ -119,7 +126,10 @@ class JsonFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
         }
     }
 
-    private fun renderString(value: String, out: StringBuilder) {
+    private fun renderString(
+        value: String,
+        out: StringBuilder,
+    ) {
         out.append('"')
         for (c in value) {
             when (c) {
@@ -152,21 +162,41 @@ class JsonFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
 /** Parsed JSON value tree. Numbers keep their raw source text. */
 internal sealed class JsonValue {
     object Null : JsonValue()
-    data class Bool(val value: Boolean) : JsonValue()
-    data class Number(val raw: String) : JsonValue()
-    data class Text(val value: String) : JsonValue()
-    data class Array(val items: List<JsonValue>) : JsonValue()
-    data class Object(val entries: List<Pair<String, JsonValue>>) : JsonValue()
+
+    data class Bool(
+        val value: Boolean,
+    ) : JsonValue()
+
+    data class Number(
+        val raw: String,
+    ) : JsonValue()
+
+    data class Text(
+        val value: String,
+    ) : JsonValue()
+
+    data class Array(
+        val items: List<JsonValue>,
+    ) : JsonValue()
+
+    data class Object(
+        val entries: List<Pair<String, JsonValue>>,
+    ) : JsonValue()
 }
 
 /**
  * Strict JSON lexer/parser with 1-based line/column tracking.
  * The [deadline] is polled at least every 1 KiB of consumed input.
  */
-internal class JsonLexer(private val text: String, private val deadline: Deadline) {
-
-    class PositionError(message: String, val line: Int, val column: Int) :
-        RuntimeException("$message (line $line, column $column)")
+internal class JsonLexer(
+    private val text: String,
+    private val deadline: Deadline,
+) {
+    class PositionError(
+        message: String,
+        val line: Int,
+        val column: Int,
+    ) : RuntimeException("$message (line $line, column $column)")
 
     private var pos = 0
     private var line = 1
@@ -194,7 +224,7 @@ internal class JsonLexer(private val text: String, private val deadline: Deadlin
             'f' -> parseKeyword("false", JsonValue.Bool(false))
             'n' -> parseKeyword("null", JsonValue.Null)
             '-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> parseNumber()
-            else -> fail("unexpected character '${c}', a value was expected")
+            else -> fail("unexpected character '$c', a value was expected")
         }
     }
 
@@ -332,7 +362,10 @@ internal class JsonLexer(private val text: String, private val deadline: Deadlin
         return JsonValue.Number(text.substring(start, pos))
     }
 
-    private fun parseKeyword(word: String, value: JsonValue): JsonValue {
+    private fun parseKeyword(
+        word: String,
+        value: JsonValue,
+    ): JsonValue {
         for (expected in word) {
             if (pos >= text.length || text[pos] != expected) fail("invalid literal, expected '$word'")
             advance()

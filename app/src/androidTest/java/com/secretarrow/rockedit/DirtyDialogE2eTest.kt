@@ -1,6 +1,7 @@
 package com.secretarrow.rockedit
 
 import android.content.Intent
+import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -13,7 +14,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.lifecycle.Lifecycle
 import com.secretarrow.rockedit.ui.EditorActivity
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,15 +25,15 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class DirtyDialogE2eTest {
-
     @Test
     fun backWithChangesShowsUnsavedDialogAndDiscardCloses() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            setClass(context, EditorActivity::class.java)
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, "seed")
-        }
+        val intent =
+            Intent(Intent.ACTION_SEND).apply {
+                setClass(context, EditorActivity::class.java)
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, "seed")
+            }
         val scenario = ActivityScenario.launch<EditorActivity>(intent)
 
         onView(withId(R.id.editor)).check(matches(withText("seed")))

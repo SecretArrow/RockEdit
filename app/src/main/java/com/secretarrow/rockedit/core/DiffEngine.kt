@@ -25,7 +25,6 @@ package com.secretarrow.rockedit.core
  *   so the same inputs always produce the same ops.
  */
 object DiffEngine {
-
     enum class DiffKind { EQUAL, DELETE, INSERT }
 
     /**
@@ -38,13 +37,13 @@ object DiffEngine {
         val text: String,
         val oldStart: Int,
         val newStart: Int,
-        val lineCount: Int
+        val lineCount: Int,
     )
 
     data class DiffStats(
         val addedLines: Int,
         val removedLines: Int,
-        val unchangedLines: Int
+        val unchangedLines: Int,
     ) {
         val hasChanges: Boolean get() = addedLines > 0 || removedLines > 0
     }
@@ -53,7 +52,7 @@ object DiffEngine {
         val ignoreWhitespace: Boolean = false,
         val ignoreCase: Boolean = false,
         val maxLines: Int = 100_000,
-        val maxMatrixCells: Long = 4_000_000L
+        val maxMatrixCells: Long = 4_000_000L,
     ) {
         init {
             require(maxLines in 1..1_000_000) {
@@ -71,16 +70,19 @@ object DiffEngine {
         data class Done(
             val ops: List<DiffOp>,
             val stats: DiffStats,
-            val fellBack: Boolean
+            val fellBack: Boolean,
         ) : DiffOutcome
 
-        data class Failure(val code: DiffErrorCode, val message: String) : DiffOutcome
+        data class Failure(
+            val code: DiffErrorCode,
+            val message: String,
+        ) : DiffOutcome
     }
 
     fun diff(
         oldText: String,
         newText: String,
-        options: DiffOptions = DiffOptions()
+        options: DiffOptions = DiffOptions(),
     ): DiffOutcome {
         if (oldText.isEmpty() && newText.isEmpty()) {
             return DiffOutcome.Done(emptyList(), DiffStats(0, 0, 0), fellBack = false)
@@ -91,7 +93,7 @@ object DiffEngine {
             return DiffOutcome.Failure(
                 DiffErrorCode.INPUT_TOO_LARGE,
                 "input has ${maxOf(oldLines.size, newLines.size)} lines, " +
-                    "limit is ${options.maxLines}"
+                    "limit is ${options.maxLines}",
             )
         }
         if (oldText.isEmpty()) {
@@ -105,34 +107,37 @@ object DiffEngine {
         // covers the changed middle, which keeps the matrix small for the
         // typical "edit in the middle of a file" case.
         var start = 0
-        while (start < oldLines.size && start < newLines.size &&
+        while (start < oldLines.size &&
+            start < newLines.size &&
             equal(oldLines[start], newLines[start], options)
         ) {
             start++
         }
         var oldEnd = oldLines.size - 1
         var newEnd = newLines.size - 1
-        while (oldEnd >= start && newEnd >= start &&
+        while (oldEnd >= start &&
+            newEnd >= start &&
             equal(oldLines[oldEnd], newLines[newEnd], options)
         ) {
             oldEnd--
             newEnd--
         }
         val prefixOps = if (start == 0) emptyList() else listOf(equalOp(oldLines, start))
-        val suffixOps = if (oldEnd + 1 < oldLines.size && oldEnd + 1 < oldLines.size) {
-            val count = oldLines.size - 1 - oldEnd
-            listOf(
-                DiffOp(
-                    DiffKind.EQUAL,
-                    oldLines.drop(oldEnd + 1).joinToString("\n"),
-                    oldStart = oldEnd + 1,
-                    newStart = newEnd + 1,
-                    lineCount = count
+        val suffixOps =
+            if (oldEnd + 1 < oldLines.size && oldEnd + 1 < oldLines.size) {
+                val count = oldLines.size - 1 - oldEnd
+                listOf(
+                    DiffOp(
+                        DiffKind.EQUAL,
+                        oldLines.drop(oldEnd + 1).joinToString("\n"),
+                        oldStart = oldEnd + 1,
+                        newStart = newEnd + 1,
+                        lineCount = count,
+                    ),
                 )
-            )
-        } else {
-            emptyList()
-        }
+            } else {
+                emptyList()
+            }
 
         val midOld = oldLines.subList(start, oldEnd + 1)
         val midNew = newLines.subList(start, newEnd + 1)
@@ -150,7 +155,7 @@ object DiffEngine {
         oldLines: List<String>,
         newLines: List<String>,
         options: DiffOptions,
-        offset: Int
+        offset: Int,
     ): Pair<List<DiffOp>, Boolean> {
         if (oldLines.isEmpty() && newLines.isEmpty()) return Pair(emptyList(), false)
         if (oldLines.isEmpty()) {
@@ -161,10 +166,10 @@ object DiffEngine {
                         newLines.joinToString("\n"),
                         oldStart = offset,
                         newStart = offset,
-                        lineCount = newLines.size
-                    )
+                        lineCount = newLines.size,
+                    ),
                 ),
-                false
+                false,
             )
         }
         if (newLines.isEmpty()) {
@@ -175,10 +180,10 @@ object DiffEngine {
                         oldLines.joinToString("\n"),
                         oldStart = offset,
                         newStart = offset,
-                        lineCount = oldLines.size
-                    )
+                        lineCount = oldLines.size,
+                    ),
                 ),
-                false
+                false,
             )
         }
         val n = oldLines.size
@@ -186,29 +191,31 @@ object DiffEngine {
         val width = m + 1
         val cells = (n.toLong() + 1) * (m.toLong() + 1)
         if (cells > options.maxMatrixCells) {
-            val ops = buildList {
-                add(deleteOp(oldLines, offset))
-                add(
-                    DiffOp(
-                        DiffKind.INSERT,
-                        newLines.joinToString("\n"),
-                        oldStart = offset + n,
-                        newStart = offset,
-                        lineCount = m
+            val ops =
+                buildList {
+                    add(deleteOp(oldLines, offset))
+                    add(
+                        DiffOp(
+                            DiffKind.INSERT,
+                            newLines.joinToString("\n"),
+                            oldStart = offset + n,
+                            newStart = offset,
+                            lineCount = m,
+                        ),
                     )
-                )
-            }
+                }
             return Pair(ops, true)
         }
         // dp[i * width + j] = LCS length of oldLines[i..] and newLines[j..].
         val dp = IntArray(cells.toInt())
         for (i in n - 1 downTo 0) {
             for (j in m - 1 downTo 0) {
-                dp[i * width + j] = if (equal(oldLines[i], newLines[j], options)) {
-                    dp[(i + 1) * width + j + 1] + 1
-                } else {
-                    maxOf(dp[(i + 1) * width + j], dp[i * width + j + 1])
-                }
+                dp[i * width + j] =
+                    if (equal(oldLines[i], newLines[j], options)) {
+                        dp[(i + 1) * width + j + 1] + 1
+                    } else {
+                        maxOf(dp[(i + 1) * width + j], dp[i * width + j + 1])
+                    }
             }
         }
         val ops = ArrayList<DiffOp>(n + m)
@@ -227,8 +234,8 @@ object DiffEngine {
                     text = pendingLines.joinToString("\n"),
                     oldStart = pendingOld,
                     newStart = pendingNew,
-                    lineCount = pendingLines.size
-                )
+                    lineCount = pendingLines.size,
+                ),
             )
             pendingKind = null
             pendingLines.clear()
@@ -238,8 +245,10 @@ object DiffEngine {
         var j = 0
         while (i < n || j < m) {
             val takeEqual = i < n && j < m && equal(oldLines[i], newLines[j], options)
-            val takeDelete = i < n && !takeEqual &&
-                (j >= m || dp[(i + 1) * width + j] >= dp[i * width + j + 1])
+            val takeDelete =
+                i < n &&
+                    !takeEqual &&
+                    (j >= m || dp[(i + 1) * width + j] >= dp[i * width + j + 1])
             when {
                 takeEqual -> {
                     if (pendingKind != DiffKind.EQUAL) {
@@ -294,7 +303,11 @@ object DiffEngine {
         }
     }
 
-    private fun equal(a: String, b: String, options: DiffOptions): Boolean {
+    private fun equal(
+        a: String,
+        b: String,
+        options: DiffOptions,
+    ): Boolean {
         var left = a
         var right = b
         if (options.ignoreWhitespace) {
@@ -308,36 +321,45 @@ object DiffEngine {
         return left == right
     }
 
-    private fun equalOp(lines: List<String>, upTo: Int): DiffOp =
+    private fun equalOp(
+        lines: List<String>,
+        upTo: Int,
+    ): DiffOp =
         DiffOp(
             DiffKind.EQUAL,
             lines.subList(0, upTo).joinToString("\n"),
             oldStart = 0,
             newStart = 0,
-            lineCount = upTo
+            lineCount = upTo,
         )
 
-    private fun insertOp(lines: List<String>, oldStart: Int): DiffOp =
+    private fun insertOp(
+        lines: List<String>,
+        oldStart: Int,
+    ): DiffOp =
         DiffOp(
             DiffKind.INSERT,
             lines.joinToString("\n"),
             oldStart = oldStart,
             newStart = 0,
-            lineCount = lines.size
+            lineCount = lines.size,
         )
 
-    private fun deleteOp(lines: List<String>, newStart: Int): DiffOp =
+    private fun deleteOp(
+        lines: List<String>,
+        newStart: Int,
+    ): DiffOp =
         DiffOp(
             DiffKind.DELETE,
             lines.joinToString("\n"),
             oldStart = 0,
             newStart = newStart,
-            lineCount = lines.size
+            lineCount = lines.size,
         )
 
     private fun done(
         ops: List<DiffOp>,
-        fellBack: Boolean
+        fellBack: Boolean,
     ): DiffOutcome {
         var added = 0
         var removed = 0

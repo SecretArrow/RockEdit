@@ -24,7 +24,6 @@ import kotlinx.coroutines.withContext
  * Main screen: recent files list + open/create entry points.
  */
 class MainActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: RecentFilesAdapter
 
@@ -51,10 +50,11 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
 
-        adapter = RecentFilesAdapter(
-            onClick = { openEditor(Uri.parse(it.uri)) },
-            onLongClick = { confirmRemove(it) }
-        )
+        adapter =
+            RecentFilesAdapter(
+                onClick = { openEditor(Uri.parse(it.uri)) },
+                onLongClick = { confirmRemove(it) },
+            )
         binding.recentsList.layoutManager = LinearLayoutManager(this)
         binding.recentsList.adapter = adapter
 
@@ -108,10 +108,11 @@ class MainActivity : AppCompatActivity() {
     private fun handleSharedText(intent: Intent?) {
         if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
             val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
-            val editor = Intent(this, EditorActivity::class.java).apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, text)
-            }
+            val editor =
+                Intent(this, EditorActivity::class.java).apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, text)
+                }
             startActivity(editor)
         }
     }
@@ -120,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         try {
             contentResolver.takePersistableUriPermission(
                 uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         } catch (_: SecurityException) {
             // Provider did not offer persistable grants; file still opens for this session.
@@ -137,30 +138,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun confirmRemove(item: RecentFile) {
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        androidx.appcompat.app.AlertDialog
+            .Builder(this)
             .setTitle(R.string.remove_from_recents)
             .setMessage(item.name)
             .setPositiveButton(R.string.discard) { _, _ ->
                 App.recents(this).remove(item.uri)
                 refreshRecents()
                 Toast.makeText(this, R.string.removed_from_recents, Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
     private fun showAbout() {
         val body = getString(R.string.about_body, BuildConfig.VERSION_NAME)
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        androidx.appcompat.app.AlertDialog
+            .Builder(this)
             .setTitle(R.string.about_title)
             .setMessage(body)
             .setPositiveButton(android.R.string.ok, null)
             .setNeutralButton(R.string.licenses_title) { _, _ ->
                 startActivity(
-                    Intent(this, com.secretarrow.rockedit.ui.LicensesActivity::class.java)
+                    Intent(this, com.secretarrow.rockedit.ui.LicensesActivity::class.java),
                 )
-            }
-            .show()
+            }.show()
     }
 
     private fun refreshRecents() {
@@ -177,7 +178,8 @@ class MainActivity : AppCompatActivity() {
     fun queryDisplayName(uri: Uri): String {
         var name: String = uri.lastPathSegment ?: "file.txt"
         try {
-            contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            contentResolver
+                .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
                 ?.use { cursor ->
                     if (cursor.moveToFirst()) {
                         val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)

@@ -7,9 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RecentFilesStoreTest {
-
-    private fun store(capacity: Int = RecentFilesStore.MAX_ITEMS) =
-        RecentFilesStore(InMemoryKeyValueStore(), capacity)
+    private fun store(capacity: Int = RecentFilesStore.MAX_ITEMS) = RecentFilesStore(InMemoryKeyValueStore(), capacity)
 
     @Test
     fun emptyByDefault() {

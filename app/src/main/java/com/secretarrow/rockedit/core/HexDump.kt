@@ -36,7 +36,6 @@ package com.secretarrow.rockedit.core
  *   [BINARY_SNIFF_BYTES] bytes means binary; an empty array is never binary.
  */
 object HexDump {
-
     /** Hard cap for both directions: 1 MiB of bytes. */
     const val MAX_BYTES = 1_048_576
 
@@ -57,7 +56,7 @@ object HexDump {
         TOO_LARGE,
         EMPTY,
         ODD_HEX,
-        INVALID_HEX
+        INVALID_HEX,
     }
 
     /**
@@ -68,26 +67,40 @@ object HexDump {
         val bytesPerLine: Int = 16,
         val groupSize: Int = 2,
         val offsetBase: Long = 0,
-        val uppercase: Boolean = false
+        val uppercase: Boolean = false,
     )
 
     /** One rendered dump row: byte [offset] plus the aligned hex/ASCII columns. */
-    data class DumpLine(val offset: Long, val hexText: String, val asciiText: String)
+    data class DumpLine(
+        val offset: Long,
+        val hexText: String,
+        val asciiText: String,
+    )
 
     sealed interface ResultLines {
-        data class Success(val lines: List<DumpLine>) : ResultLines
-        data class Failure(val code: ErrorCode, val message: String) : ResultLines
+        data class Success(
+            val lines: List<DumpLine>,
+        ) : ResultLines
+
+        data class Failure(
+            val code: ErrorCode,
+            val message: String,
+        ) : ResultLines
     }
 
     sealed interface ParseResult {
-        data class Success(val bytes: ByteArray) : ParseResult {
-            override fun equals(other: Any?): Boolean =
-                other is Success && bytes.contentEquals(other.bytes)
+        data class Success(
+            val bytes: ByteArray,
+        ) : ParseResult {
+            override fun equals(other: Any?): Boolean = other is Success && bytes.contentEquals(other.bytes)
 
             override fun hashCode(): Int = bytes.contentHashCode()
         }
 
-        data class Failure(val code: ErrorCode, val message: String) : ParseResult
+        data class Failure(
+            val code: ErrorCode,
+            val message: String,
+        ) : ParseResult
     }
 
     /**
@@ -96,38 +109,42 @@ object HexDump {
      * @return `null` when the options are usable, otherwise a [ResultLines.Failure]
      *   carrying a specific message (what failed, why, and the allowed range).
      */
-    internal fun validateOptions(options: DumpOptions): ResultLines.Failure? = when {
-        options.bytesPerLine < MIN_BYTES_PER_LINE || options.bytesPerLine > MAX_BYTES_PER_LINE ->
-            ResultLines.Failure(
-                ErrorCode.BYTES_PER_LINE,
-                "bytesPerLine is ${options.bytesPerLine}, allowed range is " +
-                    "$MIN_BYTES_PER_LINE..$MAX_BYTES_PER_LINE"
-            )
-        options.groupSize < 1 || options.groupSize > options.bytesPerLine ->
-            ResultLines.Failure(
-                ErrorCode.GROUP_SIZE,
-                "groupSize is ${options.groupSize}, allowed range is 1..${options.bytesPerLine} " +
-                    "(must not exceed bytesPerLine)"
-            )
-        options.offsetBase < 0 ->
-            ResultLines.Failure(
-                ErrorCode.OFFSET_BASE,
-                "offsetBase is ${options.offsetBase}, must be >= 0"
-            )
-        else -> null
-    }
+    internal fun validateOptions(options: DumpOptions): ResultLines.Failure? =
+        when {
+            options.bytesPerLine < MIN_BYTES_PER_LINE || options.bytesPerLine > MAX_BYTES_PER_LINE ->
+                ResultLines.Failure(
+                    ErrorCode.BYTES_PER_LINE,
+                    "bytesPerLine is ${options.bytesPerLine}, allowed range is " +
+                        "$MIN_BYTES_PER_LINE..$MAX_BYTES_PER_LINE",
+                )
+            options.groupSize < 1 || options.groupSize > options.bytesPerLine ->
+                ResultLines.Failure(
+                    ErrorCode.GROUP_SIZE,
+                    "groupSize is ${options.groupSize}, allowed range is 1..${options.bytesPerLine} " +
+                        "(must not exceed bytesPerLine)",
+                )
+            options.offsetBase < 0 ->
+                ResultLines.Failure(
+                    ErrorCode.OFFSET_BASE,
+                    "offsetBase is ${options.offsetBase}, must be >= 0",
+                )
+            else -> null
+        }
 
     /**
      * Splits [bytes] into aligned dump lines (empty input -> zero lines).
      * Never throws: invalid options and oversized input come back as
      * [ResultLines.Failure] with a specific message.
      */
-    fun toDumpLines(bytes: ByteArray, options: DumpOptions = DumpOptions()): ResultLines {
+    fun toDumpLines(
+        bytes: ByteArray,
+        options: DumpOptions = DumpOptions(),
+    ): ResultLines {
         validateOptions(options)?.let { return it }
         if (bytes.size > MAX_BYTES) {
             return ResultLines.Failure(
                 ErrorCode.TOO_LARGE,
-                "input has ${bytes.size} bytes, limit is $MAX_BYTES"
+                "input has ${bytes.size} bytes, limit is $MAX_BYTES",
             )
         }
         if (bytes.isEmpty()) {
@@ -146,8 +163,8 @@ object HexDump {
                 DumpLine(
                     offset = options.offsetBase + start,
                     hexText = hexColumn(bytes, start, count, options, width),
-                    asciiText = asciiColumn(bytes, start, count, options.bytesPerLine)
-                )
+                    asciiText = asciiColumn(bytes, start, count, options.bytesPerLine),
+                ),
             )
         }
         return ResultLines.Success(lines)
@@ -163,11 +180,15 @@ object HexDump {
      * [IllegalArgumentException] carrying the same specific message. Callers
      * that cannot guarantee the cap should call [toDumpLines] instead.
      */
-    fun toDumpText(bytes: ByteArray, options: DumpOptions = DumpOptions()): String {
-        val lines = when (val result = toDumpLines(bytes, options)) {
-            is ResultLines.Failure -> throw IllegalArgumentException(result.message)
-            is ResultLines.Success -> result.lines
-        }
+    fun toDumpText(
+        bytes: ByteArray,
+        options: DumpOptions = DumpOptions(),
+    ): String {
+        val lines =
+            when (val result = toDumpLines(bytes, options)) {
+                is ResultLines.Failure -> throw IllegalArgumentException(result.message)
+                is ResultLines.Success -> result.lines
+            }
         if (lines.isEmpty()) {
             return ""
         }
@@ -197,7 +218,10 @@ object HexDump {
      * INVALID_HEX at its column, a decoded size above [cap] fails with
      * TOO_LARGE, and a dump with no decodable data fails with EMPTY.
      */
-    internal fun parseWithCap(dump: String, cap: Int): ParseResult {
+    internal fun parseWithCap(
+        dump: String,
+        cap: Int,
+    ): ParseResult {
         if (cap < 0) {
             throw IllegalArgumentException("cap is $cap, must be >= 0")
         }
@@ -205,7 +229,7 @@ object HexDump {
             return ParseResult.Failure(
                 ErrorCode.EMPTY,
                 "dump is empty or contains only whitespace; parsing nothing is an error " +
-                    "(toDumpLines of an empty array succeeds by design, parse does not)"
+                    "(toDumpLines of an empty array succeeds by design, parse does not)",
             )
         }
         val lines = dump.split('\n')
@@ -219,14 +243,14 @@ object HexDump {
                 }
                 is LineData.Bad -> return ParseResult.Failure(
                     parsed.code,
-                    "line ${index + 1}, column ${parsed.column}: ${parsed.detail}"
+                    "line ${index + 1}, column ${parsed.column}: ${parsed.detail}",
                 )
                 is LineData.Data -> {
                     if (total + parsed.data.size > cap) {
                         return ParseResult.Failure(
                             ErrorCode.TOO_LARGE,
                             "decoded dump exceeds the cap: at least ${total + parsed.data.size} " +
-                                "bytes, cap is $cap (first exceeded at line ${index + 1})"
+                                "bytes, cap is $cap (first exceeded at line ${index + 1})",
                         )
                     }
                     total += parsed.data.size
@@ -238,7 +262,7 @@ object HexDump {
             return ParseResult.Failure(
                 ErrorCode.EMPTY,
                 "no hex data found in dump (${lines.size} lines scanned, all blank, junk " +
-                    "or offset-only)"
+                    "or offset-only)",
             )
         }
         val out = ByteArray(total)
@@ -267,8 +291,15 @@ object HexDump {
     // ------------------------------------------------------------ internals
 
     private sealed interface LineData {
-        data class Data(val data: ByteArray) : LineData
-        data class Bad(val code: ErrorCode, val column: Int, val detail: String) : LineData
+        data class Data(
+            val data: ByteArray,
+        ) : LineData
+
+        data class Bad(
+            val code: ErrorCode,
+            val column: Int,
+            val detail: String,
+        ) : LineData
     }
 
     /**
@@ -315,7 +346,7 @@ object HexDump {
                         ErrorCode.INVALID_HEX,
                         i,
                         "invalid hex character '$c'; allowed are 0-9, a-f, A-F and " +
-                            "single spaces between groups"
+                            "single spaces between groups",
                     )
                 }
             }
@@ -330,7 +361,7 @@ object HexDump {
                 ErrorCode.ODD_HEX,
                 lastDigitColumn,
                 "odd number of hex digits (${digits.length}); digits must come in byte " +
-                    "pairs (unpaired digit '${digits.last()}')"
+                    "pairs (unpaired digit '${digits.last()}')",
             )
         }
         val data = ByteArray(digits.length / 2)
@@ -345,7 +376,7 @@ object HexDump {
         start: Int,
         count: Int,
         options: DumpOptions,
-        width: Int
+        width: Int,
     ): String {
         val table = if (options.uppercase) HEX_UPPER else HEX_LOWER
         val sb = StringBuilder(width)
@@ -361,7 +392,12 @@ object HexDump {
         return sb.toString()
     }
 
-    private fun asciiColumn(bytes: ByteArray, start: Int, count: Int, bytesPerLine: Int): String {
+    private fun asciiColumn(
+        bytes: ByteArray,
+        start: Int,
+        count: Int,
+        bytesPerLine: Int,
+    ): String {
         val sb = StringBuilder(bytesPerLine)
         for (i in 0 until count) {
             val value = bytes[start + i].toInt() and 0xFF
@@ -374,13 +410,19 @@ object HexDump {
     }
 
     /** Fixed hex-column width for a full line: hex digits plus group separators. */
-    private fun hexWidth(bytesPerLine: Int, groupSize: Int): Int {
+    private fun hexWidth(
+        bytesPerLine: Int,
+        groupSize: Int,
+    ): Int {
         val groups = (bytesPerLine + groupSize - 1) / groupSize
         return bytesPerLine * 2 + (groups - 1)
     }
 
     /** Offset digit width: at least 8, grown only when the highest offset needs more. */
-    private fun offsetDigits(offsetBase: Long, size: Int): Int {
+    private fun offsetDigits(
+        offsetBase: Long,
+        size: Int,
+    ): Int {
         var needed = 1
         var value = offsetBase + (size - 1).coerceAtLeast(0)
         while (value >= 16) {
@@ -390,20 +432,24 @@ object HexDump {
         return if (needed < 8) 8 else needed
     }
 
-    private fun offsetText(offset: Long, digits: Int, uppercase: Boolean): String {
+    private fun offsetText(
+        offset: Long,
+        digits: Int,
+        uppercase: Boolean,
+    ): String {
         val raw = offset.toString(16).padStart(digits, '0')
         return if (uppercase) raw.uppercase() else raw
     }
 
-    private fun hexValue(c: Char): Int = when (c) {
-        in '0'..'9' -> c - '0'
-        in 'a'..'f' -> c - 'a' + 10
-        in 'A'..'F' -> c - 'A' + 10
-        else -> throw IllegalStateException(
-            "non-hex character '$c' reached hexValue; parser validation gap"
-        )
-    }
+    private fun hexValue(c: Char): Int =
+        when (c) {
+            in '0'..'9' -> c - '0'
+            in 'a'..'f' -> c - 'a' + 10
+            in 'A'..'F' -> c - 'A' + 10
+            else -> throw IllegalStateException(
+                "non-hex character '$c' reached hexValue; parser validation gap",
+            )
+        }
 
-    private fun Char.isHexDigit(): Boolean =
-        this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
+    private fun Char.isHexDigit(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 }

@@ -19,7 +19,6 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class SyntaxHighlightE2eTest {
-
     private fun newKotlinFileIntent(): Intent {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val file = File(context.filesDir, "e2e_syntax.kt")
@@ -44,9 +43,10 @@ class SyntaxHighlightE2eTest {
         while (System.currentTimeMillis() < deadline && spans.size < 3) {
             scenario.onActivity { activity ->
                 val editor = activity.findViewById<EditText>(R.id.editor)
-                spans = editor.editableText
-                    .getSpans(0, editor.length(), ForegroundColorSpan::class.java)
-                    .toList()
+                spans =
+                    editor.editableText
+                        .getSpans(0, editor.length(), ForegroundColorSpan::class.java)
+                        .toList()
             }
             if (spans.size < 3) Thread.sleep(100)
         }

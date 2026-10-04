@@ -4,7 +4,11 @@ package com.secretarrow.rockedit.core
 enum class SyntaxTokenType { KEYWORD, STRING, COMMENT, NUMBER }
 
 /** A colored range in the source text (end exclusive). */
-data class SyntaxToken(val type: SyntaxTokenType, val start: Int, val end: Int)
+data class SyntaxToken(
+    val type: SyntaxTokenType,
+    val start: Int,
+    val end: Int,
+)
 
 /**
  * Small, dependency-free single-pass lexer. It scans the whole document and
@@ -12,24 +16,28 @@ data class SyntaxToken(val type: SyntaxTokenType, val start: Int, val end: Int)
  * Deterministic and side-effect free, so it is fully unit testable on the JVM.
  */
 object SyntaxTokenizer {
-
     /**
      * Tokenizes [text] according to [language]. Adjacent plain text is not
      * emitted: the caller only needs the colored ranges.
      */
-    fun tokenize(text: String, language: SyntaxLanguage): List<SyntaxToken> {
+    fun tokenize(
+        text: String,
+        language: SyntaxLanguage,
+    ): List<SyntaxToken> {
         if (text.isEmpty()) return emptyList()
         val tokens = ArrayList<SyntaxToken>()
         val len = text.length
         val lineComments = language.lineComments.filter { it.isNotEmpty() }
-        val blocks = language.blockComments
-            .filter { it.first.isNotEmpty() && it.second.isNotEmpty() }
+        val blocks =
+            language.blockComments
+                .filter { it.first.isNotEmpty() && it.second.isNotEmpty() }
         val delims = language.stringDelims
-        val keywords = if (language.caseInsensitive) {
-            language.keywords.mapTo(HashSet()) { it.lowercase() }
-        } else {
-            language.keywords
-        }
+        val keywords =
+            if (language.caseInsensitive) {
+                language.keywords.mapTo(HashSet()) { it.lowercase() }
+            } else {
+                language.keywords
+            }
 
         var i = 0
         var blockEnd: String? = null
@@ -111,7 +119,11 @@ object SyntaxTokenizer {
         return tokens
     }
 
-    private fun longestMatchAt(text: String, pos: Int, markers: List<String>): String? {
+    private fun longestMatchAt(
+        text: String,
+        pos: Int,
+        markers: List<String>,
+    ): String? {
         var found: String? = null
         for (marker in markers) {
             if (text.startsWith(marker, pos) && (found == null || marker.length > found.length)) {
@@ -124,7 +136,7 @@ object SyntaxTokenizer {
     private fun longestBlockMatchAt(
         text: String,
         pos: Int,
-        blocks: List<Pair<String, String>>
+        blocks: List<Pair<String, String>>,
     ): Pair<String, String>? {
         var found: Pair<String, String>? = null
         for (block in blocks) {

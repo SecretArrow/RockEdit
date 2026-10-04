@@ -8,7 +8,6 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class SessionStoreTest {
-
     private fun store() = SessionStore(InMemoryKeyValueStore())
 
     @Test
@@ -94,8 +93,9 @@ class SessionStoreTest {
 
     @Test
     fun parseToleratesMalformedEntries() {
-        val json = "{\"u1\":{\"selStart\":4,\"selEnd\":6,\"scrollY\":1,\"updatedAt\":5}," +
-            "\"bad\":\"nope\"}"
+        val json =
+            "{\"u1\":{\"selStart\":4,\"selEnd\":6,\"scrollY\":1,\"updatedAt\":5}," +
+                "\"bad\":\"nope\"}"
         val map = SessionStore.parse(json)
         assertEquals(1, map.size)
         assertEquals(4, map["u1"]!!.selStart)

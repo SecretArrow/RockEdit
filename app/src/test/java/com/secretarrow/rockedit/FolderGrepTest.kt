@@ -15,11 +15,10 @@ import org.junit.Test
  * total caps, CRLF lines, and preview clipping.
  */
 class FolderGrepTest {
-
     private fun done(
         files: List<GrepFile>,
         query: String,
-        options: GrepOptions = GrepOptions()
+        options: GrepOptions = GrepOptions(),
     ): FolderGrep.GrepSummary {
         val outcome = FolderGrep.run(files, query, options)
         assertTrue("expected Done, was $outcome", outcome is GrepOutcome.Done)
@@ -29,7 +28,7 @@ class FolderGrepTest {
     private fun failure(
         files: List<GrepFile>,
         query: String,
-        options: GrepOptions = GrepOptions()
+        options: GrepOptions = GrepOptions(),
     ): FolderGrep.GrepError {
         val outcome = FolderGrep.run(files, query, options)
         assertTrue("expected Failure, was $outcome", outcome is GrepOutcome.Failure)
@@ -48,7 +47,7 @@ class FolderGrepTest {
     fun invalidRegexFailsWithoutCrash() {
         assertEquals(
             FolderGrep.ErrorCode.PARSE_ERROR,
-            failure(emptyList(), "[", GrepOptions(isRegex = true)).code
+            failure(emptyList(), "[", GrepOptions(isRegex = true)).code,
         )
         // Literal mode never fails: "[" quotes to a valid pattern.
         assertEquals(0, done(emptyList(), "[").hits.size)
@@ -89,10 +88,11 @@ class FolderGrepTest {
 
     @Test
     fun hitsCarryPathLineAndColumn() {
-        val summary = done(
-            listOf(GrepFile("src/App.kt", "alpha\nbravo\nalpha again")),
-            "alpha"
-        )
+        val summary =
+            done(
+                listOf(GrepFile("src/App.kt", "alpha\nbravo\nalpha again")),
+                "alpha",
+            )
         assertEquals(2, summary.hits.size)
         assertEquals("src/App.kt", summary.hits[0].path)
         assertEquals(1, summary.hits[0].lineNumber)
@@ -121,10 +121,11 @@ class FolderGrepTest {
 
     @Test
     fun binaryFileIsSkippedAndCounted() {
-        val summary = done(
-            listOf(GrepFile("bin.dat", "abc\u0000xyz")),
-            "abc"
-        )
+        val summary =
+            done(
+                listOf(GrepFile("bin.dat", "abc\u0000xyz")),
+                "abc",
+            )
         assertEquals(1, summary.skippedBinary)
         assertEquals(0, summary.filesScanned)
         assertEquals(0, summary.hits.size)
@@ -142,21 +143,23 @@ class FolderGrepTest {
 
     @Test
     fun perFileCapSetsTruncatedFlag() {
-        val summary = done(
-            listOf(GrepFile("f.txt", "x\nx\nx\nx")),
-            "x",
-            GrepOptions(maxMatchesPerFile = 2)
-        )
+        val summary =
+            done(
+                listOf(GrepFile("f.txt", "x\nx\nx\nx")),
+                "x",
+                GrepOptions(maxMatchesPerFile = 2),
+            )
         assertEquals(2, summary.hits.size)
         assertTrue(summary.truncatedMatches)
     }
 
     @Test
     fun totalCapStopsTraversalAndSetsFlags() {
-        val files = listOf(
-            GrepFile("a.txt", "hit\nhit\nhit"),
-            GrepFile("b.txt", "hit\nhit")
-        )
+        val files =
+            listOf(
+                GrepFile("a.txt", "hit\nhit\nhit"),
+                GrepFile("b.txt", "hit\nhit"),
+            )
         val summary = done(files, "hit", GrepOptions(maxTotalMatches = 4))
         assertEquals(4, summary.hits.size)
         assertTrue(summary.truncatedMatches)

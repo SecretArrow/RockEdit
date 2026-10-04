@@ -18,8 +18,9 @@ import com.secretarrow.rockedit.core.SyntaxTokenizer
  * documents. Colors come from the theme resources, so light, dark and the
  * AMOLED black theme all get readable palettes automatically.
  */
-class SyntaxHighlighter(private val editor: EditText) {
-
+class SyntaxHighlighter(
+    private val editor: EditText,
+) {
     private val handler = Handler(Looper.getMainLooper())
     private val applyRunnable = Runnable { applyNow() }
     private var language: SyntaxLanguage? = null
@@ -67,7 +68,7 @@ class SyntaxHighlighter(private val editor: EditText) {
                 ForegroundColorSpan(color),
                 token.start,
                 token.end,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
         }
     }
@@ -79,12 +80,13 @@ class SyntaxHighlighter(private val editor: EditText) {
         }
     }
 
-    private fun colorFor(type: SyntaxTokenType): Int = when (type) {
-        SyntaxTokenType.KEYWORD -> ContextCompat.getColor(editor.context, R.color.syntax_keyword)
-        SyntaxTokenType.STRING -> ContextCompat.getColor(editor.context, R.color.syntax_string)
-        SyntaxTokenType.COMMENT -> ContextCompat.getColor(editor.context, R.color.syntax_comment)
-        SyntaxTokenType.NUMBER -> ContextCompat.getColor(editor.context, R.color.syntax_number)
-    }
+    private fun colorFor(type: SyntaxTokenType): Int =
+        when (type) {
+            SyntaxTokenType.KEYWORD -> ContextCompat.getColor(editor.context, R.color.syntax_keyword)
+            SyntaxTokenType.STRING -> ContextCompat.getColor(editor.context, R.color.syntax_string)
+            SyntaxTokenType.COMMENT -> ContextCompat.getColor(editor.context, R.color.syntax_comment)
+            SyntaxTokenType.NUMBER -> ContextCompat.getColor(editor.context, R.color.syntax_number)
+        }
 
     companion object {
         private const val DEBOUNCE_MS = 250L

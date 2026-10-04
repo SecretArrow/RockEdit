@@ -2,12 +2,10 @@ package com.secretarrow.rockedit
 
 import com.secretarrow.rockedit.core.EncodingDetector
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.charset.Charset
 
 class EncodingCharsetsTest {
-
     @Test
     fun commonCharsetsAreUniqueAndSupported() {
         val names = EncodingDetector.COMMON_CHARSETS

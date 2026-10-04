@@ -15,7 +15,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.EditText
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -38,8 +37,8 @@ import com.secretarrow.rockedit.core.EditorTab
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
 import com.secretarrow.rockedit.core.FolderGrep
-import com.secretarrow.rockedit.core.FormatErrorCode
 import com.secretarrow.rockedit.core.FormatError
+import com.secretarrow.rockedit.core.FormatErrorCode
 import com.secretarrow.rockedit.core.FormatOptions
 import com.secretarrow.rockedit.core.FormatRequest
 import com.secretarrow.rockedit.core.FormatResult
@@ -65,13 +64,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
 import kotlin.math.min
-import org.json.JSONArray
-import org.json.JSONObject
 
 /**
  * The editing screen. Opens content:// or file:// URIs (SAF) into tabs,
@@ -84,7 +83,6 @@ import org.json.JSONObject
  * [onNewIntent] as a new tab (launchMode=singleTask).
  */
 class EditorActivity : AppCompatActivity() {
-
     private lateinit var binding: ActivityEditorBinding
     private lateinit var settings: SettingsRepository
     private lateinit var tabPersistence: TabPersistence
@@ -127,15 +125,16 @@ class EditorActivity : AppCompatActivity() {
             }
         }
 
-    private val backCallback = object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-            if (hasDirtyTabs()) {
-                showUnsavedDialog()
-            } else {
-                finish()
+    private val backCallback =
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (hasDirtyTabs()) {
+                    showUnsavedDialog()
+                } else {
+                    finish()
+                }
             }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         settings = App.settings(this)
@@ -205,17 +204,22 @@ class EditorActivity : AppCompatActivity() {
             obj.put(F_CARET, tab.caretStart)
             obj.put(F_CARET_END, tab.caretEnd)
             obj.put(F_SCROLL, tab.scrollY)
-            var committed = if (budget > 0 && tab.lastCommitted.length <= SNAPSHOT_LIMIT)
-                tab.lastCommitted else ""
+            var committed =
+                if (budget > 0 && tab.lastCommitted.length <= SNAPSHOT_LIMIT) {
+                    tab.lastCommitted
+                } else {
+                    ""
+                }
             if (committed.length > budget) committed = ""
             budget -= committed.length
-            val saved = if (tab.isDirty || tab.savedText != tab.lastCommitted) {
-                var s = if (tab.savedText.length <= SNAPSHOT_LIMIT) tab.savedText else ""
-                if (s.length > budget) s = ""
-                s
-            } else {
-                committed
-            }
+            val saved =
+                if (tab.isDirty || tab.savedText != tab.lastCommitted) {
+                    var s = if (tab.savedText.length <= SNAPSHOT_LIMIT) tab.savedText else ""
+                    if (s.length > budget) s = ""
+                    s
+                } else {
+                    committed
+                }
             budget -= saved.length
             obj.put(F_SAVED, saved)
             obj.put(F_COMMITTED, committed)
@@ -243,10 +247,11 @@ class EditorActivity : AppCompatActivity() {
                         return true
                     }
                     takePersistentPermission(data)
-                    val tab = EditorTab.pending(
-                        uri = uriStr,
-                        name = data.lastPathSegment ?: "…"
-                    )
+                    val tab =
+                        EditorTab.pending(
+                            uri = uriStr,
+                            name = data.lastPathSegment ?: "…",
+                        )
                     val index = tabManager.add(tab)
                     showTab(index)
                 }
@@ -268,8 +273,12 @@ class EditorActivity : AppCompatActivity() {
 
     private fun newUntitledTab(): EditorTab {
         val n = untitledCounter++
-        val name = if (n == 0) getString(R.string.untitled)
-        else getString(R.string.untitled_n, n + 1)
+        val name =
+            if (n == 0) {
+                getString(R.string.untitled)
+            } else {
+                getString(R.string.untitled_n, n + 1)
+            }
         return EditorTab.untitled(name)
     }
 
@@ -284,11 +293,12 @@ class EditorActivity : AppCompatActivity() {
             return
         }
         for (st in saved.tabs) {
-            val tab: EditorTab = if (st.uri == null) {
-                EditorTab(id = EditorTab.newId(), uri = null, name = st.name, loaded = true)
-            } else {
-                EditorTab.pending(st.uri, st.name.ifEmpty { "…" })
-            }
+            val tab: EditorTab =
+                if (st.uri == null) {
+                    EditorTab(id = EditorTab.newId(), uri = null, name = st.name, loaded = true)
+                } else {
+                    EditorTab.pending(st.uri, st.name.ifEmpty { "…" })
+                }
             tab.charsetName = st.charset
             val lb = LineBreak.entries.firstOrNull { it.name == st.lineBreak }
             if (lb != null) tab.lineBreak = lb
@@ -421,8 +431,8 @@ class EditorActivity : AppCompatActivity() {
             val active = index == tabManager.activeIndex()
             chip.setBackgroundColor(
                 getColor(
-                    if (active) R.color.tab_chip_active else R.color.tab_chip_inactive
-                )
+                    if (active) R.color.tab_chip_active else R.color.tab_chip_inactive,
+                ),
             )
             chip.setOnClickListener { showTab(index) }
             chip.setOnLongClickListener {
@@ -432,14 +442,15 @@ class EditorActivity : AppCompatActivity() {
             close.setOnClickListener { closeTab(index) }
             bar.addView(chip)
         }
-        val plus = TextView(this).apply {
-            text = "+"
-            contentDescription = getString(R.string.new_tab)
-            textSize = 18f
-            setPadding(24, 0, 24, 0)
-            gravity = android.view.Gravity.CENTER
-            setOnClickListener { newTab() }
-        }
+        val plus =
+            TextView(this).apply {
+                text = "+"
+                contentDescription = getString(R.string.new_tab)
+                textSize = 18f
+                setPadding(24, 0, 24, 0)
+                gravity = android.view.Gravity.CENTER
+                setOnClickListener { newTab() }
+            }
         bar.addView(plus)
         binding.tabScroll.post {
             val idx = tabManager.activeIndex()
@@ -450,25 +461,32 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
-    private fun tabStateSignature(): String = buildString {
-        append(tabManager.activeIndex()).append('|')
-        for (t in tabManager.tabs()) append(t.id).append(':').append(t.isDirty).append(':')
-            .append(t.name).append('|')
-    }
+    private fun tabStateSignature(): String =
+        buildString {
+            append(tabManager.activeIndex()).append('|')
+            for (t in tabManager.tabs()) {
+                append(t.id)
+                    .append(':')
+                    .append(t.isDirty)
+                    .append(':')
+                    .append(t.name)
+                    .append('|')
+            }
+        }
 
     private fun closeTab(index: Int) {
         val tab = tabManager.tabs().getOrNull(index) ?: return
         if (tab.isDirty && tab.loaded) {
             pendingCloseIndex = index
-            AlertDialog.Builder(this)
+            AlertDialog
+                .Builder(this)
                 .setTitle(R.string.close_tab)
                 .setMessage(getString(R.string.close_tab_confirm, tab.name))
                 .setPositiveButton(R.string.save) { _, _ ->
                     if (tabManager.activeIndex() != index) showTab(index)
                     pendingFinishAfterSave = false
                     save { performClose(index) }
-                }
-                .setNegativeButton(R.string.discard) { _, _ -> performClose(index) }
+                }.setNegativeButton(R.string.discard) { _, _ -> performClose(index) }
                 .setNeutralButton(R.string.cancel) { _, _ -> pendingCloseIndex = -1 }
                 .show()
         } else {
@@ -488,14 +506,14 @@ class EditorActivity : AppCompatActivity() {
 
     private fun closeOthers(index: Int) {
         if (tabManager.size() <= 1) return
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.close_others)
             .setMessage(getString(R.string.close_others_confirm, tabManager.size() - 1))
             .setPositiveButton(R.string.close_others) { _, _ ->
                 tabManager.closeOthers(index)
                 showTab(0)
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -510,7 +528,10 @@ class EditorActivity : AppCompatActivity() {
             val uri = tab.uri
             if (tab.loaded && uri != null && tab.caretStart >= 0) {
                 App.sessions(this).saveCursor(
-                    uri, tab.caretStart, tab.caretEnd, tab.scrollY
+                    uri,
+                    tab.caretStart,
+                    tab.caretEnd,
+                    tab.scrollY,
                 )
             }
         }
@@ -569,8 +590,19 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private inner class EditorWatcher : TextWatcher {
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+        override fun beforeTextChanged(
+            s: CharSequence?,
+            start: Int,
+            count: Int,
+            after: Int,
+        ) = Unit
+
+        override fun onTextChanged(
+            s: CharSequence?,
+            start: Int,
+            before: Int,
+            count: Int,
+        ) = Unit
 
         override fun afterTextChanged(s: Editable?) {
             if (applyingUndoRedo || loading) return
@@ -588,11 +620,12 @@ class EditorActivity : AppCompatActivity() {
 
     // ------------------------------------------------------------------ save
 
-    private fun saveLineBreakForFile(): LineBreak = when (settings.lineBreakDefault) {
-        SettingsRepository.LINE_BREAK_LF -> LineBreak.LF
-        SettingsRepository.LINE_BREAK_CRLF -> LineBreak.CRLF
-        else -> tabManager.activeTab()?.lineBreak ?: LineBreak.LF
-    }
+    private fun saveLineBreakForFile(): LineBreak =
+        when (settings.lineBreakDefault) {
+            SettingsRepository.LINE_BREAK_LF -> LineBreak.LF
+            SettingsRepository.LINE_BREAK_CRLF -> LineBreak.CRLF
+            else -> tabManager.activeTab()?.lineBreak ?: LineBreak.LF
+        }
 
     private fun save(afterSave: (() -> Unit)? = null) {
         val tab = tabManager.activeTab() ?: return
@@ -610,15 +643,19 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
-    private fun writeTo(tab: EditorTab, afterSave: (() -> Unit)? = null) {
+    private fun writeTo(
+        tab: EditorTab,
+        afterSave: (() -> Unit)? = null,
+    ) {
         val uriStr = tab.uri ?: return
         val target = saveLineBreakForFile()
         lifecycleScope.launch {
             // v0.11.0: opt-in format-on-save runs BEFORE the bytes are written.
             maybeFormatOnSave(tab)
-            val ok = withContext(Dispatchers.IO) {
-                writeText(Uri.parse(uriStr), tab.lastCommitted, target, tab.charsetName)
-            }
+            val ok =
+                withContext(Dispatchers.IO) {
+                    writeText(Uri.parse(uriStr), tab.lastCommitted, target, tab.charsetName)
+                }
             if (ok) {
                 tab.savedText = tab.lastCommitted
                 tab.lineBreak = target
@@ -636,14 +673,20 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
-    private fun writeText(uri: Uri, text: String, lineBreak: LineBreak, charset: String): Boolean {
+    private fun writeText(
+        uri: Uri,
+        text: String,
+        lineBreak: LineBreak,
+        charset: String,
+    ): Boolean {
         val payload = EncodingDetector.encode(LineBreak.normalize(text, lineBreak), charset)
         return try {
-            val stream = try {
-                contentResolver.openOutputStream(uri, "wt")
-            } catch (_: IllegalArgumentException) {
-                null
-            } ?: contentResolver.openOutputStream(uri) ?: return false
+            val stream =
+                try {
+                    contentResolver.openOutputStream(uri, "wt")
+                } catch (_: IllegalArgumentException) {
+                    null
+                } ?: contentResolver.openOutputStream(uri) ?: return false
             stream.use { it.write(payload) }
             true
         } catch (_: Exception) {
@@ -655,7 +698,7 @@ class EditorActivity : AppCompatActivity() {
         try {
             contentResolver.takePersistableUriPermission(
                 uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         } catch (_: SecurityException) {
             // Non-persistable grant: still valid for this session.
@@ -666,13 +709,16 @@ class EditorActivity : AppCompatActivity() {
 
     private fun showUnsavedDialog() {
         val dirtyCount = tabManager.tabs().count { it.loaded && it.isDirty }
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.discard_changes_title)
             .setMessage(
-                if (dirtyCount > 1) getString(R.string.discard_changes_multi, dirtyCount)
-                else getString(R.string.discard_changes_msg)
-            )
-            .setPositiveButton(R.string.save) { _, _ -> saveAllThenFinish() }
+                if (dirtyCount > 1) {
+                    getString(R.string.discard_changes_multi, dirtyCount)
+                } else {
+                    getString(R.string.discard_changes_msg)
+                },
+            ).setPositiveButton(R.string.save) { _, _ -> saveAllThenFinish() }
             .setNegativeButton(R.string.discard) { _, _ -> finish() }
             .setNeutralButton(R.string.cancel, null)
             .show()
@@ -702,16 +748,21 @@ class EditorActivity : AppCompatActivity() {
         val findInput = view.findViewById<EditText>(R.id.find_input)
         val replaceInput = view.findViewById<EditText>(R.id.replace_input)
         val caseBox = view.findViewById<android.widget.CheckBox>(R.id.case_sensitive)
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.find)
-            .setView(view)
-            .setNegativeButton(R.string.cancel, null)
-            .create()
+        val dialog =
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.find)
+                .setView(view)
+                .setNegativeButton(R.string.cancel, null)
+                .create()
 
         fun options() = SearchEngine.Options(caseSensitive = caseBox.isChecked)
 
         view.findViewById<View>(R.id.btn_next).setOnClickListener {
-            val text = binding.editor.text?.toString().orEmpty()
+            val text =
+                binding.editor.text
+                    ?.toString()
+                    .orEmpty()
             val query = findInput.text.toString()
             val idx = SearchEngine.indexOf(text, query, searchStart, options(), wrapAround = true)
             if (idx < 0 || query.isEmpty()) {
@@ -734,7 +785,10 @@ class EditorActivity : AppCompatActivity() {
                 editable.replace(selStart, selEnd, replacement)
                 searchStart = selStart + replacement.length
             }
-            val text = binding.editor.text?.toString().orEmpty()
+            val text =
+                binding.editor.text
+                    ?.toString()
+                    .orEmpty()
             val idx = SearchEngine.indexOf(text, query, searchStart, options(), wrapAround = true)
             if (idx < 0) {
                 toast(getString(R.string.not_found))
@@ -746,7 +800,10 @@ class EditorActivity : AppCompatActivity() {
         view.findViewById<View>(R.id.btn_replace_all).setOnClickListener {
             val query = findInput.text.toString()
             val replacement = replaceInput.text.toString()
-            val text = binding.editor.text?.toString().orEmpty()
+            val text =
+                binding.editor.text
+                    ?.toString()
+                    .orEmpty()
             val (newText, count) = SearchEngine.replaceAll(text, query, replacement, options())
             if (count > 0) {
                 setTextPreservingHistory(newText)
@@ -765,11 +822,17 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun showGotoDialog() {
-        val lineCount = TextStats.lineCount(binding.editor.text?.toString().orEmpty())
+        val lineCount =
+            TextStats.lineCount(
+                binding.editor.text
+                    ?.toString()
+                    .orEmpty(),
+            )
         val view = layoutInflater.inflate(R.layout.dialog_goto, null)
         val input = view.findViewById<EditText>(R.id.goto_input)
         input.hint = getString(R.string.goto_hint, lineCount)
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.goto_line)
             .setView(view)
             .setPositiveButton(R.string.go) { _, _ ->
@@ -777,23 +840,33 @@ class EditorActivity : AppCompatActivity() {
                 if (line == null || line < 1 || line > lineCount) {
                     toast(getString(R.string.invalid_line))
                 } else {
-                    val offset = CursorNav.offsetForLine(binding.editor.text?.toString().orEmpty(), line)
+                    val offset =
+                        CursorNav.offsetForLine(
+                            binding.editor.text
+                                ?.toString()
+                                .orEmpty(),
+                            line,
+                        )
                     binding.editor.setSelection(offset)
                 }
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
     private fun showStatsDialog() {
-        val text = binding.editor.text?.toString().orEmpty()
-        val message = listOf(
-            getString(R.string.stats_chars, TextStats.charCount(text)),
-            getString(R.string.stats_words, TextStats.wordCount(text)),
-            getString(R.string.stats_lines, TextStats.lineCount(text)),
-            getString(R.string.stats_encoding, tabManager.activeTab()?.charsetName ?: EncodingDetector.DEFAULT_CHARSET)
-        ).joinToString("\n")
-        AlertDialog.Builder(this)
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
+        val message =
+            listOf(
+                getString(R.string.stats_chars, TextStats.charCount(text)),
+                getString(R.string.stats_words, TextStats.wordCount(text)),
+                getString(R.string.stats_lines, TextStats.lineCount(text)),
+                getString(R.string.stats_encoding, tabManager.activeTab()?.charsetName ?: EncodingDetector.DEFAULT_CHARSET),
+            ).joinToString("\n")
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.stats_title)
             .setMessage(message)
             .setPositiveButton(android.R.string.ok, null)
@@ -818,7 +891,7 @@ class EditorActivity : AppCompatActivity() {
         editable.replace(0, text.length, result.text)
         binding.editor.setSelection(
             result.selStart.coerceIn(0, result.text.length),
-            result.selEnd.coerceIn(0, result.text.length)
+            result.selEnd.coerceIn(0, result.text.length),
         )
         updateGutter()
         dirtyChanged()
@@ -827,7 +900,10 @@ class EditorActivity : AppCompatActivity() {
     // -------------------------------------------------------------- bookmarks
 
     private fun currentLine(): Int {
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         val sel = binding.editor.selectionStart.coerceAtLeast(0)
         return CursorNav.lineForOffset(text, sel)
     }
@@ -836,14 +912,20 @@ class EditorActivity : AppCompatActivity() {
         val tab = tabManager.activeTab() ?: return
         val uri = tab.uri ?: return
         val line = currentLine()
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         val ls = LineOps.lineStart(text, binding.editor.selectionStart.coerceAtLeast(0))
         val le = LineOps.lineEnd(text, binding.editor.selectionStart.coerceAtLeast(0))
         val label = text.substring(ls, le).trim().take(60)
         val added = App.bookmarks(this).toggle(uri, line, label)
         toast(
-            if (added) getString(R.string.bookmark_line) + " " + line
-            else getString(R.string.bookmarks) + " " + line + " \u2717"
+            if (added) {
+                getString(R.string.bookmark_line) + " " + line
+            } else {
+                getString(R.string.bookmarks) + " " + line + " \u2717"
+            },
         )
     }
 
@@ -859,23 +941,31 @@ class EditorActivity : AppCompatActivity() {
             toast(getString(R.string.no_bookmarks))
             return
         }
-        val text = binding.editor.text?.toString().orEmpty()
-        val labels = items.map { b ->
-            val lineText = if (text.isEmpty()) "" else {
-                val ls = LineOps.lineStart(text, CursorNav.offsetForLine(text, b.line))
-                val le = LineOps.lineEnd(text, CursorNav.offsetForLine(text, b.line))
-                text.substring(ls, le).trim().take(40)
-            }
-            "${b.line}: ${b.label.ifEmpty { lineText }}"
-        }.toTypedArray()
-        AlertDialog.Builder(this)
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
+        val labels =
+            items
+                .map { b ->
+                    val lineText =
+                        if (text.isEmpty()) {
+                            ""
+                        } else {
+                            val ls = LineOps.lineStart(text, CursorNav.offsetForLine(text, b.line))
+                            val le = LineOps.lineEnd(text, CursorNav.offsetForLine(text, b.line))
+                            text.substring(ls, le).trim().take(40)
+                        }
+                    "${b.line}: ${b.label.ifEmpty { lineText }}"
+                }.toTypedArray()
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.bookmarks)
             .setItems(labels) { _, which ->
                 val offset = CursorNav.offsetForLine(text, items[which].line)
                 binding.editor.setSelection(offset)
                 binding.editor.requestFocus()
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -899,11 +989,12 @@ class EditorActivity : AppCompatActivity() {
         try {
             val cm = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
             val clip = cm?.primaryClip
-            val text = if (clip != null && clip.itemCount > 0) {
-                clip.getItemAt(0).coerceToText(this)?.toString()
-            } else {
-                null
-            }
+            val text =
+                if (clip != null && clip.itemCount > 0) {
+                    clip.getItemAt(0).coerceToText(this)?.toString()
+                } else {
+                    null
+                }
             if (!text.isNullOrBlank()) {
                 clipboardHistory.add(text)
             }
@@ -924,7 +1015,10 @@ class EditorActivity : AppCompatActivity() {
 
     /** Hands the live buffer to the split screen (process-local, capped). */
     private fun openSplitView() {
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         if (text.length > SPLIT_HANDOFF_MAX_CHARS) {
             toast(getString(R.string.split_too_large))
             return
@@ -939,7 +1033,10 @@ class EditorActivity : AppCompatActivity() {
      * behaviour for a caret sitting just after a closing bracket.
      */
     private fun matchBrace() {
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         if (text.isEmpty()) {
             toast(getString(R.string.brace_not_found))
             return
@@ -954,7 +1051,7 @@ class EditorActivity : AppCompatActivity() {
             is BraceMatcher.MatchResult.Matched -> {
                 binding.editor.setSelection(
                     min(index, result.partnerIndex),
-                    max(index, result.partnerIndex) + 1
+                    max(index, result.partnerIndex) + 1,
                 )
                 binding.editor.requestFocus()
             }
@@ -967,7 +1064,10 @@ class EditorActivity : AppCompatActivity() {
 
     /** Lists TODO/FIXME/HACK/XXX/BUG/NOTE markers; tapping jumps to the line. */
     private fun scanTodos() {
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         when (val result = TodoScanner.scan(text)) {
             is TodoScanner.ScanResult.Failure ->
                 toast(getString(R.string.todo_too_large))
@@ -976,28 +1076,33 @@ class EditorActivity : AppCompatActivity() {
                     toast(getString(R.string.todo_none))
                     return
                 }
-                val labels = result.items.map { item ->
-                    getString(
-                        R.string.todo_item_row,
-                        item.lineNumber,
-                        item.marker,
-                        item.message.ifEmpty { "-" }
-                    )
-                }.toTypedArray()
-                val builder = AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.todo_dialog_title, result.items.size))
+                val labels =
+                    result.items
+                        .map { item ->
+                            getString(
+                                R.string.todo_item_row,
+                                item.lineNumber,
+                                item.marker,
+                                item.message.ifEmpty { "-" },
+                            )
+                        }.toTypedArray()
+                val builder =
+                    AlertDialog
+                        .Builder(this)
+                        .setTitle(getString(R.string.todo_dialog_title, result.items.size))
                 if (result.truncated) {
                     builder.setMessage(R.string.todo_truncated)
                 }
                 builder
                     .setItems(labels) { _, which ->
-                        val offset = CursorNav.offsetForLine(
-                            text, result.items[which].lineNumber
-                        )
+                        val offset =
+                            CursorNav.offsetForLine(
+                                text,
+                                result.items[which].lineNumber,
+                            )
                         binding.editor.setSelection(offset)
                         binding.editor.requestFocus()
-                    }
-                    .setNegativeButton(R.string.cancel, null)
+                    }.setNegativeButton(R.string.cancel, null)
                     .show()
             }
         }
@@ -1010,20 +1115,21 @@ class EditorActivity : AppCompatActivity() {
             toast(getString(R.string.clip_empty))
             return
         }
-        val labels = entries.map { entry ->
-            val preview = entry.text.replace('\n', ' ').take(60)
-            (if (entry.pinned) "\u2605 " else "") + preview
-        }.toTypedArray()
-        AlertDialog.Builder(this)
+        val labels =
+            entries
+                .map { entry ->
+                    val preview = entry.text.replace('\n', ' ').take(60)
+                    (if (entry.pinned) "\u2605 " else "") + preview
+                }.toTypedArray()
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.clip_dialog_title)
             .setItems(labels) { _, which ->
                 insertAtCursor(entries[which].text)
-            }
-            .setNeutralButton(R.string.clip_clear) { _, _ ->
+            }.setNeutralButton(R.string.clip_clear) { _, _ ->
                 clipboardHistory.clear()
                 toast(getString(R.string.clip_cleared))
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -1050,31 +1156,48 @@ class EditorActivity : AppCompatActivity() {
     }
 
     private fun shareText() {
-        val send = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, binding.editor.text?.toString().orEmpty())
-        }
+        val send =
+            Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(
+                    Intent.EXTRA_TEXT,
+                    binding.editor.text
+                        ?.toString()
+                        .orEmpty(),
+                )
+            }
         startActivity(Intent.createChooser(send, getString(R.string.share)))
     }
 
     private fun printDocument() {
         val tab = tabManager.activeTab() ?: return
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         TextPrinter.print(this, FileNames.sanitize(tab.name), text)
     }
 
     private fun showPreview() {
         val tab = tabManager.activeTab() ?: return
-        val intent = Intent(this, PreviewActivity::class.java)
-            .putExtra(PreviewActivity.EXTRA_TEXT, binding.editor.text?.toString().orEmpty())
-            .putExtra(PreviewActivity.EXTRA_TITLE, tab.name)
-            .putExtra(PreviewActivity.EXTRA_FILE_NAME, tab.name)
+        val intent =
+            Intent(this, PreviewActivity::class.java)
+                .putExtra(
+                    PreviewActivity.EXTRA_TEXT,
+                    binding.editor.text
+                        ?.toString()
+                        .orEmpty(),
+                ).putExtra(PreviewActivity.EXTRA_TITLE, tab.name)
+                .putExtra(PreviewActivity.EXTRA_FILE_NAME, tab.name)
         startActivity(intent)
     }
 
     private fun runCode() {
         val tab = tabManager.activeTab() ?: return
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id
         val pistonLanguage = languageId?.let { PistonClient.LANGUAGE_MAP[it] }
         if (pistonLanguage == null) {
@@ -1082,31 +1205,36 @@ class EditorActivity : AppCompatActivity() {
             return
         }
         if (!settings.onlineExecution) {
-            AlertDialog.Builder(this)
+            AlertDialog
+                .Builder(this)
                 .setTitle(R.string.run_consent_title)
                 .setMessage(R.string.run_consent_msg)
                 .setPositiveButton(R.string.run_consent_yes) { _, _ ->
                     settings.onlineExecution = true
                     executeOnline(pistonLanguage, text)
-                }
-                .setNegativeButton(R.string.cancel, null)
+                }.setNegativeButton(R.string.cancel, null)
                 .show()
             return
         }
         executeOnline(pistonLanguage, text)
     }
 
-    private fun executeOnline(language: String, code: String) {
+    private fun executeOnline(
+        language: String,
+        code: String,
+    ) {
         toast(getString(R.string.run_done) + "…")
         lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                try {
-                    PistonClient.execute(language, code)
-                } catch (e: Exception) {
-                    PistonClient.ExecutionResult("", e.message ?: "network error", "", -1)
+            val result =
+                withContext(Dispatchers.IO) {
+                    try {
+                        PistonClient.execute(language, code)
+                    } catch (e: Exception) {
+                        PistonClient.ExecutionResult("", e.message ?: "network error", "", -1)
+                    }
                 }
-            }
-            AlertDialog.Builder(this@EditorActivity)
+            AlertDialog
+                .Builder(this@EditorActivity)
                 .setTitle(R.string.run_output_title)
                 .setMessage(result.summary)
                 .setPositiveButton(android.R.string.ok, null)
@@ -1179,9 +1307,10 @@ class EditorActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.action_save -> save()
             R.id.action_save_as -> {
-                val suggested = FileNames.sanitize(
-                    tabManager.activeTab()?.name ?: "untitled.txt"
-                )
+                val suggested =
+                    FileNames.sanitize(
+                        tabManager.activeTab()?.name ?: "untitled.txt",
+                    )
                 saveAsLauncher.launch(suggested)
             }
             R.id.action_new_tab -> newTab()
@@ -1191,9 +1320,10 @@ class EditorActivity : AppCompatActivity() {
             }
             R.id.action_close_tab -> closeTab(tabManager.activeIndex())
             R.id.action_close_others -> closeOthers(tabManager.activeIndex())
-            R.id.action_open_folder -> startActivity(
-                Intent(this, FolderBrowserActivity::class.java)
-            )
+            R.id.action_open_folder ->
+                startActivity(
+                    Intent(this, FolderBrowserActivity::class.java),
+                )
             R.id.action_undo -> performUndo()
             R.id.action_redo -> performRedo()
             R.id.action_format -> formatDocument()
@@ -1294,13 +1424,14 @@ class EditorActivity : AppCompatActivity() {
                 val loaded = o.optBoolean(F_LOADED, true)
                 val committed = o.optString(F_COMMITTED, "")
                 val saved = o.optString(F_SAVED, "")
-                val tab: EditorTab = if (loaded && (uri == null || committed.isNotEmpty())) {
-                    EditorTab(id = EditorTab.newId(), uri = uri, name = o.optString(F_NAME))
-                } else if (uri != null) {
-                    EditorTab.pending(uri, o.optString(F_NAME).ifEmpty { "…" })
-                } else {
-                    EditorTab(id = EditorTab.newId(), uri = null, name = o.optString(F_NAME))
-                }
+                val tab: EditorTab =
+                    if (loaded && (uri == null || committed.isNotEmpty())) {
+                        EditorTab(id = EditorTab.newId(), uri = uri, name = o.optString(F_NAME))
+                    } else if (uri != null) {
+                        EditorTab.pending(uri, o.optString(F_NAME).ifEmpty { "…" })
+                    } else {
+                        EditorTab(id = EditorTab.newId(), uri = null, name = o.optString(F_NAME))
+                    }
                 tab.charsetName = o.optString(F_CHARSET, EncodingDetector.DEFAULT_CHARSET)
                 val lb = LineBreak.entries.firstOrNull { it.name == o.optString(F_LINE_BREAK) }
                 if (lb != null) tab.lineBreak = lb
@@ -1330,11 +1461,12 @@ class EditorActivity : AppCompatActivity() {
         }
         val name = tab.name.ifEmpty { getString(R.string.untitled) }
         binding.toolbar.title = if (tab.isDirty) "$name \u2022" else name
-        binding.toolbar.subtitle = if (tab.readOnly) {
-            getString(R.string.read_only)
-        } else {
-            tab.charsetName
-        }
+        binding.toolbar.subtitle =
+            if (tab.readOnly) {
+                getString(R.string.read_only)
+            } else {
+                tab.charsetName
+            }
         val sig = tabStateSignature()
         if (sig != tabSignature) {
             tabSignature = sig
@@ -1368,9 +1500,10 @@ class EditorActivity : AppCompatActivity() {
         lifecycleScope.launch {
             // Keep the file's own line break style (detected once, up front).
             val options = FormatOptions(lineBreak = LineBreak.detect(text, fallback = LineBreak.LF))
-            val result = withContext(Dispatchers.Default) {
-                FormatterRegistry.default().format(FormatRequest(text, languageId, options))
-            }
+            val result =
+                withContext(Dispatchers.Default) {
+                    FormatterRegistry.default().format(FormatRequest(text, languageId, options))
+                }
             when (result) {
                 is FormatResult.Success -> {
                     if (result.changed) {
@@ -1397,8 +1530,11 @@ class EditorActivity : AppCompatActivity() {
             FormatErrorCode.INPUT_TOO_LARGE -> getString(R.string.format_error_too_large)
             FormatErrorCode.UNSUPPORTED_LANGUAGE -> getString(R.string.format_error_generic)
             FormatErrorCode.PARSE_ERROR ->
-                if (line != null) getString(R.string.format_error_parse_line, line)
-                else getString(R.string.format_error_parse_generic)
+                if (line != null) {
+                    getString(R.string.format_error_parse_line, line)
+                } else {
+                    getString(R.string.format_error_parse_generic)
+                }
             FormatErrorCode.TIMEOUT -> getString(R.string.format_error_timeout)
             FormatErrorCode.INTERNAL_ERROR -> getString(R.string.format_error_generic)
         }
@@ -1437,17 +1573,20 @@ class EditorActivity : AppCompatActivity() {
         val originalIndent = fragment.takeWhile { it == ' ' || it == '\t' }
         toast(getString(R.string.format_running))
         lifecycleScope.launch {
-            val baseOptions = FormatOptions(
-                lineBreak = LineBreak.detect(fragment, fallback = LineBreak.LF),
-                lenient = true,
-                // A selection never gains a final newline of its own.
-                insertFinalNewline = false
-            )
-            val options = editorConfigOptionsFor(tab, baseOptions)
-                .copy(lenient = true, insertFinalNewline = false)
-            val result = withContext(Dispatchers.Default) {
-                FormatterRegistry.default().format(FormatRequest(fragment, languageId, options))
-            }
+            val baseOptions =
+                FormatOptions(
+                    lineBreak = LineBreak.detect(fragment, fallback = LineBreak.LF),
+                    lenient = true,
+                    // A selection never gains a final newline of its own.
+                    insertFinalNewline = false,
+                )
+            val options =
+                editorConfigOptionsFor(tab, baseOptions)
+                    .copy(lenient = true, insertFinalNewline = false)
+            val result =
+                withContext(Dispatchers.Default) {
+                    FormatterRegistry.default().format(FormatRequest(fragment, languageId, options))
+                }
             when (result) {
                 is FormatResult.Success -> {
                     if (!result.changed) {
@@ -1457,14 +1596,16 @@ class EditorActivity : AppCompatActivity() {
                     var formatted = result.formattedText
                     if (originalIndent.isNotEmpty() && !formatted.startsWith(originalIndent)) {
                         val breakValue = LineBreak.detect(formatted, LineBreak.LF).value
-                        formatted = formatted.split(Regex("\r\n|\n|\r"))
-                            .joinToString(breakValue) { originalIndent + it }
+                        formatted =
+                            formatted
+                                .split(Regex("\r\n|\n|\r"))
+                                .joinToString(breakValue) { originalIndent + it }
                     }
                     applyingUndoRedo = false
                     editable.replace(start, end, formatted)
                     binding.editor.setSelection(
                         (start + formatted.length).coerceAtMost(text.length),
-                        (start + formatted.length).coerceAtMost(text.length)
+                        (start + formatted.length).coerceAtMost(text.length),
                     )
                     updateGutter()
                     dirtyChanged()
@@ -1493,18 +1634,26 @@ class EditorActivity : AppCompatActivity() {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_text_tools, null)
         val container = view.findViewById<LinearLayout>(R.id.text_tools_container)
         val scope = view.findViewById<TextView>(R.id.text_tools_scope)
-        scope.text = getString(
-            if (hasSelection) R.string.text_tools_scope_selection
-            else R.string.text_tools_scope_document
-        )
+        scope.text =
+            getString(
+                if (hasSelection) {
+                    R.string.text_tools_scope_selection
+                } else {
+                    R.string.text_tools_scope_document
+                },
+            )
         val ripple = android.util.TypedValue()
-        val hasRipple = theme.resolveAttribute(
-            android.R.attr.selectableItemBackground, ripple, true
-        )
-        val rowParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val hasRipple =
+            theme.resolveAttribute(
+                android.R.attr.selectableItemBackground,
+                ripple,
+                true,
+            )
+        val rowParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         var dialog: AlertDialog? = null
         for ((index, op) in ops.withIndex()) {
             val row = TextView(this)
@@ -1520,15 +1669,16 @@ class EditorActivity : AppCompatActivity() {
             }
             container.addView(row, rowParams)
         }
-        dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.text_tools)
-            .setView(view)
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        dialog =
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.text_tools)
+                .setView(view)
+                .setNegativeButton(R.string.cancel, null)
+                .show()
     }
 
-    private fun dp(value: Int): Int =
-        (value * resources.displayMetrics.density).toInt()
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
     private fun applyTextTool(op: TextUtilities.Op) {
         val tab = tabManager.activeTab() ?: return
@@ -1579,7 +1729,8 @@ class EditorActivity : AppCompatActivity() {
         val multiline = view.findViewById<CheckBox>(R.id.regex_multiline)
         val dotAll = view.findViewById<CheckBox>(R.id.regex_dotall)
         val results = view.findViewById<TextView>(R.id.regex_results)
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.regex_tester)
             .setView(view)
             .setPositiveButton(R.string.close, null)
@@ -1587,21 +1738,35 @@ class EditorActivity : AppCompatActivity() {
         var pending: Job? = null
         val schedule = {
             pending?.cancel()
-            pending = lifecycleScope.launch {
-                delay(250) // debounce: one run per pause in typing
-                runRegexTest(
-                    patternInput.text?.toString().orEmpty(),
-                    textInput.text?.toString().orEmpty(),
-                    RegexTester.Flags(ignoreCase.isChecked, multiline.isChecked, dotAll.isChecked),
-                    results
-                )
+            pending =
+                lifecycleScope.launch {
+                    delay(250) // debounce: one run per pause in typing
+                    runRegexTest(
+                        patternInput.text?.toString().orEmpty(),
+                        textInput.text?.toString().orEmpty(),
+                        RegexTester.Flags(ignoreCase.isChecked, multiline.isChecked, dotAll.isChecked),
+                        results,
+                    )
+                }
+        }
+        val watcher =
+            object : TextWatcher {
+                override fun afterTextChanged(s: Editable?) = schedule()
+
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) = Unit
+
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int,
+                ) = Unit
             }
-        }
-        val watcher = object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) = schedule()
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
-        }
         patternInput.addTextChangedListener(watcher)
         textInput.addTextChangedListener(watcher)
         ignoreCase.setOnClickListener { schedule() }
@@ -1609,18 +1774,24 @@ class EditorActivity : AppCompatActivity() {
         dotAll.setOnClickListener { schedule() }
     }
 
-    private fun runRegexTest(pattern: String, text: String, flags: RegexTester.Flags, resultsView: TextView) {
+    private fun runRegexTest(
+        pattern: String,
+        text: String,
+        flags: RegexTester.Flags,
+        resultsView: TextView,
+    ) {
         lifecycleScope.launch {
-            val outcome = try {
-                withTimeout(3_000) {
-                    withContext(Dispatchers.Default) { RegexTester.run(pattern, text, flags) }
+            val outcome =
+                try {
+                    withTimeout(3_000) {
+                        withContext(Dispatchers.Default) { RegexTester.run(pattern, text, flags) }
+                    }
+                } catch (e: TimeoutCancellationException) {
+                    // The engine is not interruptible, but the dialog stops
+                    // waiting: documented trade-off for pathological patterns.
+                    resultsView.text = getString(R.string.regex_timeout)
+                    return@launch
                 }
-            } catch (e: TimeoutCancellationException) {
-                // The engine is not interruptible, but the dialog stops
-                // waiting: documented trade-off for pathological patterns.
-                resultsView.text = getString(R.string.regex_timeout)
-                return@launch
-            }
             when (outcome) {
                 is RegexTester.RegexOutcome.Failure ->
                     resultsView.text = getString(R.string.regex_error, outcome.error.message)
@@ -1630,18 +1801,25 @@ class EditorActivity : AppCompatActivity() {
                         resultsView.text = getString(R.string.regex_results_none)
                     } else {
                         val shown = found.matches.take(20)
-                        val suffix = if (found.matchesTruncated || found.matches.size > shown.size) {
-                            getString(R.string.regex_truncated_more, shown.size)
-                        } else ""
+                        val suffix =
+                            if (found.matchesTruncated || found.matches.size > shown.size) {
+                                getString(R.string.regex_truncated_more, shown.size)
+                            } else {
+                                ""
+                            }
                         val header = getString(R.string.regex_results_header, found.matches.size, suffix)
-                        val body = shown.mapIndexed { i, match ->
-                            val groups = match.groups.drop(1)
-                                .joinToString(" ") { g -> "[${g.text ?: "—"}]" }
-                            "#${i + 1} [${match.start}, ${match.end}) \"${text.substring(
-                                match.start.coerceIn(0, text.length),
-                                match.end.coerceIn(0, text.length)
-                            )}\" $groups"
-                        }.joinToString("\n")
+                        val body =
+                            shown
+                                .mapIndexed { i, match ->
+                                    val groups =
+                                        match.groups
+                                            .drop(1)
+                                            .joinToString(" ") { g -> "[${g.text ?: "—"}]" }
+                                    "#${i + 1} [${match.start}, ${match.end}) \"${text.substring(
+                                        match.start.coerceIn(0, text.length),
+                                        match.end.coerceIn(0, text.length),
+                                    )}\" $groups"
+                                }.joinToString("\n")
                         resultsView.text = header + "\n" + body
                     }
                 }
@@ -1651,7 +1829,10 @@ class EditorActivity : AppCompatActivity() {
 
     /** Lists every color literal in the document; tapping jumps to it. */
     private fun showColorsDialog() {
-        val text = binding.editor.text?.toString().orEmpty()
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         lifecycleScope.launch {
             val summary = withContext(Dispatchers.Default) { ColorExtractor.extract(text) }
             if (summary.colors.isEmpty()) {
@@ -1659,37 +1840,50 @@ class EditorActivity : AppCompatActivity() {
                 return@launch
             }
             val shown = summary.colors.take(100)
-            val title = getString(
-                R.string.color_count,
-                summary.colors.size,
-                if (summary.colors.size > shown.size) {
-                    getString(R.string.color_truncated_more, shown.size)
-                } else ""
-            )
-            val adapter = object : android.widget.ArrayAdapter<ColorExtractor.ColorOccurrence>(
-                this@EditorActivity, R.layout.item_color, shown
-            ) {
-                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                    val row = convertView ?: LayoutInflater.from(context)
-                        .inflate(R.layout.item_color, parent, false)
-                    val swatch = row.findViewById<View>(R.id.grep_swatch)
-                    val label = row.findViewById<TextView>(R.id.grep_color_text)
-                    val occurrence = shown[position]
-                    swatch.setBackgroundColor(occurrence.argb.toInt())
-                    label.text = "${occurrence.source}  ·  ${getString(
-                        R.string.color_line, CursorNav.lineForOffset(text, occurrence.start)
-                    )}"
-                    return row
+            val title =
+                getString(
+                    R.string.color_count,
+                    summary.colors.size,
+                    if (summary.colors.size > shown.size) {
+                        getString(R.string.color_truncated_more, shown.size)
+                    } else {
+                        ""
+                    },
+                )
+            val adapter =
+                object : android.widget.ArrayAdapter<ColorExtractor.ColorOccurrence>(
+                    this@EditorActivity,
+                    R.layout.item_color,
+                    shown,
+                ) {
+                    override fun getView(
+                        position: Int,
+                        convertView: View?,
+                        parent: ViewGroup,
+                    ): View {
+                        val row =
+                            convertView ?: LayoutInflater
+                                .from(context)
+                                .inflate(R.layout.item_color, parent, false)
+                        val swatch = row.findViewById<View>(R.id.grep_swatch)
+                        val label = row.findViewById<TextView>(R.id.grep_color_text)
+                        val occurrence = shown[position]
+                        swatch.setBackgroundColor(occurrence.argb.toInt())
+                        label.text = "${occurrence.source}  ·  ${getString(
+                            R.string.color_line,
+                            CursorNav.lineForOffset(text, occurrence.start),
+                        )}"
+                        return row
+                    }
                 }
-            }
-            AlertDialog.Builder(this@EditorActivity)
+            AlertDialog
+                .Builder(this@EditorActivity)
                 .setTitle(title)
                 .setAdapter(adapter) { _, which ->
                     val target = shown[which].start.coerceIn(0, text.length)
                     binding.editor.setSelection(target)
                     binding.editor.requestFocus()
-                }
-                .setNegativeButton(R.string.cancel, null)
+                }.setNegativeButton(R.string.cancel, null)
                 .show()
         }
     }
@@ -1699,7 +1893,10 @@ class EditorActivity : AppCompatActivity() {
      * problem — non-SAF URI, revoked grant, broken config — silently keeps
      * [base]: config support must never block formatting or saving.
      */
-    private fun editorConfigOptionsFor(tab: EditorTab, base: FormatOptions): FormatOptions {
+    private fun editorConfigOptionsFor(
+        tab: EditorTab,
+        base: FormatOptions,
+    ): FormatOptions {
         val uriStr = tab.uri ?: return base
         return try {
             val content = readSiblingEditorConfig(Uri.parse(uriStr)) ?: return base
@@ -1718,25 +1915,28 @@ class EditorActivity : AppCompatActivity() {
             if (parentId.isEmpty() || parentId == docId) return null
             val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(fileUri, parentId)
             var configUri: Uri? = null
-            contentResolver.query(
-                childrenUri,
-                arrayOf(
-                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                    DocumentsContract.Document.COLUMN_DISPLAY_NAME
-                ),
-                null,
-                null,
-                null
-            )?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    if (cursor.getString(1) == ".editorconfig") {
-                        configUri = DocumentsContract.buildDocumentUriUsingTree(
-                            fileUri, cursor.getString(0)
-                        )
-                        break
+            contentResolver
+                .query(
+                    childrenUri,
+                    arrayOf(
+                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    ),
+                    null,
+                    null,
+                    null,
+                )?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        if (cursor.getString(1) == ".editorconfig") {
+                            configUri =
+                                DocumentsContract.buildDocumentUriUsingTree(
+                                    fileUri,
+                                    cursor.getString(0),
+                                )
+                            break
+                        }
                     }
                 }
-            }
             val found = configUri ?: return null
             contentResolver.openInputStream(found)?.bufferedReader()?.readText()
         } catch (e: Exception) {
@@ -1755,8 +1955,8 @@ class EditorActivity : AppCompatActivity() {
                     "application/json",
                     "application/xml",
                     "application/javascript",
-                    "application/x-yaml"
-                )
+                    "application/x-yaml",
+                ),
             )
         } catch (e: Exception) {
             // No file picker on the device (or the resolver failed).
@@ -1770,7 +1970,10 @@ class EditorActivity : AppCompatActivity() {
      * toast — a broken comparison never mutates the document.
      */
     private fun startDiffWithFile(otherUri: Uri) {
-        val current = binding.editor.text?.toString().orEmpty()
+        val current =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
         if (current.length > MAX_DIFF_CHARS) {
             toast(getString(R.string.diff_too_large))
             return
@@ -1795,8 +1998,8 @@ class EditorActivity : AppCompatActivity() {
                             DiffActivity.createIntent(
                                 this@EditorActivity,
                                 docFile.absolutePath,
-                                otherFile.absolutePath
-                            )
+                                otherFile.absolutePath,
+                            ),
                         )
                     } catch (e: Exception) {
                         toast(getString(R.string.diff_error_generic, e.message ?: "?"))
@@ -1813,46 +2016,50 @@ class EditorActivity : AppCompatActivity() {
     }
 
     /** Outcome of reading the picked side: unreadable / binary / content. */
-    private class DiffRead(val content: String?, val binary: Boolean)
+    private class DiffRead(
+        val content: String?,
+        val binary: Boolean,
+    )
 
-    private fun readDiffSource(uri: Uri): DiffRead? = try {
-        val stream = contentResolver.openInputStream(uri) ?: return null
-        stream.use { input ->
-            val buffer = java.io.ByteArrayOutputStream()
-            val chunk = ByteArray(16 * 1024)
-            var read = input.read(chunk)
-            var sniffed = 0
-            var binary = false
-            while (read >= 0) {
-                if (sniffed < FolderGrep.BINARY_SNIFF_BYTES) {
-                    val limit = minOf(read, FolderGrep.BINARY_SNIFF_BYTES - sniffed)
-                    for (i in 0 until limit) {
-                        if (chunk[i] == 0.toByte()) {
-                            binary = true
-                            break
+    private fun readDiffSource(uri: Uri): DiffRead? =
+        try {
+            val stream = contentResolver.openInputStream(uri) ?: return null
+            stream.use { input ->
+                val buffer = java.io.ByteArrayOutputStream()
+                val chunk = ByteArray(16 * 1024)
+                var read = input.read(chunk)
+                var sniffed = 0
+                var binary = false
+                while (read >= 0) {
+                    if (sniffed < FolderGrep.BINARY_SNIFF_BYTES) {
+                        val limit = minOf(read, FolderGrep.BINARY_SNIFF_BYTES - sniffed)
+                        for (i in 0 until limit) {
+                            if (chunk[i] == 0.toByte()) {
+                                binary = true
+                                break
+                            }
                         }
+                        sniffed += limit
                     }
-                    sniffed += limit
+                    if (binary) return DiffRead(null, true)
+                    if (buffer.size() >= MAX_DIFF_BYTES) break
+                    val toWrite = minOf(read, MAX_DIFF_BYTES - buffer.size())
+                    buffer.write(chunk, 0, toWrite)
+                    if (toWrite < read) break
+                    read = input.read(chunk)
                 }
-                if (binary) return DiffRead(null, true)
-                if (buffer.size() >= MAX_DIFF_BYTES) break
-                val toWrite = minOf(read, MAX_DIFF_BYTES - buffer.size())
-                buffer.write(chunk, 0, toWrite)
-                if (toWrite < read) break
-                read = input.read(chunk)
+                if (binary) {
+                    DiffRead(null, true)
+                } else {
+                    DiffRead(
+                        EncodingDetector.decode(buffer.toByteArray(), EncodingDetector.DEFAULT_CHARSET),
+                        false,
+                    )
+                }
             }
-            if (binary) {
-                DiffRead(null, true)
-            } else {
-                DiffRead(
-                    EncodingDetector.decode(buffer.toByteArray(), EncodingDetector.DEFAULT_CHARSET),
-                    false
-                )
-            }
+        } catch (e: Exception) {
+            null
         }
-    } catch (e: Exception) {
-        null
-    }
 
     /** Lists insertable snippets (current language + wildcard) as rows. */
     private fun showSnippetsDialog() {
@@ -1863,16 +2070,23 @@ class EditorActivity : AppCompatActivity() {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_snippet_list, null)
         val container = view.findViewById<LinearLayout>(R.id.snippet_container)
         val ripple = android.util.TypedValue()
-        val hasRipple = theme.resolveAttribute(
-            android.R.attr.selectableItemBackground, ripple, true
-        )
-        val rowParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val hasRipple =
+            theme.resolveAttribute(
+                android.R.attr.selectableItemBackground,
+                ripple,
+                true,
+            )
+        val rowParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         var dialog: AlertDialog? = null
 
-        fun addRow(label: String, onClick: () -> Unit) {
+        fun addRow(
+            label: String,
+            onClick: () -> Unit,
+        ) {
             val row = TextView(this)
             row.text = label
             row.textSize = 16f
@@ -1898,11 +2112,13 @@ class EditorActivity : AppCompatActivity() {
         addRow(getString(R.string.snippet_new)) { showNewSnippetDialog(store, languageId) }
         addRow(getString(R.string.snippet_manage)) { showDeleteSnippetDialog(store) }
 
-        dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.snippets)
-            .setView(view)
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        dialog =
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.snippets)
+                .setView(view)
+                .setNegativeButton(R.string.cancel, null)
+                .show()
     }
 
     /**
@@ -1910,7 +2126,10 @@ class EditorActivity : AppCompatActivity() {
      * one exists. Respects read-only mode and the undo stack; the caret lands
      * on the body's `$0` stop (or the end of the inserted text).
      */
-    private fun insertSnippet(store: SnippetStore, snippet: SnippetStore.Snippet) {
+    private fun insertSnippet(
+        store: SnippetStore,
+        snippet: SnippetStore.Snippet,
+    ) {
         val editable = binding.editor.text ?: return
         val tab = tabManager.activeTab() ?: return
         if (tab.readOnly) {
@@ -1926,8 +2145,9 @@ class EditorActivity : AppCompatActivity() {
                 val end = binding.editor.selectionEnd.coerceIn(start, length)
                 applyingUndoRedo = false
                 editable.replace(start, end, result.text)
-                val caret = (start + SnippetStore.Insert.finalCaret(result))
-                    .coerceIn(0, editable.length)
+                val caret =
+                    (start + SnippetStore.Insert.finalCaret(result))
+                        .coerceIn(0, editable.length)
                 binding.editor.setSelection(caret)
                 updateGutter()
                 dirtyChanged()
@@ -1938,18 +2158,23 @@ class EditorActivity : AppCompatActivity() {
     }
 
     /** Create form; stays open on validation failure so the user can retry. */
-    private fun showNewSnippetDialog(store: SnippetStore, languageId: String) {
+    private fun showNewSnippetDialog(
+        store: SnippetStore,
+        languageId: String,
+    ) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_snippet_form, null)
         val nameInput = view.findViewById<EditText>(R.id.snippet_name)
         val languageInput = view.findViewById<EditText>(R.id.snippet_language)
         val bodyInput = view.findViewById<EditText>(R.id.snippet_body)
         languageInput.setText(languageId)
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.snippet_new)
-            .setView(view)
-            .setPositiveButton(R.string.snippet_save, null)
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        val dialog =
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.snippet_new)
+                .setView(view)
+                .setPositiveButton(R.string.snippet_save, null)
+                .setNegativeButton(R.string.cancel, null)
+                .show()
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             val name = nameInput.text?.toString().orEmpty()
             val language = languageInput.text?.toString().orEmpty()
@@ -1977,13 +2202,17 @@ class EditorActivity : AppCompatActivity() {
         val hint = view.findViewById<TextView>(R.id.snippet_hint)
         hint.setText(R.string.snippet_delete_hint)
         val ripple = android.util.TypedValue()
-        val hasRipple = theme.resolveAttribute(
-            android.R.attr.selectableItemBackground, ripple, true
-        )
-        val rowParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val hasRipple =
+            theme.resolveAttribute(
+                android.R.attr.selectableItemBackground,
+                ripple,
+                true,
+            )
+        val rowParams =
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
         var dialog: AlertDialog? = null
         for (snippet in all) {
             val row = TextView(this)
@@ -2003,11 +2232,13 @@ class EditorActivity : AppCompatActivity() {
             }
             container.addView(row, rowParams)
         }
-        dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.snippet_manage)
-            .setView(view)
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+        dialog =
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.snippet_manage)
+                .setView(view)
+                .setNegativeButton(R.string.cancel, null)
+                .show()
     }
 
     /**
@@ -2024,9 +2255,10 @@ class EditorActivity : AppCompatActivity() {
             val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id ?: "txt"
             val baseOptions = FormatOptions(lineBreak = LineBreak.detect(text, fallback = LineBreak.LF))
             val options = editorConfigOptionsFor(tab, baseOptions)
-            val result = withContext(Dispatchers.Default) {
-                FormatterRegistry.default().format(FormatRequest(text, languageId, options))
-            }
+            val result =
+                withContext(Dispatchers.Default) {
+                    FormatterRegistry.default().format(FormatRequest(text, languageId, options))
+                }
             if (result is FormatResult.Success && result.changed) {
                 val editable = binding.editor.text
                 if (editable != null) {
@@ -2065,13 +2297,13 @@ class EditorActivity : AppCompatActivity() {
             return
         }
         if (tab.isDirty) {
-            AlertDialog.Builder(this)
+            AlertDialog
+                .Builder(this)
                 .setTitle(R.string.reopen_encoding)
                 .setMessage(R.string.reopen_discard_msg)
                 .setPositiveButton(R.string.continue_label) { _, _ ->
                     pickCharsetAndReopen(tab)
-                }
-                .setNegativeButton(R.string.cancel, null)
+                }.setNegativeButton(R.string.cancel, null)
                 .show()
         } else {
             pickCharsetAndReopen(tab)
@@ -2081,17 +2313,20 @@ class EditorActivity : AppCompatActivity() {
     private fun pickCharsetAndReopen(tab: EditorTab) {
         val names = EncodingDetector.COMMON_CHARSETS.toTypedArray()
         val current = names.indexOf(tab.charsetName)
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.reopen_encoding)
             .setSingleChoiceItems(names, current) { dialog, which ->
                 dialog.dismiss()
                 reopenWith(tab, names[which])
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    private fun reopenWith(tab: EditorTab, charset: String) {
+    private fun reopenWith(
+        tab: EditorTab,
+        charset: String,
+    ) {
         val uriStr = tab.uri ?: return
         lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) { readBytes(Uri.parse(uriStr)) }
@@ -2115,15 +2350,15 @@ class EditorActivity : AppCompatActivity() {
         val tab = tabManager.activeTab() ?: return
         val names = EncodingDetector.COMMON_CHARSETS.toTypedArray()
         val current = names.indexOf(tab.charsetName)
-        AlertDialog.Builder(this)
+        AlertDialog
+            .Builder(this)
             .setTitle(R.string.save_encoding)
             .setSingleChoiceItems(names, current) { dialog, which ->
                 dialog.dismiss()
                 tab.charsetName = names[which]
                 updateUiState()
                 save()
-            }
-            .setNegativeButton(R.string.cancel, null)
+            }.setNegativeButton(R.string.cancel, null)
             .show()
     }
 
@@ -2173,7 +2408,10 @@ class EditorActivity : AppCompatActivity() {
         private const val MAX_DIFF_BYTES = 4_000_000
 
         /** Convenience starter used by MainActivity and tests. */
-        fun createIntent(context: android.content.Context, uri: Uri?): Intent =
+        fun createIntent(
+            context: android.content.Context,
+            uri: Uri?,
+        ): Intent =
             Intent(context, EditorActivity::class.java).apply {
                 if (uri != null) {
                     action = Intent.ACTION_EDIT
@@ -2181,7 +2419,10 @@ class EditorActivity : AppCompatActivity() {
                 }
             }
 
-        fun openText(context: android.content.Context, text: String): Intent =
+        fun openText(
+            context: android.content.Context,
+            text: String,
+        ): Intent =
             Intent(context, EditorActivity::class.java).apply {
                 action = Intent.ACTION_SEND
                 putExtra(Intent.EXTRA_TEXT, text)
