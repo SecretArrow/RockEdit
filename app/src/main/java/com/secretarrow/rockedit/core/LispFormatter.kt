@@ -54,7 +54,8 @@ class LispFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
             }
             if (scan.startsInsideBlockComment) {
                 // Preserve block comment interiors (e.g. Clojure `#| |#`).
-                appendLine(out, index, lines.size, raw.trimEnd(' ', '\t'))
+                val verbatim = if (options.trimTrailingWhitespace) raw.trimEnd(' ', '\t') else raw
+                appendLine(out, index, lines.size, verbatim)
                 continue
             }
 
@@ -76,7 +77,8 @@ class LispFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCod
                 depth = renderDepth
             }
             if (depth > MAX_DEPTH) throw DepthSignal(MAX_DEPTH)
-            appendLine(out, index, lines.size, pad(options, depth) + trimmed)
+            val body = if (options.trimTrailingWhitespace) trimmed else raw.trimStart()
+            appendLine(out, index, lines.size, pad(options, depth) + body)
             // The full net delta moves the running balance measured from
             // BEFORE the line; below zero means an extra closer
             // (e.g. `(foo))` at depth 0).

@@ -147,7 +147,8 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
                     } else {
                         widths[index]
                     }
-                    appendLine(out, index, lines.size, " ".repeat(newWidth) + raw.trim())
+                    val body = if (options.trimTrailingWhitespace) raw.trim() else raw.trimStart()
+                    appendLine(out, index, lines.size, " ".repeat(newWidth) + body)
                 }
             }
         }
@@ -231,7 +232,8 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
                 renderDepth = 0
             }
             if (renderDepth > MAX_DEPTH) throw DepthSignal(MAX_DEPTH)
-            appendLine(out, index, lines.size, pad(options, renderDepth) + trimmed)
+            val body = if (options.trimTrailingWhitespace) trimmed else raw.trimStart()
+            appendLine(out, index, lines.size, pad(options, renderDepth) + body)
 
             when {
                 isCloser -> depth = (depth - 1).coerceAtLeast(0)
@@ -273,10 +275,10 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
     ): FormatResult {
         val out = StringBuilder()
         for (index in lines.indices) {
-            val content = if (kinds[index] == LineKind.VERBATIM) {
-                lines[index]
-            } else {
-                lines[index].trimEnd(' ', '\t')
+            val content = when {
+                kinds[index] == LineKind.VERBATIM -> lines[index]
+                options.trimTrailingWhitespace -> lines[index].trimEnd(' ', '\t')
+                else -> lines[index]
             }
             appendLine(out, index, lines.size, content)
         }

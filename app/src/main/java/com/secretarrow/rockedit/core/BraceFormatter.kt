@@ -72,7 +72,8 @@ class BraceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCo
                 continue
             }
             if (isVerbatim) {
-                appendLine(out, index, lines.size, raw.trimEnd(' ', '\t'))
+                val verbatim = if (options.trimTrailingWhitespace) raw.trimEnd(' ', '\t') else raw
+                appendLine(out, index, lines.size, verbatim)
                 continue
             }
 
@@ -106,7 +107,8 @@ class BraceFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractCo
             if (depth > MAX_DEPTH) throw DepthSignal(MAX_DEPTH)
             val isPreprocessor = config.hashPreprocessor && trimmed.startsWith("#")
             val pad = if (options.minify || isPreprocessor) "" else pad(options, depth)
-            appendLine(out, index, lines.size, pad + trimmed)
+            val body = if (options.trimTrailingWhitespace) trimmed else raw.trimStart()
+            appendLine(out, index, lines.size, pad + body)
             // The full net delta (all closers minus openers on the line)
             // moves the running balance measured from BEFORE the line;
             // below zero means an extra closer (e.g. `x }` at depth 0).
