@@ -405,7 +405,7 @@ object TextUtilities {
                 'r' -> { sb.append('\r'); i += 2 }
                 't' -> { sb.append('\t'); i += 2 }
                 'b' -> { sb.append('\b'); i += 2 }
-                '\u000C' -> { sb.append('\u000C'); i += 2 }
+                'f' -> { sb.append('\u000C'); i += 2 }
                 'u' -> {
                     if (i + 6 > text.length) {
                         return parseError("truncated \\u escape", i)

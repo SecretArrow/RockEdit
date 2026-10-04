@@ -67,7 +67,7 @@ class TextToolsE2eTest {
 
     @Test
     fun textToolsSortLinesMutatesDocument() {
-        val (_, intent) = newTestFile("e2e_tools.txt", "cherry\napple\nbanana")
+        val intent = newTestFile("e2e_tools.txt", "cherry\napple\nbanana")
         ActivityScenario.launch<EditorActivity>(intent)
 
         waitUntil({
@@ -90,7 +90,7 @@ class TextToolsE2eTest {
     @Test
     fun regexTesterReportsMatchesWithoutMutatingDocument() {
         val original = "one two three"
-        val (_, intent) = newTestFile("e2e_regex.txt", original)
+        val intent = newTestFile("e2e_regex.txt", original)
         ActivityScenario.launch<EditorActivity>(intent)
 
         waitUntil({

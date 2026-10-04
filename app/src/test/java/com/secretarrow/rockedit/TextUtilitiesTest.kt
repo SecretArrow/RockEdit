@@ -62,9 +62,9 @@ class TextUtilitiesTest {
 
     @Test
     fun base64UrlSafeAlphabetDecodes() {
-        // " subjects?" -> use a URL-safe encoded value: byte 0xFB needs -_ form.
-        val decoded = ok(Op.BASE64_DECODE, "-_8").text
-        assertEquals(1, decoded.length) // structural: decodes without error
+        // "Hi?" encodes to "SGk/" (std) = "SGk_" (URL-safe): forces -/_ chars.
+        assertEquals("Hi?", ok(Op.BASE64_DECODE, "SGk_").text)
+        assertEquals("Hi?", ok(Op.BASE64_DECODE, "SGk/").text)
     }
 
     @Test
@@ -93,8 +93,8 @@ class TextUtilitiesTest {
 
     @Test
     fun base64BadPaddingRejected() {
-        // Canonical for "aGk" is 2 pads; 1 pad is invalid.
-        val error = fail(Op.BASE64_DECODE, "aGk=")
+        // Canonical for a 3-char body is 1 pad; 2 pads is invalid.
+        val error = fail(Op.BASE64_DECODE, "aGk==")
         assertEquals(TextUtilities.ErrorCode.PARSE_ERROR, error.code)
     }
 

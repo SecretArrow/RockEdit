@@ -26,8 +26,12 @@ class FolderGrepTest {
         return (outcome as GrepOutcome.Done).summary
     }
 
-    private fun failure(files: List<GrepFile>, query: String): FolderGrep.GrepError {
-        val outcome = FolderGrep.run(files, query)
+    private fun failure(
+        files: List<GrepFile>,
+        query: String,
+        options: GrepOptions = GrepOptions()
+    ): FolderGrep.GrepError {
+        val outcome = FolderGrep.run(files, query, options)
         assertTrue("expected Failure, was $outcome", outcome is GrepOutcome.Failure)
         return (outcome as GrepOutcome.Failure).error
     }
@@ -42,7 +46,12 @@ class FolderGrepTest {
 
     @Test
     fun invalidRegexFailsWithoutCrash() {
-        assertEquals(FolderGrep.ErrorCode.PARSE_ERROR, failure(emptyList(), "[").code)
+        assertEquals(
+            FolderGrep.ErrorCode.PARSE_ERROR,
+            failure(emptyList(), "[", GrepOptions(isRegex = true)).code
+        )
+        // Literal mode never fails: "[" quotes to a valid pattern.
+        assertEquals(0, done(emptyList(), "[").hits.size)
     }
 
     @Test
@@ -159,8 +168,8 @@ class FolderGrepTest {
 
     @Test
     fun longLinePreviewIsClipped() {
-        val long = "y".repeat(250)
-        val summary = done(listOf(GrepFile("f.txt", long)), "yyy")
+        val long = "needle" + "y".repeat(250) // exactly one match
+        val summary = done(listOf(GrepFile("f.txt", long)), "needle")
         assertEquals(1, summary.hits.size)
         assertEquals(FolderGrep.PREVIEW_MAX_CHARS + 1, summary.hits[0].preview.length)
         assertTrue(summary.hits[0].preview.endsWith("…"))
