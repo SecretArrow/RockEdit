@@ -153,8 +153,34 @@ object DiffEngine {
         offset: Int
     ): Pair<List<DiffOp>, Boolean> {
         if (oldLines.isEmpty() && newLines.isEmpty()) return Pair(emptyList(), false)
-        if (oldLines.isEmpty()) return Pair(listOf(insertOp(newLines, offset)), false)
-        if (newLines.isEmpty()) return Pair(listOf(deleteOp(oldLines, offset)), false)
+        if (oldLines.isEmpty()) {
+            return Pair(
+                listOf(
+                    DiffOp(
+                        DiffKind.INSERT,
+                        newLines.joinToString("\n"),
+                        oldStart = offset,
+                        newStart = offset,
+                        lineCount = newLines.size
+                    )
+                ),
+                false
+            )
+        }
+        if (newLines.isEmpty()) {
+            return Pair(
+                listOf(
+                    DiffOp(
+                        DiffKind.DELETE,
+                        oldLines.joinToString("\n"),
+                        oldStart = offset,
+                        newStart = offset,
+                        lineCount = oldLines.size
+                    )
+                ),
+                false
+            )
+        }
         val n = oldLines.size
         val m = newLines.size
         val width = m + 1

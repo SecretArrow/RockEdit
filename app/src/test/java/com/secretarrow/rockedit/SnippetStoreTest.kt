@@ -100,7 +100,7 @@ class SnippetStoreTest {
         ok(s.create("b", "all", "b"))
         s.delete("s1")
         ok(s.create("c", "all", "c"))
-        assertEquals(listOf("b", "c").sorted(), s.list().map { it.id }.sorted())
+        assertEquals(listOf("s2", "s3").sorted(), s.list().map { it.id }.sorted())
         assertEquals("s3", s.list().first { it.name == "c" }.id)
     }
 
@@ -122,8 +122,8 @@ class SnippetStoreTest {
         ok(s.create("beta", "all", "b"))
         ok(s.create("alpha", "all", "a"))
         ok(s.create("hot", "all", "h"))
-        s.touch("hot")
-        s.touch("hot")
+        assertTrue(s.touch("s3"))
+        assertTrue(s.touch("s3"))
         assertEquals(listOf("hot", "alpha", "beta"), s.list().map { it.name })
     }
 
@@ -343,7 +343,7 @@ class SnippetStoreTest {
         val result = expandOk("\${1:first} end\$0")
         assertEquals("first end", result.text)
         assertEquals("first end".length, SnippetStore.Insert.finalCaret(result))
-        assertEquals(0, result.stops.last { it.index == 0 }.start)
+        assertEquals("first end".length, result.stops.last { it.index == 0 }.start)
     }
 
     @Test
