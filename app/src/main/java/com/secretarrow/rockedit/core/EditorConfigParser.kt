@@ -199,8 +199,10 @@ object EditorConfigParser {
         val indentSize = (resolved.indentSize ?: base.indentSize)
             .coerceIn(FormatOptions.MIN_INDENT_SIZE, FormatOptions.MAX_INDENT_SIZE)
         val indentStyle = when (resolved.indentStyle) {
-            IndentStyle.TAB -> IndentStyle.TABS
-            IndentStyle.SPACE -> IndentStyle.SPACES
+            // Fully qualified: this object declares its own IndentStyle enum
+            // (SPACE/TAB); the formatter's enum (SPACES/TABS) is the target.
+            IndentStyle.TAB -> com.secretarrow.rockedit.core.IndentStyle.TABS
+            IndentStyle.SPACE -> com.secretarrow.rockedit.core.IndentStyle.SPACES
             null -> base.indentStyle
         }
         return base.copy(
