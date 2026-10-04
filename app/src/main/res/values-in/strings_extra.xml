@@ -92,4 +92,6 @@
     <string name="help_q8">Bisakah menjalankan kode saya?</string>
     <string name="help_a8">Opsional: “Jalankan kode” mengirim dokumen aktif ke layanan publik Piston dan menampilkan stdout/stderr. Fitur mati secara bawaan — aktifkan saat diminta bila Anda nyaman dengan kode yang keluar dari perangkat.</string>
     <string name="pref_advanced">Lanjutan</string>
+    <string name="storage_git_path">pemilik/repo/branch</string>
+    <string name="storage_gitlab_host">Host GitLab (mis. gitlab.com)</string>
 </resources>

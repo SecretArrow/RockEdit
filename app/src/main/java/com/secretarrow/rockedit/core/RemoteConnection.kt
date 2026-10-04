@@ -8,7 +8,9 @@ enum class RemoteType(val defaultPort: Int, val displayName: String) {
     FTP(21, "FTP"),
     FTPS(21, "FTPS (explicit TLS)"),
     SFTP(22, "SFTP (SSH)"),
-    WEBDAV(80, "WebDAV")
+    WEBDAV(80, "WebDAV"),
+    GITHUB(443, "GitHub (PAT)"),
+    GITLAB(443, "GitLab (PAT)")
 }
 
 /**

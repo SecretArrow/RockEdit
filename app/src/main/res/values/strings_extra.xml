@@ -92,4 +92,6 @@
     <string name="help_q8">Can it run my code?</string>
     <string name="help_a8">Optionally: “Run code” sends the current document to the public Piston service and shows stdout/stderr. It is off by default — enable it when prompted if you are comfortable with the code leaving the device.</string>
     <string name="pref_advanced">Advanced</string>
+    <string name="storage_git_path">owner/repo/branch</string>
+    <string name="storage_gitlab_host">GitLab host (e.g. gitlab.com)</string>
 </resources>

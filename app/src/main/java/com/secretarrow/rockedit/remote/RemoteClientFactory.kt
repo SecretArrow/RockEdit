@@ -11,5 +11,6 @@ object RemoteClientFactory {
         RemoteType.FTP, RemoteType.FTPS -> FtpRemoteClient(connection)
         RemoteType.SFTP -> SftpRemoteClient(connection)
         RemoteType.WEBDAV -> WebDavRemoteClient(connection, https = connection.port == 443)
+        RemoteType.GITHUB, RemoteType.GITLAB -> GitRemoteClient(connection)
     }
 }

@@ -132,6 +132,14 @@ class StorageManagerActivity : AppCompatActivity() {
             if (portInput.text.isNullOrEmpty()) {
                 portInput.hint = type.defaultPort.toString()
             }
+            pathInput.hint = when (type) {
+                RemoteType.GITHUB, RemoteType.GITLAB -> getString(R.string.storage_git_path)
+                else -> getString(R.string.storage_initial_path)
+            }
+            hostInput.hint = when (type) {
+                RemoteType.GITLAB -> getString(R.string.storage_gitlab_host)
+                else -> getString(R.string.storage_host)
+            }
         }
         typeButtons.forEachIndexed { index, button ->
             button.setOnClickListener { selectType(types[index]) }

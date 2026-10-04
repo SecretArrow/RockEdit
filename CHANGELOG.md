@@ -6,8 +6,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased]
 
 ### Planned
-- Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal)
-- GitHub/GitLab via Personal Access Token
+- Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
+- USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
+
+## [0.8.0] - 2026-10-04
+
+### Added
+- GitHub & GitLab via Personal Access Token di Storage Manager: repositori
+  dimuat sebagai owner/repo/branch, telusuri pohon file, buka file ke editor,
+  dan simpan kembali menciptakan commit sungguhan (payload base64, sha untuk
+  pembaruan, .gitkeep untuk folder baru)
+- Petunjuk dinamis pada dialog koneksi (owner/repo/branch, host GitLab);
+  kata sandi (PAT) tetap terenkripsi Android Keystore
+- API murni ter-unit-test: parsing /contents GitHub & /repository/tree GitLab,
+  decode/encode base64, body PUT/DELETE/commit, navigasi GitPath (branch
+  bersarang didukung)
 
 ## [0.7.0] - 2026-10-04
 
