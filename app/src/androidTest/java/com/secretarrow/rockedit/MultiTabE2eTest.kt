@@ -64,21 +64,29 @@ class MultiTabE2eTest {
     ) {
         val deadline = System.currentTimeMillis() + timeoutMs
         var matched = false
+        var lastError = ""
         while (System.currentTimeMillis() < deadline && !matched) {
             try {
-                onView(
-                    allOf(withParent(withId(R.id.tab_bar)), withText(containsString(namePart)))
-                ).check(matches(isDisplayed()))
+                chipMatcher(namePart).check(matches(isDisplayed()))
                 matched = true
-            } catch (_: Throwable) {
+            } catch (t: Throwable) {
+                lastError = "${t.javaClass.simpleName}: ${t.message?.lineSequence()?.firstOrNull()}"
                 Thread.sleep(100)
             }
         }
         assertTrue(
-            "Tab chip never appeared: $namePart; chips were ${chipNames(scenario)}",
+            "Tab chip never appeared: $namePart; chips were ${chipNames(scenario)}; last error: $lastError",
             matched
         )
     }
+
+    private fun chipMatcher(namePart: String) =
+        onView(
+            allOf(
+                withId(R.id.tab_chip),
+                withChild(withText(containsString(namePart)))
+            )
+        )
 
     private fun waitForEditorText(expected: String, timeoutMs: Long = 8000) {
         val deadline = System.currentTimeMillis() + timeoutMs
@@ -109,15 +117,11 @@ class MultiTabE2eTest {
         waitForTabChip(scenario, "e2e_multi_b.txt")
 
         // Switch back to tab A by tapping its chip; content must follow.
-        onView(
-            allOf(withParent(withId(R.id.tab_bar)), withText(containsString("e2e_multi_a.txt")))
-        ).perform(click())
+        chipMatcher("e2e_multi_a.txt").perform(click())
         waitForEditorText("alpha content")
 
         // And forward to tab B again.
-        onView(
-            allOf(withParent(withId(R.id.tab_bar)), withText(containsString("e2e_multi_b.txt")))
-        ).perform(click())
+        chipMatcher("e2e_multi_b.txt").perform(click())
         waitForEditorText("beta content")
     }
 }
