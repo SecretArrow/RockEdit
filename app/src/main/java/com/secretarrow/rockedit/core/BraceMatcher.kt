@@ -24,7 +24,8 @@ package com.secretarrow.rockedit.core
  * - Cursor on a closer -> backward scan, symmetric rules (other closers push,
  *   other openers pop). Backward simplifications, documented deliberately:
  *   - String/char literals are tracked with backslash-run escape counting.
- *   - Block comments toggle on `*/` (enter) and `/*` (exit) exactly.
+ *   - Block comments toggle exactly on the star-then-slash closer (exit) and
+ *     the slash-then-star opener (enter).
  *   - Line comments are only approximated: on seeing `//` the scanner drops
  *     the rest of that line segment (resumes on the previous line). Characters
  *     to the RIGHT of the `//` were already visited and are not retroactively
