@@ -15,8 +15,11 @@
 -dontwarn javax.security.auth.**
 -dontwarn javax.security.auth.login.**
 -dontwarn javax.security.sasl.**
+-dontwarn sun.**
 -dontwarn com.jcraft.jzlib.**
 -dontwarn org.apache.sshd.**
+-dontwarn org.conscrypt.**
+-dontwarn org.openjsse.**
 -keep class net.schmizz.sshj.** { *; }
 -keep class com.hierynomus.sshj.** { *; }
 -keep class org.bouncycastle.jce.provider.BouncyCastleProvider { *; }
