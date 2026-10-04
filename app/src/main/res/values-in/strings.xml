@@ -51,6 +51,14 @@
     <string name="binary_warning">File mungkin bukan teks biasa. Menampilkan karakter pengganti.</string>
     <string name="read_only_toast">Mode baca-saja aktif</string>
 
+    <string name="syntax_highlight">Penyorotan sintaks</string>
+    <string name="reopen_encoding">Buka ulang dengan encoding</string>
+    <string name="save_encoding">Simpan dengan encoding</string>
+    <string name="insert_datetime">Sisipkan tanggal / waktu</string>
+    <string name="reopen_discard_msg">Membuka ulang akan membuang perubahan yang belum disimpan. Lanjutkan?</string>
+    <string name="reopen_needs_file">Simpan file dulu untuk memakai alat encoding</string>
+    <string name="continue_label">Lanjutkan</string>
+
     <string name="pref_appearance">Tampilan</string>
     <string name="pref_theme_title">Tema</string>
     <string name="pref_theme_system">Ikuti sistem</string>
@@ -65,6 +73,9 @@
     <string name="pref_line_break_lf">LF (\\n, Unix)</string>
     <string name="pref_line_break_crlf">CRLF (\\r\\n, Windows)</string>
     <string name="pref_full_screen">Editor layar penuh</string>
+    <string name="pref_syntax">Penyorotan sintaks</string>
+    <string name="pref_font_size">Ukuran font</string>
+    <string name="pref_auto_save">Simpan otomatis saat pindah aplikasi</string>
 
     <string name="duplicate_line">Duplikat baris</string>
     <string name="delete_line">Hapus baris</string>

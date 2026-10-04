@@ -5,6 +5,12 @@
     <color name="gutter_background">#F1F5F9</color>
     <color name="gutter_text">#64748B</color>
 
+    <!-- Syntax palette (light) -->
+    <color name="syntax_keyword">#7C3AED</color>
+    <color name="syntax_string">#15803D</color>
+    <color name="syntax_comment">#94A3B8</color>
+    <color name="syntax_number">#B45309</color>
+
     <color name="black_amoled">#000000</color>
     <color name="black_elevated">#121212</color>
 </resources>

@@ -6,11 +6,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased]
 
 ### Planned
-- Syntax highlighting (TextMate grammars) untuk bahasa populer
 - Multi-tab editing
 - Storage Manager: FTP/FTPS/SFTP, WebDAV, Google Drive, Dropbox, OneDrive, GitHub, GitLab
 - Folder drawer, bookmark folder, backup/restore JSON
 - Preview HTML/Markdown/AsciiDoc
+
+## [0.3.0] - 2026-10-04
+
+### Added
+- Penyorotan sintaks untuk 20 bahasa (Kotlin, Java, C, C++, C#, Go, Rust, JavaScript,
+  TypeScript, Python, Ruby, PHP, Swift, Shell, SQL, JSON, YAML, XML, HTML, CSS):
+  tokenizer murni Kotlin (keyword/string/komentar/angka), deteksi bahasa dari ekstensi
+  file, palet terang & gelap/AMOLED, toggle dari menu editor
+- Buka ulang file dengan encoding pilihan (15 charset: UTF-8/16/32, ISO-8859-1, ASCII,
+  windows-1251/1252, Shift_JIS, GBK, GB18030, Big5, EUC-KR, KOI8-R) dengan konfirmasi
+  bila ada perubahan yang belum disimpan
+- Simpan dengan encoding pilihan (charset aktif dipakai saat menulis file)
+- Pengaturan ukuran font editor (12–24sp, gutter ikut menyesuaikan)
+- Pengaturan simpan otomatis saat activity ke background (default mati)
+- Menu sisipkan tanggal/waktu (format yyyy-MM-dd HH:mm) pada posisi kursor
+- E2E test penyorotan sintaks + unit test tokenizer/registry/charset/pengaturan baru
 
 ## [0.2.0] - 2026-10-03
 

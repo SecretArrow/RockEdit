@@ -12,7 +12,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = (findProperty("rockeditVersionCode") as String?)?.toIntOrNull() ?: 1
-        versionName = (findProperty("rockeditVersionName") as String?) ?: "0.2.0"
+        versionName = (findProperty("rockeditVersionName") as String?) ?: "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }

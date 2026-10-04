@@ -35,5 +35,23 @@
             android:defaultValue="false"
             android:key="full_screen"
             android:title="@string/pref_full_screen" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="syntax_highlight"
+            android:title="@string/pref_syntax" />
+
+        <ListPreference
+            android:defaultValue="14"
+            android:entries="@array/font_size_entries"
+            android:entryValues="@array/font_size_values"
+            android:key="font_size"
+            android:title="@string/pref_font_size"
+            app:useSimpleSummaryProvider="true" />
+
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="auto_save"
+            android:title="@string/pref_auto_save" />
     </PreferenceCategory>
 </PreferenceScreen>

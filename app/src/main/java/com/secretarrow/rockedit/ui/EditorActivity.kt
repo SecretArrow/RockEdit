@@ -28,12 +28,15 @@ import com.secretarrow.rockedit.core.LineBreak
 import com.secretarrow.rockedit.core.LineOps
 import com.secretarrow.rockedit.core.SearchEngine
 import com.secretarrow.rockedit.core.SettingsRepository
+import com.secretarrow.rockedit.core.SyntaxRegistry
 import com.secretarrow.rockedit.core.TextStats
 import com.secretarrow.rockedit.core.UndoStack
 import com.secretarrow.rockedit.databinding.ActivityEditorBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.max
 
 /**
@@ -58,6 +61,8 @@ class EditorActivity : AppCompatActivity() {
     private var pendingFinishAfterSave = false
     private var searchStart = 0
     private var originalKeyListener: KeyListener? = null
+    private lateinit var highlighter: SyntaxHighlighter
+    private var syntaxOn = true
     private val undoStack = UndoStack()
 
     private val saveAsLauncher =
@@ -94,6 +99,7 @@ class EditorActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, backCallback)
 
         originalKeyListener = binding.editor.keyListener
+        highlighter = SyntaxHighlighter(binding.editor)
 
         binding.editor.addTextChangedListener(EditorWatcher())
         binding.editor.setOnScrollChangeListener { _, _, scrollY, _, _ ->
@@ -104,7 +110,16 @@ class EditorActivity : AppCompatActivity() {
         if (!restored) {
             loadFromIntent(intent, savedInstanceState == null)
         }
+        updateSyntaxLanguage()
+        syntaxOn = settings.syntaxHighlight
+        highlighter.setEnabled(syntaxOn)
+        // restoreState() fills the editor directly (outside the watcher), so an
+        // explicit pass guarantees colored text after configuration changes too.
+        highlighter.rehighlightNow()
         applyWordWrap(settings.wordWrap)
+        val fontSp = settings.fontSizeSp
+        binding.editor.textSize = fontSp.toFloat()
+        binding.gutter.textSize = fontSp.toFloat()
         if (settings.lineNumbers) {
             updateGutter()
         } else {
@@ -161,6 +176,7 @@ class EditorActivity : AppCompatActivity() {
             fileLineBreak = LineBreak.detect(text, LineBreak.LF)
             displayName = DisplayNames.resolve(this@EditorActivity, uri)
             savedText = text
+            updateSyntaxLanguage()
             setTextInternal(text)
             restoreCursorFor(uri)
             showBinaryHintIfNeeded(maybeBinary)
@@ -188,6 +204,9 @@ class EditorActivity : AppCompatActivity() {
         val end = binding.editor.selectionEnd
         if (start < 0 || end < 0) return
         App.sessions(this).saveCursor(uri.toString(), start, end, binding.editor.scrollY)
+        if (settings.autoSave && isDirty() && !readOnly) {
+            writeTo(uri)
+        }
     }
 
     /** Restores the last caret/scroll of [uri], if this file was opened before. */
@@ -233,6 +252,7 @@ class EditorActivity : AppCompatActivity() {
         applyingUndoRedo = false
         dirtyChanged()
         updateGutter()
+        highlighter.rehighlightNow()
     }
 
     private fun isDirty(): Boolean = lastCommitted != savedText
@@ -253,6 +273,7 @@ class EditorActivity : AppCompatActivity() {
                 lastCommitted = text
                 updateGutter()
                 dirtyChanged()
+                highlighter.scheduleHighlight()
             }
         }
     }
@@ -578,6 +599,7 @@ class EditorActivity : AppCompatActivity() {
         menu.findItem(R.id.action_wrap)?.isChecked = wordWrapEnabled
         menu.findItem(R.id.action_line_numbers)?.isChecked = binding.gutter.visibility == View.VISIBLE
         menu.findItem(R.id.action_read_only)?.isChecked = readOnly
+        menu.findItem(R.id.action_syntax)?.isChecked = syntaxOn
         fileUri?.let { uri ->
             menu.findItem(R.id.action_bookmark_toggle)?.isChecked =
                 App.bookmarks(this).has(uri.toString(), currentLine())
@@ -620,6 +642,14 @@ class EditorActivity : AppCompatActivity() {
                 item.isChecked = show
             }
             R.id.action_read_only -> applyReadOnly(!readOnly)
+            R.id.action_syntax -> {
+                syntaxOn = !syntaxOn
+                highlighter.setEnabled(syntaxOn)
+                item.isChecked = syntaxOn
+            }
+            R.id.action_reopen_encoding -> showReopenEncodingDialog()
+            R.id.action_save_encoding -> showSaveEncodingDialog()
+            R.id.action_insert_datetime -> insertDateTime()
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
                 return true
@@ -638,6 +668,7 @@ class EditorActivity : AppCompatActivity() {
         applyingUndoRedo = false
         dirtyChanged()
         updateGutter()
+        highlighter.rehighlightNow()
     }
 
     private fun performRedo() {
@@ -649,6 +680,7 @@ class EditorActivity : AppCompatActivity() {
         applyingUndoRedo = false
         dirtyChanged()
         updateGutter()
+        highlighter.rehighlightNow()
     }
 
     // ------------------------------------------------------------------ chrome
@@ -683,6 +715,86 @@ class EditorActivity : AppCompatActivity() {
 
     private fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    // ------------------------------------------------------------------ syntax & encoding
+
+    /** Re-detects the syntax language from the current file display name. */
+    private fun updateSyntaxLanguage() {
+        highlighter.setLanguage(SyntaxRegistry.languageForFileName(displayName))
+    }
+
+    private fun showReopenEncodingDialog() {
+        val uri = fileUri
+        if (uri == null) {
+            toast(getString(R.string.reopen_needs_file))
+            return
+        }
+        if (isDirty()) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.reopen_encoding)
+                .setMessage(R.string.reopen_discard_msg)
+                .setPositiveButton(R.string.continue_label) { _, _ -> pickCharsetAndReopen(uri) }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        } else {
+            pickCharsetAndReopen(uri)
+        }
+    }
+
+    private fun pickCharsetAndReopen(uri: Uri) {
+        val names = EncodingDetector.COMMON_CHARSETS.toTypedArray()
+        val current = names.indexOf(charsetName)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.reopen_encoding)
+            .setSingleChoiceItems(names, current) { dialog, which ->
+                dialog.dismiss()
+                reopenWith(uri, names[which])
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun reopenWith(uri: Uri, charset: String) {
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) { readBytes(uri) }
+            val bytes = result?.first
+            if (bytes == null) {
+                toast(getString(R.string.open_failed, displayName ?: uri.toString()))
+                return@launch
+            }
+            val text = EncodingDetector.decode(bytes, charset)
+            charsetName = charset
+            savedText = text
+            setTextInternal(text)
+            updateUiState()
+        }
+    }
+
+    private fun showSaveEncodingDialog() {
+        val names = EncodingDetector.COMMON_CHARSETS.toTypedArray()
+        val current = names.indexOf(charsetName)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.save_encoding)
+            .setSingleChoiceItems(names, current) { dialog, which ->
+                dialog.dismiss()
+                charsetName = names[which]
+                updateUiState()
+                save()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun insertDateTime() {
+        val editable = binding.editor.text ?: return
+        if (readOnly) {
+            toast(getString(R.string.read_only_toast))
+            return
+        }
+        val stamp = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(LocalDateTime.now())
+        val start = binding.editor.selectionStart.coerceIn(0, editable.length)
+        editable.replace(start, start, stamp)
     }
 
     companion object {

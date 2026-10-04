@@ -40,6 +40,21 @@ class SettingsRepository(private val kv: KeyValueStore) {
         get() = kv.getBoolean(KEY_WORD_WRAP, false)
         set(value) = kv.putBoolean(KEY_WORD_WRAP, value)
 
+    /** Syntax highlighting on by default; per-file language comes from the file name. */
+    var syntaxHighlight: Boolean
+        get() = kv.getBoolean(KEY_SYNTAX_HIGHLIGHT, true)
+        set(value) = kv.putBoolean(KEY_SYNTAX_HIGHLIGHT, value)
+
+    /** Editor font size in sp; falls back to the default on malformed values. */
+    var fontSizeSp: Int
+        get() = kv.getString(KEY_FONT_SIZE, DEFAULT_FONT_SIZE)?.toIntOrNull() ?: 14
+        set(value) = kv.putString(KEY_FONT_SIZE, value.toString())
+
+    /** Saves the open file automatically when the activity goes to background. */
+    var autoSave: Boolean
+        get() = kv.getBoolean(KEY_AUTO_SAVE, false)
+        set(value) = kv.putBoolean(KEY_AUTO_SAVE, value)
+
     /** One of [LINE_BREAK_AUTO], [LINE_BREAK_LF], [LINE_BREAK_CRLF]. */
     var lineBreakDefault: String
         get() = kv.getString(KEY_LINE_BREAK, LINE_BREAK_AUTO) ?: LINE_BREAK_AUTO
@@ -58,6 +73,11 @@ class SettingsRepository(private val kv: KeyValueStore) {
         const val KEY_WORD_WRAP = "word_wrap"
         const val KEY_LINE_BREAK = "line_break"
         const val KEY_FULL_SCREEN = "full_screen"
+        const val KEY_SYNTAX_HIGHLIGHT = "syntax_highlight"
+        const val KEY_FONT_SIZE = "font_size"
+        const val KEY_AUTO_SAVE = "auto_save"
+
+        const val DEFAULT_FONT_SIZE = "14"
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"

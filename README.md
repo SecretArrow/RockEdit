@@ -7,17 +7,23 @@
 (GPL-3.0) untuk Android — tanpa iklan, tanpa akun, tanpa telemetri, tanpa izin internet.
 Semua file dan kredensial Anda tidak pernah meninggalkan perangkat.
 
-## Fitur (v0.2.0)
+## Fitur (v0.3.0)
 
 - Buka & simpan file teks apa pun lewat Storage Access Framework (tanpa izin storage!)
 - Editor multi-baris dengan **undo/redo tanpa batas praktis** (100 langkah berkapasitas penuh)
+- **Penyorotan sintaks untuk 20 bahasa** (Kotlin, Java, C/C++, C#, Go, Rust, JS/TS, Python,
+  Ruby, PHP, Swift, Shell, SQL, JSON, YAML, XML, HTML, CSS) — deteksi otomatis dari ekstensi,
+  palet terang/gelap/AMOLED, dapat dimatikan dari menu
+- **Buka ulang dengan encoding** & **simpan dengan encoding** (UTF-8/16/32, Shift_JIS, GBK,
+  Big5, EUC-KR, dan lainnya) di atas deteksi otomatis
+- **Ukuran font** editor dapat diatur (12–24sp) + **simpan otomatis** saat pindah aplikasi (opsional)
 - Nomor baris + gutter tersinkron, word wrap (on/off), mode baca-saja
 - **Operasi baris**: duplikat, hapus, naik/turunkan baris (LF/CR/CRLF aman, masuk undo)
 - **Bookmark per-baris**: tandai baris penting, lompat lewat daftar penanda
 - **Pemulihan posisi**: kursor & scroll per file diingat saat dibuka ulang
 - **Cari / Ganti** dengan opsi peka-huruf, wrap-around, ganti satu/semua
-- **Lompat ke baris** + **statistik** karakter/kata/baris
-- **Deteksi encoding otomatis** (juniversalchardet): UTF-8, UTF-16, Shift_JIS, dsb.
+- **Lompat ke baris** + **statistik** karakter/kata/baris + **sisipkan tanggal/waktu**
+- **Deteksi encoding otomatis** (juniversalchardet) + peringatan file binary
 - **Deteksi & pertahankan line break** file (LF / CR / CRLF), dapat dipaksa di pengaturan
 - Daftar **file terbaru** (maks. 40) + terima teks dari aplikasi lain (share-in)
 - Tema terang/gelap/**hitam AMOLED**/ikuti sistem, mode **layar penuh**, bahasa Indonesia + Inggris

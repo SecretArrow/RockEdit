@@ -17,6 +17,35 @@ class SettingsRepositoryTest {
         assertFalse(s.wordWrap)
         assertFalse(s.fullScreen)
         assertEquals(SettingsRepository.LINE_BREAK_AUTO, s.lineBreakDefault)
+        assertTrue(s.syntaxHighlight)
+        assertEquals(14, s.fontSizeSp)
+        assertFalse(s.autoSave)
+    }
+
+    @Test
+    fun syntaxHighlightRoundTrip() {
+        val store = InMemoryKeyValueStore()
+        val s = SettingsRepository(store)
+        s.syntaxHighlight = false
+        assertFalse(SettingsRepository(store).syntaxHighlight)
+    }
+
+    @Test
+    fun fontSizeRoundTripAndFallback() {
+        val store = InMemoryKeyValueStore()
+        val s = SettingsRepository(store)
+        s.fontSizeSp = 20
+        assertEquals(20, SettingsRepository(store).fontSizeSp)
+        store.putString(SettingsRepository.KEY_FONT_SIZE, "bogus")
+        assertEquals(14, SettingsRepository(store).fontSizeSp)
+    }
+
+    @Test
+    fun autoSaveRoundTrip() {
+        val store = InMemoryKeyValueStore()
+        val s = SettingsRepository(store)
+        s.autoSave = true
+        assertTrue(SettingsRepository(store).autoSave)
     }
 
     @Test

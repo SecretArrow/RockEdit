@@ -11,6 +11,29 @@ object EncodingDetector {
     const val DEFAULT_CHARSET = "UTF-8"
 
     /**
+     * Charsets offered by the "Reopen with encoding" / "Save with encoding"
+     * menus, in presentation order (UTF-8 first). All names are supported by
+     * both the JVM unit tests and the Android runtime.
+     */
+    val COMMON_CHARSETS: List<String> = listOf(
+        "UTF-8",
+        "UTF-16LE",
+        "UTF-16BE",
+        "UTF-32LE",
+        "UTF-32BE",
+        "ISO-8859-1",
+        "US-ASCII",
+        "windows-1252",
+        "windows-1251",
+        "Shift_JIS",
+        "GBK",
+        "GB18030",
+        "Big5",
+        "EUC-KR",
+        "KOI8-R"
+    )
+
+    /**
      * Detects the charset name from raw bytes.
      * Returns [DEFAULT_CHARSET] when detection fails or the bytes are empty.
      */

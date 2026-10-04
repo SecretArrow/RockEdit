@@ -2,4 +2,10 @@
 <resources>
     <color name="gutter_background">#1E293B</color>
     <color name="gutter_text">#94A3B8</color>
+
+    <!-- Syntax palette (dark + AMOLED black) -->
+    <color name="syntax_keyword">#C4B5FD</color>
+    <color name="syntax_string">#86EFAC</color>
+    <color name="syntax_comment">#64748B</color>
+    <color name="syntax_number">#FCD34D</color>
 </resources>

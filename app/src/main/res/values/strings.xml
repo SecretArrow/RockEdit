@@ -63,6 +63,15 @@
     <string name="binary_warning">File may not be plain text. Showing replacement characters.</string>
     <string name="read_only_toast">Read-only mode enabled</string>
 
+    <!-- Syntax & encoding (v0.3.0) -->
+    <string name="syntax_highlight">Syntax highlighting</string>
+    <string name="reopen_encoding">Reopen with encoding</string>
+    <string name="save_encoding">Save with encoding</string>
+    <string name="insert_datetime">Insert date / time</string>
+    <string name="reopen_discard_msg">Re-decoding will discard unsaved changes. Continue?</string>
+    <string name="reopen_needs_file">Save the file first to use encoding tools</string>
+    <string name="continue_label">Continue</string>
+
     <!-- Settings -->
     <string name="pref_appearance">Appearance</string>
     <string name="pref_theme_title">Theme</string>
@@ -78,6 +87,9 @@
     <string name="pref_line_break_lf">LF (\\n, Unix)</string>
     <string name="pref_line_break_crlf">CRLF (\\r\\n, Windows)</string>
     <string name="pref_full_screen">Full screen editor</string>
+    <string name="pref_syntax">Syntax highlighting</string>
+    <string name="pref_font_size">Font size</string>
+    <string name="pref_auto_save">Auto-save on background</string>
 
     <!-- About -->
     <string name="about_title">About Rock Edit</string>

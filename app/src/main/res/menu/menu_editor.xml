@@ -75,4 +75,21 @@
         android:checkable="true"
         android:title="@string/read_only"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_syntax"
+        android:checkable="true"
+        android:title="@string/syntax_highlight"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_reopen_encoding"
+        android:title="@string/reopen_encoding"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_save_encoding"
+        android:title="@string/save_encoding"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_insert_datetime"
+        android:title="@string/insert_datetime"
+        app:showAsAction="never" />
 </menu>
