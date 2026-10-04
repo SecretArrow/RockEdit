@@ -320,9 +320,446 @@ object SyntaxRegistry {
         stringDelims = listOf('"', '\'')
     )
 
+    // ---- Extended language set (v0.5.0) --------------------------------------
+
+    private val lua = SyntaxLanguage(
+        id = "lua",
+        displayName = "Lua",
+        keywords = setOf(
+            "and", "break", "do", "else", "elseif", "end", "false", "for", "function",
+            "goto", "if", "in", "local", "nil", "not", "or", "repeat", "return",
+            "then", "true", "until", "while", "self"
+        ),
+        lineComments = listOf("--"),
+        blockComments = listOf("--[[" to "]]")
+    )
+
+    private val perl = SyntaxLanguage(
+        id = "perl",
+        displayName = "Perl",
+        keywords = setOf(
+            "my", "our", "local", "sub", "if", "elsif", "else", "unless", "while",
+            "until", "for", "foreach", "do", "last", "next", "redo", "return",
+            "use", "no", "require", "package", "new", "defined", "undef", "exists",
+            "delete", "keys", "values", "each", "push", "pop", "shift", "unshift",
+            "splice", "sort", "map", "grep", "join", "split", "print", "printf",
+            "say", "open", "close", "die", "warn", "eval", "wantarray", "ref",
+            "bless", "scalar", "abs", "chomp", "chop", "lc", "uc", "length",
+            "substr", "index", "sprintf", "true", "false", "and", "or", "not", "eq", "ne"
+        ),
+        lineComments = listOf("#"),
+        stringDelims = listOf('"', '\'')
+    )
+
+    private val r = SyntaxLanguage(
+        id = "r",
+        displayName = "R",
+        keywords = setOf(
+            "if", "else", "repeat", "while", "function", "for", "in", "next", "break",
+            "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_",
+            "NA_character_", "NA_complex_", "library", "require", "return", "source"
+        ),
+        lineComments = listOf("#")
+    )
+
+    private val objc = SyntaxLanguage(
+        id = "objc",
+        displayName = "Objective-C",
+        keywords = c.keywords + setOf(
+            "id", "self", "nil", "YES", "NO", "BOOL", "IBOutlet", "IBAction",
+            "interface", "implementation", "property", "end", "protocol",
+            "class", "import", "include", "@synthesize", "@dynamic", "nonatomic",
+            "strong", "weak", "readonly", "readwrite", "alloc", "init", "new"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val dart = SyntaxLanguage(
+        id = "dart",
+        displayName = "Dart",
+        keywords = setOf(
+            "abstract", "as", "assert", "async", "await", "break", "case", "catch",
+            "class", "const", "continue", "default", "deferred", "do", "dynamic",
+            "else", "enum", "export", "extends", "extension", "external", "factory",
+            "false", "final", "finally", "for", "get", "if", "implements", "import",
+            "in", "interface", "is", "late", "library", "mixin", "new", "null",
+            "on", "operator", "part", "required", "rethrow", "return", "sealed",
+            "set", "show", "static", "super", "switch", "sync", "this", "throw",
+            "true", "try", "typedef", "var", "void", "while", "with", "yield"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/", "///" to "\n")
+    )
+
+    private val scala = SyntaxLanguage(
+        id = "scala",
+        displayName = "Scala",
+        keywords = setOf(
+            "abstract", "case", "catch", "class", "def", "do", "else", "extends",
+            "false", "final", "finally", "for", "forSome", "if", "implicit", "import",
+            "lazy", "match", "new", "null", "object", "override", "package", "private",
+            "protected", "return", "sealed", "super", "this", "throw", "trait", "true",
+            "try", "type", "val", "var", "while", "with", "yield", "given", "using",
+            "enum", "export", "extension", "end", "then", "inline", "transparent"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val groovy = SyntaxLanguage(
+        id = "groovy",
+        displayName = "Groovy",
+        keywords = setOf(
+            "as", "assert", "break", "case", "catch", "class", "const", "continue",
+            "def", "default", "do", "else", "enum", "extends", "false", "finally",
+            "for", "goto", "if", "implements", "import", "in", "instanceof",
+            "interface", "new", "null", "package", "return", "super", "switch",
+            "this", "throw", "throws", "trait", "true", "try", "while", "closure",
+            "it", "println", "task", "plugin", "apply", "repositories", "dependencies"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
+    private val haskell = SyntaxLanguage(
+        id = "haskell",
+        displayName = "Haskell",
+        keywords = setOf(
+            "case", "class", "data", "default", "deriving", "do", "else", "foreign",
+            "if", "import", "in", "infix", "infixl", "infixr", "instance", "let",
+            "module", "newtype", "of", "then", "type", "where", "mdo", "rec"
+        ),
+        lineComments = listOf("--"),
+        blockComments = listOf("{-" to "-}"),
+        stringDelims = listOf('"')
+    )
+
+    private val erlang = SyntaxLanguage(
+        id = "erlang",
+        displayName = "Erlang",
+        keywords = setOf(
+            "after", "and", "andalso", "band", "begin", "bnot", "bor", "bsl", "bsr",
+            "bxor", "case", "catch", "cond", "div", "end", "fun", "if", "let", "not",
+            "of", "or", "orelse", "receive", "rem", "try", "when", "xor", "query"
+        ),
+        lineComments = listOf("%"),
+        stringDelims = listOf('"')
+    )
+
+    private val elixir = SyntaxLanguage(
+        id = "elixir",
+        displayName = "Elixir",
+        keywords = setOf(
+            "def", "defmodule", "defp", "defmacro", "defstruct", "defprotocol",
+            "defimpl", "defexception", "defguard", "defoverridable", "do", "else",
+            "end", "false", "fn", "if", "import", "require", "use", "alias", "case",
+            "cond", "with", "for", "unless", "receive", "try", "rescue", "catch",
+            "after", "raise", "throw", "true", "nil", "and", "or", "not", "in", "when"
+        ),
+        lineComments = listOf("#")
+    )
+
+    private val clojure = SyntaxLanguage(
+        id = "clojure",
+        displayName = "Clojure",
+        keywords = setOf(
+            "def", "defn", "defn-", "defmacro", "defonce", "defmulti", "defmethod",
+            "defprotocol", "defrecord", "deftype", "let", "letfn", "fn", "loop",
+            "recur", "if", "when", "when-not", "when-let", "if-let", "if-not", "cond",
+            "condp", "case", "do", "doseq", "dotimes", "for", "while", "try", "catch",
+            "finally", "throw", "ns", "require", "import", "use", "refer", "true",
+            "false", "nil", "lambda", "quote", "var", "new", "set!", "assoc", "merge"
+        ),
+        lineComments = listOf(";"),
+        stringDelims = listOf('"')
+    )
+
+    private val fsharp = SyntaxLanguage(
+        id = "fsharp",
+        displayName = "F#",
+        keywords = setOf(
+            "abstract", "and", "as", "assert", "base", "begin", "class", "default",
+            "delegate", "do", "done", "downcast", "downto", "elif", "else", "end",
+            "exception", "extern", "false", "finally", "fixed", "for", "fun",
+            "function", "global", "if", "in", "inherit", "inline", "interface",
+            "internal", "lazy", "let", "let!", "match", "match!", "member", "module",
+            "mutable", "namespace", "new", "not", "null", "of", "open", "or",
+            "override", "private", "public", "rec", "return", "return!", "select",
+            "static", "struct", "then", "to", "true", "try", "type", "upcast", "use",
+            "use!", "val", "void", "when", "while", "with", "yield", "yield!"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("(*" to "*)")
+    )
+
+    private val visualbasic = SyntaxLanguage(
+        id = "vb",
+        displayName = "Visual Basic",
+        keywords = setOf(
+            "addhandler", "andalso", "boolean", "byref", "byte", "byval", "call",
+            "case", "catch", "cbool", "cbyte", "cchar", "cdate", "cdbl", "cdec",
+            "char", "cint", "class", "clng", "cobj", "const", "continue", "csbyte",
+            "cshort", "csng", "cstr", "ctype", "cuint", "culng", "cushort", "date",
+            "decimal", "declare", "default", "delegate", "dim", "do", "double",
+            "each", "else", "elseif", "end", "enum", "erase", "error", "event",
+            "exit", "false", "finally", "for", "friend", "function", "get", "gettype",
+            "global", "goto", "handles", "if", "implements", "imports", "in",
+            "inherits", "integer", "interface", "is", "isnot", "long", "loop", "me",
+            "mod", "module", "mustinherit", "mustoverride", "mybase", "myclass",
+            "namespace", "new", "next", "not", "nothing", "notinheritable",
+            "notoverridable", "object", "of", "on", "operator", "option", "optional",
+            "or", "orelse", "overloads", "overridable", "overrides", "paramarray",
+            "partial", "private", "property", "protected", "public", "raiseevent",
+            "readonly", "redim", "rem", "removehandler", "resume", "return", "select",
+            "set", "shadows", "shared", "short", "single", "static", "step", "stop",
+            "string", "structure", "sub", "synclock", "then", "throw", "to", "true",
+            "try", "trycast", "typeof", "until", "using", "when", "while", "widening",
+            "with", "withevents", "writeonly", "xor"
+        ),
+        lineComments = listOf("'"),
+        stringDelims = listOf('"'),
+        caseInsensitive = true
+    )
+
+    private val assembly = SyntaxLanguage(
+        id = "assembly",
+        displayName = "Assembly",
+        keywords = setOf(
+            "mov", "push", "pop", "add", "sub", "mul", "imul", "div", "idiv", "inc",
+            "dec", "and", "or", "xor", "not", "neg", "shl", "shr", "sar", "cmp",
+            "test", "jmp", "je", "jne", "jz", "jnz", "jg", "jl", "jge", "jle", "ja",
+            "jb", "call", "ret", "nop", "lea", "int", "syscall", "enter", "leave",
+            "loop", "movzx", "movsx", "sete", "setne", "cmove", "cmovne", "xchg",
+            "section", "global", "extern", "db", "dw", "dd", "dq", "resb", "resw",
+            "resd", "equ", "times", "byte", "word", "dword", "qword", "ptr", "rax",
+            "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "eax", "ebx", "ecx",
+            "edx", "esi", "edi", "ebp", "esp", "al", "bl", "cl", "dl"
+        ),
+        lineComments = listOf(";", "#"),
+        caseInsensitive = true
+    )
+
+    private val toml = SyntaxLanguage(
+        id = "toml",
+        displayName = "TOML",
+        keywords = setOf("true", "false"),
+        lineComments = listOf("#"),
+        stringDelims = listOf('"', '\'')
+    )
+
+    private val ini = SyntaxLanguage(
+        id = "ini",
+        displayName = "INI",
+        keywords = setOf("true", "false", "yes", "no", "on", "off"),
+        lineComments = listOf(";", "#"),
+        stringDelims = listOf('"', '\'')
+    )
+
+    private val makefile = SyntaxLanguage(
+        id = "makefile",
+        displayName = "Makefile",
+        keywords = setOf(
+            "all", "clean", "install", "uninstall", "dist", "check", "include",
+            "ifeq", "ifneq", "ifdef", "ifndef", "else", "endif", "define", "endef",
+            "export", "unexport", "override", "PHONY", "DEFAULT", "PRECIOUS",
+            "INTERMEDIATE", "SECONDARY", "DELETE_ON", "IGNORE", "SILENT", "EXPORT_ALL"
+        ),
+        lineComments = listOf("#")
+    )
+
+    private val cmake = SyntaxLanguage(
+        id = "cmake",
+        displayName = "CMake",
+        keywords = setOf(
+            "cmake_minimum_required", "project", "set", "if", "elseif", "else",
+            "endif", "foreach", "endforeach", "function", "endfunction", "macro",
+            "endmacro", "add_executable", "add_library", "add_subdirectory",
+            "add_custom_target", "add_definitions", "add_compile_options",
+            "target_link_libraries", "target_include_directories",
+            "target_compile_definitions", "target_compile_options",
+            "include_directories", "link_directories", "find_package", "find_library",
+            "find_path", "find_program", "message", "option", "unset", "return",
+            "include", "install", "set_target_properties", "get_target_property",
+            "enable_testing", "add_test", "string", "list", "file", "math", "exec_program"
+        ),
+        lineComments = listOf("#"),
+        blockComments = listOf("#[[" to "]]"),
+        caseInsensitive = false
+    )
+
+    private val batch = SyntaxLanguage(
+        id = "batch",
+        displayName = "Batch",
+        keywords = setOf(
+            "echo", "set", "setlocal", "endlocal", "if", "else", "for", "in", "do",
+            "goto", "call", "exit", "pause", "cd", "md", "rd", "del", "copy", "move",
+            "ren", "type", "dir", "cls", "start", "title", "color", "choice", "shift",
+            "errorlevel", "exist", "not", "equ", "neq", "lss", "leq", "gtr", "geq",
+            "defined", "off", "on", "delayedexpansion", "enabledelayedexpansion",
+            "rem", "pushd", "popd", "xcopy", "robocopy", "findstr", "set /a", "set /p"
+        ),
+        lineComments = listOf("::", "REM"),
+        stringDelims = listOf('"'),
+        caseInsensitive = true
+    )
+
+    private val powershell = SyntaxLanguage(
+        id = "powershell",
+        displayName = "PowerShell",
+        keywords = setOf(
+            "begin", "break", "catch", "class", "continue", "data", "define", "do",
+            "dynamicparam", "else", "elseif", "end", "enum", "exit", "filter",
+            "finally", "for", "foreach", "from", "function", "hidden", "if", "in",
+            "param", "process", "return", "static", "switch", "throw", "trap", "try",
+            "until", "using", "var", "while", "workflow", "get-childitem", "get-content",
+            "set-content", "write-host", "write-output", "new-object", "select-object",
+            "where-object", "foreach-object", "sort-object", "measure-object",
+            "true", "false", "null"
+        ),
+        lineComments = listOf("#"),
+        blockComments = listOf("<#" to "#>"),
+        caseInsensitive = true
+    )
+
+    private val vue = SyntaxLanguage(
+        id = "vue",
+        displayName = "Vue",
+        keywords = markupKeywords + setOf(
+            "template", "script", "style", "computed", "methods", "data", "props",
+            "watch", "mounted", "created", "setup", "ref", "reactive", "emit",
+            "v-if", "v-else", "v-for", "v-model", "v-bind", "v-on", "v-show",
+            "component", "components", "export", "default", "import", "from"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("<!--" to "-->", "/*" to "*/"),
+        caseInsensitive = true
+    )
+
+    private val graphql = SyntaxLanguage(
+        id = "graphql",
+        displayName = "GraphQL",
+        keywords = setOf(
+            "query", "mutation", "subscription", "fragment", "on", "type", "input",
+            "interface", "union", "enum", "schema", "extend", "implements", "scalar",
+            "directive", "true", "false", "null"
+        ),
+        lineComments = listOf("#"),
+        stringDelims = listOf('"')
+    )
+
+    private val julia = SyntaxLanguage(
+        id = "julia",
+        displayName = "Julia",
+        keywords = setOf(
+            "baremodule", "begin", "break", "catch", "const", "continue", "do",
+            "else", "elseif", "end", "export", "false", "finally", "for", "function",
+            "global", "if", "import", "importall", "let", "local", "macro", "module",
+            "mutable", "primitive", "quote", "return", "struct", "true", "try",
+            "type", "using", "while", "in", "isa", "where", "abstract", "typealias"
+        ),
+        lineComments = listOf("#"),
+        blockComments = listOf("#=" to "=#")
+    )
+
+    private val nim = SyntaxLanguage(
+        id = "nim",
+        displayName = "Nim",
+        keywords = setOf(
+            "addr", "and", "as", "asm", "bind", "block", "break", "case", "cast",
+            "concept", "const", "continue", "converter", "defer", "discard",
+            "distinct", "div", "do", "elif", "else", "end", "enum", "except",
+            "export", "finally", "for", "from", "func", "if", "import", "include",
+            "interface", "is", "isnot", "iterator", "let", "macro", "method", "mixin",
+            "mod", "nil", "not", "notin", "object", "of", "or", "out", "proc",
+            "ptr", "raise", "ref", "return", "shl", "shr", "static", "template",
+            "try", "tuple", "type", "using", "var", "when", "while", "with", "without", "xor", "yield"
+        ),
+        lineComments = listOf("#")
+    )
+
+    private val ocaml = SyntaxLanguage(
+        id = "ocaml",
+        displayName = "OCaml",
+        keywords = setOf(
+            "and", "as", "assert", "asr", "begin", "class", "constraint", "do",
+            "done", "downto", "else", "end", "exception", "external", "false",
+            "for", "fun", "function", "functor", "if", "in", "include", "inherit",
+            "initializer", "land", "lazy", "let", "lor", "lsl", "lsr", "lxor",
+            "match", "method", "mod", "module", "mutable", "new", "nonrec", "object",
+            "of", "open", "or", "private", "rec", "sig", "struct", "then", "to",
+            "true", "try", "type", "val", "virtual", "when", "while", "with"
+        ),
+        lineComments = emptyList(),
+        blockComments = listOf("(*" to "*)")
+    )
+
+    private val latex = SyntaxLanguage(
+        id = "latex",
+        displayName = "LaTeX",
+        keywords = setOf(
+            "documentclass", "usepackage", "begin", "end", "section", "subsection",
+            "subsubsection", "paragraph", "title", "author", "date", "maketitle",
+            "tableofcontents", "item", "itemize", "enumerate", "description",
+            "figure", "table", "tabular", "includegraphics", "label", "ref", "cite",
+            "bibliography", "bibliographystyle", "footnote", "textbf", "textit",
+            "emph", "underline", "frac", "sqrt", "sum", "int", "prod", "alpha",
+            "beta", "gamma", "delta", "omega", "pi", "left", "right", "newcommand",
+            "renewcommand", "input", "include", "document", "chapter", "part", "appendix"
+        ),
+        lineComments = listOf("%"),
+        stringDelims = emptyList(),
+        caseInsensitive = false
+    )
+
+    private val zig = SyntaxLanguage(
+        id = "zig",
+        displayName = "Zig",
+        keywords = setOf(
+            "align", "allowzero", "and", "anyframe", "anytype", "asm", "async",
+            "await", "break", "callconv", "catch", "comptime", "const", "continue",
+            "defer", "else", "enum", "errdefer", "error", "export", "extern",
+            "false", "fn", "for", "if", "inline", "noalias", "nosuspend", "noinline",
+            "null", "opaque", "or", "orelse", "packed", "pub", "resume", "return",
+            "linksection", "struct", "suspend", "switch", "test", "threadlocal",
+            "true", "try", "undefined", "union", "unreachable", "usingnamespace",
+            "var", "volatile", "while"
+        ),
+        lineComments = listOf("//")
+    )
+
+    private val protobuf = SyntaxLanguage(
+        id = "protobuf",
+        displayName = "Protocol Buffers",
+        keywords = setOf(
+            "syntax", "package", "import", "option", "message", "oneof", "map",
+            "field", "enum", "service", "rpc", "returns", "stream", "reserved",
+            "extend", "extensions", "to", "max", "group", "optional", "required",
+            "repeated", "double", "float", "int32", "int64", "uint32", "uint64",
+            "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64",
+            "bool", "string", "bytes"
+        ),
+        lineComments = listOf("//"),
+        blockComments = listOf("/*" to "*/")
+    )
+
     private val languages: List<SyntaxLanguage> = listOf(
         kotlin, java, c, cpp, csharp, go, rust, javascript, typescript, python,
-        ruby, php, swift, shell, sql, json, yaml, xml, html, css
+        ruby, php, swift, shell, sql, json, yaml, xml, html, css,
+        lua, perl, r, objc, dart, scala, groovy, haskell, erlang, elixir,
+        clojure, fsharp, visualbasic, assembly, toml, ini, makefile, cmake,
+        batch, powershell, vue, graphql, julia, nim, ocaml, latex, zig, protobuf
+    )
+
+    /** Files without (or with misleading) extensions that map by exact name. */
+    private val byName: Map<String, SyntaxLanguage> = mapOf(
+        "makefile" to makefile,
+        "gnumakefile" to makefile,
+        "dockerfile" to shell,
+        "rakefile" to ruby,
+        "gemfile" to ruby,
+        "vagrantfile" to ruby,
+        "cmakelists.txt" to cmake
     )
 
     private val byExtension: Map<String, SyntaxLanguage> = buildMap {
@@ -349,17 +786,48 @@ object SyntaxRegistry {
         link(xml, "xml", "svg", "plist", "xsl")
         link(html, "html", "htm")
         link(css, "css", "scss", "less")
+        // Extended set (v0.5.0)
+        link(lua, "lua")
+        link(perl, "pl", "pm")
+        link(r, "r")
+        link(objc, "m", "mm")
+        link(dart, "dart")
+        link(scala, "scala", "sc")
+        link(groovy, "groovy", "gradle", "jenkinsfile")
+        link(haskell, "hs")
+        link(erlang, "erl", "hrl")
+        link(elixir, "ex", "exs")
+        link(clojure, "clj", "cljs", "cljc", "edn")
+        link(fsharp, "fs", "fsi", "fsx")
+        link(visualbasic, "vb", "vbs", "bas")
+        link(assembly, "asm", "s")
+        link(toml, "toml")
+        link(ini, "ini", "cfg", "conf", "properties")
+        link(makefile, "mk", "mak")
+        link(cmake, "cmake")
+        link(batch, "bat", "cmd")
+        link(powershell, "ps1", "psm1", "psd1")
+        link(vue, "vue")
+        link(graphql, "graphql", "gql")
+        link(julia, "jl")
+        link(nim, "nim")
+        link(ocaml, "ml", "mli")
+        link(latex, "tex", "latex")
+        link(zig, "zig")
+        link(protobuf, "proto")
     }
 
     /** Number of built-in languages (useful for tests and About dialogs). */
     val languageCount: Int get() = languages.size
 
     /**
-     * Resolves the language for a file name by its extension (case-insensitive).
+     * Resolves the language for a file name: exact names first (Makefile,
+     * Dockerfile, ...), then the extension (case-insensitive).
      * Returns null for unknown extensions, extension-less names and dotfiles.
      */
     fun languageForFileName(name: String?): SyntaxLanguage? {
         if (name.isNullOrEmpty()) return null
+        byName[name.lowercase()]?.let { return it }
         val ext = FileNames.split(name).second.lowercase()
         if (ext.isEmpty()) return null
         return byExtension[ext]

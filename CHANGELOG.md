@@ -7,8 +7,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Planned
 - Storage Manager: FTP/FTPS/SFTP, WebDAV, Google Drive, Dropbox, OneDrive, GitHub, GitLab
-- Bookmark folder, backup/restore JSON
 - Preview HTML/Markdown/AsciiDoc
+
+## [0.5.0] - 2026-10-04
+
+### Added
+- Penyorotan sintaks diperluas 20 → 48 bahasa: Lua, Perl, R, Objective-C, Dart,
+  Scala, Groovy, Haskell, Erlang, Elixir, Clojure, F#, Visual Basic, Assembly,
+  TOML, INI, Makefile, CMake, Batch, PowerShell, Vue, GraphQL, Julia, Nim,
+  OCaml, LaTeX, Zig, Protocol Buffers — dengan varian komentar multi-baris khas
+  (--[[ ]], {- -}, #[[ ]], <# #>, (* *) dan lainnya)
+- File populer tanpa ekstensi kini dikenali: Makefile, Dockerfile (shell),
+  Gemfile/Rakefile/Vagrantfile (ruby), CMakeLists.txt (cmake)
+- Cetak dokumen via layar cetak Android (PDF A4 monospace, paginasi murni
+  ter-unit-test: hard wrap 88 kolom, 47 baris/halaman)
+- Cadangkan & pulihkan data (JSON via SAF): semua pengaturan + file terbaru +
+  posisi kursor + bookmark + set tab terbuka; kunci asing dilewati dengan aman,
+  ringkasan jumlah item dipulihkan/dilewati ditampilkan
+- Layar Lisensi open-source (atribusi pustaka) dari dialog Tentang
+
+### Changed
+- Tokenizer: komentar blok yang lebih panjang kini diutamakan di posisi yang
+  sama dengan penanda komentar baris (perbaikan Lua/Julia multi-baris)
+- KeyValueStore: tambahan contains() untuk dukungan cadangan yang akurat
+- Unit test baru: PrintLayout (6), BackupRestore (7), registry +4; total 181+ unit
 
 ## [0.4.0] - 2026-10-04
 

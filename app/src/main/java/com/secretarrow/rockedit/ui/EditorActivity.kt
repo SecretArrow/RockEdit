@@ -849,6 +849,12 @@ class EditorActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(send, getString(R.string.share)))
     }
 
+    private fun printDocument() {
+        val tab = tabManager.activeTab() ?: return
+        val text = binding.editor.text?.toString().orEmpty()
+        TextPrinter.print(this, FileNames.sanitize(tab.name), text)
+    }
+
     // ------------------------------------------------------------------ toggles
 
     private fun applyWordWrap(enabled: Boolean) {
@@ -945,6 +951,7 @@ class EditorActivity : AppCompatActivity() {
             }
             R.id.action_bookmarks -> showBookmarksDialog()
             R.id.action_stats -> showStatsDialog()
+            R.id.action_print -> printDocument()
             R.id.action_share -> shareText()
             R.id.action_wrap -> {
                 val enable = !wordWrapEnabled

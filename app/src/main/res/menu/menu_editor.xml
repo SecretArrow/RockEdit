@@ -77,6 +77,10 @@
         android:title="@string/statistics"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_print"
+        android:title="@string/print"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_share"
         android:title="@string/share"
         app:showAsAction="never" />

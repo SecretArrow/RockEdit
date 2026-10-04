@@ -69,14 +69,14 @@ class TabPersistence(private val kv: KeyValueStore) {
         kv.remove(KEY)
     }
 
-    private companion object {
+    companion object {
         const val KEY = "open_tabs"
-        const val F_TABS = "tabs"
-        const val F_ACTIVE = "active"
-        const val F_URI = "uri"
-        const val F_NAME = "name"
-        const val F_CHARSET = "charset"
-        const val F_LINE_BREAK = "line_break"
-        const val F_READ_ONLY = "read_only"
+        private const val F_TABS = "tabs"
+        private const val F_ACTIVE = "active"
+        private const val F_URI = "uri"
+        private const val F_NAME = "name"
+        private const val F_CHARSET = "charset"
+        private const val F_LINE_BREAK = "line_break"
+        private const val F_READ_ONLY = "read_only"
     }
 }

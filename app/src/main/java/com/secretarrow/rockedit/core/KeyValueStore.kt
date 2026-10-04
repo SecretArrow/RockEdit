@@ -11,6 +11,7 @@ interface KeyValueStore {
     fun putBoolean(key: String, value: Boolean)
     fun remove(key: String)
     fun clear()
+    fun contains(key: String): Boolean
 }
 
 /** Simple in-memory implementation used by unit tests. */
@@ -38,4 +39,6 @@ class InMemoryKeyValueStore : KeyValueStore {
     override fun clear() {
         map.clear()
     }
+
+    override fun contains(key: String): Boolean = map.containsKey(key)
 }

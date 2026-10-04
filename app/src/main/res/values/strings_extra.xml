@@ -26,4 +26,17 @@
     <string name="pref_remember_tabs">Remember open tabs</string>
     <string name="pref_sort_folders">Folders first</string>
     <string name="pref_show_hidden">Show hidden files</string>
+
+    <!-- v0.5.0: print, licenses, backup/restore -->
+    <string name="print">Print</string>
+    <string name="licenses_title">Licenses</string>
+    <string name="licenses_intro">Rock Edit is free software (GPL-3.0) and uses the following open-source libraries. Many thanks to their authors.</string>
+    <string name="licenses_thanks">Full license texts are available in the source repository.</string>
+    <string name="pref_backup_restore">Backup &amp; restore</string>
+    <string name="backup_data">Backup data (JSON)</string>
+    <string name="restore_data">Restore data (JSON)</string>
+    <string name="backup_done">Backup saved</string>
+    <string name="backup_failed">Backup failed</string>
+    <string name="restore_done">Restored %1$d item(s), skipped %2$d</string>
+    <string name="restore_failed">Restore failed — invalid file</string>
 </resources>

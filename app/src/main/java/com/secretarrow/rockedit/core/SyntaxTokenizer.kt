@@ -50,19 +50,20 @@ object SyntaxTokenizer {
             }
 
             val lineMarker = longestMatchAt(text, i, lineComments)
+            val blockMarker = longestBlockMatchAt(text, i, blocks)
+            // A longer block start at the same position wins over the line
+            // marker: Lua "--[[" over "--", Julia "#=" over "#", etc.
+            if (blockMarker != null && (lineMarker == null || blockMarker.first.length > lineMarker.length)) {
+                blockStart = i
+                blockEnd = blockMarker.second
+                i += blockMarker.first.length
+                continue
+            }
             if (lineMarker != null) {
                 val nl = text.indexOf('\n', i)
                 val end = if (nl < 0) len else nl
                 tokens.add(SyntaxToken(SyntaxTokenType.COMMENT, i, end))
                 i = end
-                continue
-            }
-
-            val blockMarker = longestBlockMatchAt(text, i, blocks)
-            if (blockMarker != null) {
-                blockStart = i
-                blockEnd = blockMarker.second
-                i += blockMarker.first.length
                 continue
             }
 

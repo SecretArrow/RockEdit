@@ -26,4 +26,17 @@
     <string name="pref_remember_tabs">Ingat tab yang terbuka</string>
     <string name="pref_sort_folders">Folder di atas</string>
     <string name="pref_show_hidden">Tampilkan file tersembunyi</string>
+
+    <!-- v0.5.0: cetak, lisensi, cadangkan/pulihkan -->
+    <string name="print">Cetak</string>
+    <string name="licenses_title">Lisensi</string>
+    <string name="licenses_intro">Rock Edit adalah perangkat lunak bebas (GPL-3.0) dan menggunakan pustaka sumber-terbuka berikut. Terima kasih banyak kepada para pembuatnya.</string>
+    <string name="licenses_thanks">Teks lisensi lengkap tersedia di repositori kode sumber.</string>
+    <string name="pref_backup_restore">Cadangkan &amp; pulihkan</string>
+    <string name="backup_data">Cadangkan data (JSON)</string>
+    <string name="restore_data">Pulihkan data (JSON)</string>
+    <string name="backup_done">Cadangan tersimpan</string>
+    <string name="backup_failed">Cadangan gagal</string>
+    <string name="restore_done">Memulihkan %1$d item, melewati %2$d</string>
+    <string name="restore_failed">Pemulihan gagal — file tidak valid</string>
 </resources>

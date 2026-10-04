@@ -48,5 +48,8 @@ object App {
             override fun clear() {
                 edit().clear().apply()
             }
+
+            override fun contains(key: String): Boolean =
+                this@toKeyValueStore.contains(key)
         }
 }

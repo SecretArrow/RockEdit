@@ -147,6 +147,11 @@ class MainActivity : AppCompatActivity() {
             .setTitle(R.string.about_title)
             .setMessage(body)
             .setPositiveButton(android.R.string.ok, null)
+            .setNeutralButton(R.string.licenses_title) { _, _ ->
+                startActivity(
+                    Intent(this, com.secretarrow.rockedit.ui.LicensesActivity::class.java)
+                )
+            }
             .show()
     }
 

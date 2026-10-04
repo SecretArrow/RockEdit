@@ -71,4 +71,14 @@
             android:key="show_hidden_files"
             android:title="@string/pref_show_hidden" />
     </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_backup_restore">
+        <Preference
+            android:key="backup_data"
+            android:title="@string/backup_data" />
+
+        <Preference
+            android:key="restore_data"
+            android:title="@string/restore_data" />
+    </PreferenceCategory>
 </PreferenceScreen>
