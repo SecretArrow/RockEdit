@@ -8,6 +8,12 @@
         app:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_format"
+        android:icon="@drawable/ic_format"
+        android:title="@string/format"
+        app:iconTint="?attr/colorOnSurface"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/action_save_as"
         android:title="@string/save_as"
         app:showAsAction="never" />

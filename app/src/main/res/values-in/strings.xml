@@ -87,4 +87,16 @@
 
     <string name="about_title">Tentang Rock Edit</string>
     <string name="about_body">Rock Edit %1$s\n\nEditor teks cepat dan stabil untuk Android. 100%% perangkat lunak bebas di bawah GPL-3.0 — tanpa iklan, tanpa pelacakan, tanpa izin berbahaya. File Anda tidak pernah meninggalkan perangkat.\n\nKode sumber: github.com/SecretArrow/RockEdit</string>
+
+    <!-- Format (v0.9.0) -->
+    <string name="format">Format kode</string>
+    <string name="format_running">Memformat…</string>
+    <string name="format_done">Kode terformat (%1$d ms)</string>
+    <string name="format_unchanged">Sudah rapi — tidak ada perubahan</string>
+    <string name="format_nothing">Tidak ada yang perlu diformat</string>
+    <string name="format_error_too_large">File terlalu besar untuk diformat (batas 2 juta karakter)</string>
+    <string name="format_error_parse_generic">Sintaks tidak valid — tidak dapat diformat</string>
+    <string name="format_error_parse_line">Sintaks tidak valid pada baris %1$d</string>
+    <string name="format_error_timeout">Memformat memakan waktu terlalu lama</string>
+    <string name="format_error_generic">Gagal memformat</string>
 </resources>

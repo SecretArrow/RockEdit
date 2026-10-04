@@ -94,4 +94,16 @@
     <!-- About -->
     <string name="about_title">About Rock Edit</string>
     <string name="about_body">Rock Edit %1$s\n\nA fast, stable text editor for Android. 100%% free software under GPL-3.0 — no ads, no tracking, no dangerous permissions. Your files never leave your device.\n\nSource code: github.com/SecretArrow/RockEdit</string>
+
+    <!-- Format (v0.9.0) -->
+    <string name="format">Format code</string>
+    <string name="format_running">Formatting…</string>
+    <string name="format_done">Code formatted (%1$d ms)</string>
+    <string name="format_unchanged">Already formatted — no changes</string>
+    <string name="format_nothing">Nothing to format</string>
+    <string name="format_error_too_large">File too large to format (limit 2M characters)</string>
+    <string name="format_error_parse_generic">Invalid syntax — cannot format</string>
+    <string name="format_error_parse_line">Invalid syntax at line %1$d</string>
+    <string name="format_error_timeout">Formatting took too long</string>
+    <string name="format_error_generic">Formatting failed</string>
 </resources>

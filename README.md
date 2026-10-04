@@ -8,7 +8,7 @@
 terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
 menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.8.0)
+## Fitur (v0.9.0)
 
 - Buka & simpan file teks apa pun lewat Storage Access Framework (tanpa izin storage!)
 - **Editor multi-tab** (maks 10): indikator perubahan, tutup per tab / tutup lainnya,
@@ -20,6 +20,10 @@ menghubungkan layanan (Storage Manager / eksekusi daring).
   tanpa ekstensi (Makefile, Dockerfile, Gemfile) — palet terang/gelap/AMOLED
 - **Buka ulang dengan encoding** & **simpan dengan encoding** (UTF-8/16/32, Shift_JIS, GBK,
   Big5, EUC-KR, dan lainnya) di atas deteksi otomatis
+- **Code Formatter** (v0.9.0): JSON (angka verbatim, error berposisi),
+  XML/SVG (proteksi XXE berlapis), CSS (string & data-URI aman, error
+  berbaris), fallback whitespace untuk bahasa apa pun — hasil masuk undo
+  stack, gagal = dokumen tidak pernah berubah
 - **Buka folder** (peramban SAF: breadcrumb, folder di atas, filter file tersembunyi,
   folder terakhir diingat) — file langsung menjadi tab
 - **Storage Manager: FTP, FTPS, SFTP, WebDAV** — file remote dibuka seperti file lokal,

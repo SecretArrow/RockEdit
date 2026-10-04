@@ -9,6 +9,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
 - USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
 
+## [0.9.0] - 2026-10-04
+
+### Added
+- **Code Formatter** di toolbar editor: JSON (parser ketat RFC 8259 buatan
+  sendiri — angka dipertahankan verbatim, error berposisi baris/kolom),
+  XML/SVG/plist (DOM re-serialization dengan proteksi XXE berlapis:
+  pra-scan DTD/DOCTYPE + parser di-hardening), CSS (state machine: komentar,
+  string, url(data:...) tidak pernah rusak; blok tidak seimbang dilaporkan
+  beserta barisnya), dan fallback universal normalisasi whitespace untuk
+  bahasa apa pun (LF/CR/CRLF, trim trailing, final newline)
+- Pipeline formatter defensif: input kosong = "skip" (bukan error), batas
+  2 juta karakter, anggaran waktu kooperatif (deadline), batas kedalaman
+  nesting, jaring pengaman Throwable — tidak ada jalur eksekusi yang melempar
+  exception ke editor
+- Hasil format masuk ke undo stack (Format bisa di-undo), read-only
+  dihormati, line break style file asli dipertahankan
+- 62+ unit test baru (parser, renderer, registry, guard, idempotensi) +
+  2 e2e (format JSON via toolbar, JSON rusak tidak pernah mengubah dokumen)
+
 ## [0.8.0] - 2026-10-04
 
 ### Added

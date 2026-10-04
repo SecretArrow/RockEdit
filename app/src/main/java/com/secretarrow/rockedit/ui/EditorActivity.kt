@@ -28,6 +28,12 @@ import com.secretarrow.rockedit.core.CursorNav
 import com.secretarrow.rockedit.core.EditorTab
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
+import com.secretarrow.rockedit.core.FormatErrorCode
+import com.secretarrow.rockedit.core.FormatError
+import com.secretarrow.rockedit.core.FormatOptions
+import com.secretarrow.rockedit.core.FormatRequest
+import com.secretarrow.rockedit.core.FormatResult
+import com.secretarrow.rockedit.core.FormatterRegistry
 import com.secretarrow.rockedit.core.LineBreak
 import com.secretarrow.rockedit.core.LineOps
 import com.secretarrow.rockedit.core.PistonClient
@@ -989,6 +995,7 @@ class EditorActivity : AppCompatActivity() {
             )
             R.id.action_undo -> performUndo()
             R.id.action_redo -> performRedo()
+            R.id.action_format -> formatDocument()
             R.id.action_find -> showFindDialog()
             R.id.action_goto -> showGotoDialog()
             R.id.action_duplicate_line -> applyLineOp(LineOps::duplicateLine)
@@ -1122,6 +1129,67 @@ class EditorActivity : AppCompatActivity() {
             refreshTabs()
         }
         invalidateOptionsMenu()
+    }
+
+    /**
+     * Formats the active document with the formatter matching its language
+     * (JSON/XML/CSS get full formatters; any other type gets whitespace
+     * normalization). Runs off the main thread; the result replaces the
+     * document content and is pushed onto the undo stack so Format can be
+     * undone like any edit. Every failure path shows a localized toast —
+     * the editor is never left in a broken state.
+     */
+    private fun formatDocument() {
+        val tab = tabManager.activeTab() ?: return
+        val editable = binding.editor.text ?: return
+        if (tab.readOnly) {
+            toast(getString(R.string.read_only_toast))
+            return
+        }
+        val text = editable.toString()
+        if (text.isBlank()) {
+            toast(getString(R.string.format_nothing))
+            return
+        }
+        val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id ?: "txt"
+        toast(getString(R.string.format_running))
+        lifecycleScope.launch {
+            // Keep the file's own line break style (detected once, up front).
+            val options = FormatOptions(lineBreak = LineBreak.detect(text, fallback = LineBreak.LF))
+            val result = withContext(Dispatchers.Default) {
+                FormatterRegistry.default().format(FormatRequest(text, languageId, options))
+            }
+            when (result) {
+                is FormatResult.Success -> {
+                    if (result.changed) {
+                        applyingUndoRedo = false
+                        editable.replace(0, text.length, result.formattedText)
+                        binding.editor.setSelection(0)
+                        updateGutter()
+                        dirtyChanged()
+                        toast(getString(R.string.format_done, result.durationMs))
+                    } else {
+                        toast(getString(R.string.format_unchanged))
+                    }
+                }
+                is FormatResult.Skipped -> toast(getString(R.string.format_nothing))
+                is FormatResult.Failure -> toast(formatErrorMessage(result.error))
+            }
+        }
+    }
+
+    /** Maps a [FormatError] to a user-facing message in the UI language. */
+    private fun formatErrorMessage(error: FormatError): String {
+        val line = error.line
+        return when (error.code) {
+            FormatErrorCode.INPUT_TOO_LARGE -> getString(R.string.format_error_too_large)
+            FormatErrorCode.UNSUPPORTED_LANGUAGE -> getString(R.string.format_error_generic)
+            FormatErrorCode.PARSE_ERROR ->
+                if (line != null) getString(R.string.format_error_parse_line, line)
+                else getString(R.string.format_error_parse_generic)
+            FormatErrorCode.TIMEOUT -> getString(R.string.format_error_timeout)
+            FormatErrorCode.INTERNAL_ERROR -> getString(R.string.format_error_generic)
+        }
     }
 
     private fun toast(message: String) {
