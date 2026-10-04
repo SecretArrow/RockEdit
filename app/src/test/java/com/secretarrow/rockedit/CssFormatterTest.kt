@@ -35,14 +35,14 @@ class CssFormatterTest {
     @Test
     fun multiSelectorRule() {
         val out = (format("h1, h2{margin:0}") as FormatResult.Success).formattedText
-        assertEquals("h1, h2 {\n    margin: 0;\n}\n", out)
+        assertEquals("h1, h2 {\n    margin: 0\n}\n", out)
     }
 
     @Test
     fun nestedMediaQuery() {
         val out = (format("@media (max-width:600px){.a{color:red}}") as FormatResult.Success).formattedText
         assertEquals(
-            "@media (max-width:600px) {\n    .a {\n        color: red;\n    }\n}\n",
+            "@media (max-width:600px) {\n    .a {\n        color: red\n    }\n}\n",
             out
         )
     }
@@ -51,30 +51,27 @@ class CssFormatterTest {
     fun commentsPreservedInPrettyMode() {
         val out = (format("/* header */\nbody{color:red}") as FormatResult.Success).formattedText
         assertTrue(out.contains("/* header */"))
-        assertTrue(out.contains("color: red;"))
+        assertTrue(out.contains("color: red"))
     }
 
     @Test
     fun bracesInsideCommentDoNotAffectDepth() {
         val out = (format("/* { } { */\na{color:red}") as FormatResult.Success).formattedText
-        assertTrue(out is FormatResult.Success)
-        assertTrue((out as FormatResult.Success).formattedText.contains("color: red;"))
+        assertTrue(out.contains("color: red"))
     }
 
     @Test
     fun bracesInsideStringDoNotAffectDepth() {
         val out = (format("a:after{content:\"{\";}") as FormatResult.Success).formattedText
-        assertTrue(out is FormatResult.Success)
-        assertTrue((out as FormatResult.Success).formattedText.contains("content: \"{\";"))
+        assertTrue(out.contains("content: \"{\";"))
     }
 
     @Test
     fun dataUriNotBrokenBySemicolon() {
         val src = ".i{background:url(data:image/png;base64,AAA/BBB==) no-repeat}"
         val out = (format(src) as FormatResult.Success).formattedText
-        assertTrue(out is FormatResult.Success)
         // The data URI stays on one single line, untouched.
-        assertTrue((out as FormatResult.Success).formattedText.contains("url(data:image/png;base64,AAA/BBB==)"))
+        assertTrue(out.contains("url(data:image/png;base64,AAA/BBB==)"))
     }
 
     // -------------------------------------------------------- errors

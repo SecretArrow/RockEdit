@@ -4,12 +4,14 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.secretarrow.rockedit.ui.EditorActivity
 import org.hamcrest.Matchers.containsString
@@ -54,14 +56,30 @@ class FormatterE2eTest {
         assertTrue("Editor never showed text: $expected", found)
     }
 
+    /**
+     * Presses the Format action. The icon normally sits on the toolbar, but
+     * on narrow toolbars it can be pushed into the overflow menu — try the
+     * icon first, then fall back to the overflow.
+     */
+    private fun pressFormat() {
+        try {
+            onView(withContentDescription(R.string.format)).perform(click())
+        } catch (_: Throwable) {
+            Espresso.openActionBarOverflowOrOptionsMenu(
+                ApplicationProvider.getApplicationContext<android.content.Context>()
+            )
+            onView(withText(R.string.format)).perform(click())
+        }
+    }
+
     @Test
     fun formatsJsonThroughToolbarAction() {
         val (_, intent) = newTestFile("e2e_format.json", """{"b":1,"a":2}""")
         ActivityScenario.launch<EditorActivity>(intent)
 
-        // Wait for the async load, then press Format on the toolbar.
+        // Wait for the async load, then press Format.
         waitForText("\"b\":1")
-        onView(withContentDescription(R.string.format)).perform(click())
+        pressFormat()
 
         // Poll: pretty output puts every member on its own indented line.
         waitForText("\"a\": 2", timeoutMs = 10_000)
@@ -76,7 +94,7 @@ class FormatterE2eTest {
         ActivityScenario.launch<EditorActivity>(intent)
 
         waitForText("\"b\":")
-        onView(withContentDescription(R.string.format)).perform(click())
+        pressFormat()
 
         // The document must remain byte-identical: failures never mutate it.
         Thread.sleep(1500)
