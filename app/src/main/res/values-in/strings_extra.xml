@@ -94,4 +94,67 @@
     <string name="pref_advanced">Lanjutan</string>
     <string name="storage_git_path">pemilik/repo/branch</string>
     <string name="storage_gitlab_host">Host GitLab (mis. gitlab.com)</string>
+
+    <!-- v0.11.0: alat teks, regex tester, warna, grep, ekstra format -->
+    <string name="pref_format_on_save">Format saat menyimpan</string>
+    <string name="pref_format_on_save_summary">Jalankan Code Formatter otomatis sebelum setiap penyimpanan (.editorconfig di folder file dihormati bila ada)</string>
+    <string name="text_tools">Alat teks</string>
+    <string name="text_tools_scope_document">Diterapkan ke seluruh dokumen</string>
+    <string name="text_tools_scope_selection">Diterapkan ke teks terpilih</string>
+    <string name="text_tools_done">Diterapkan</string>
+    <string name="text_tools_unchanged">Tidak ada perubahan</string>
+    <string name="text_tools_error">Alat teks gagal: %1$s</string>
+    <string-array name="text_tools_ops">
+        <item>Enkode Base64</item>
+        <item>Dekode Base64</item>
+        <item>Enkode URL</item>
+        <item>Dekode URL</item>
+        <item>Escape HTML</item>
+        <item>Unescape HTML</item>
+        <item>Hash MD5</item>
+        <item>Hash SHA-1</item>
+        <item>Hash SHA-256</item>
+        <item>Ke camelCase</item>
+        <item>Ke snake_case</item>
+        <item>Ke kebab-case</item>
+        <item>Urutkan baris (A→Z)</item>
+        <item>Urutkan baris (Z→A)</item>
+        <item>Hapus baris duplikat</item>
+        <item>Balik urutan baris</item>
+        <item>Escape JSON</item>
+        <item>Unescape JSON</item>
+    </string-array>
+    <string name="regex_tester">Uji regex</string>
+    <string name="regex_pattern">Pola</string>
+    <string name="regex_pattern_hint">mis. \\w+@\\w+\\.\\w+</string>
+    <string name="regex_ignore_case">Abaikan huruf besar/kecil</string>
+    <string name="regex_multiline">^ $ multi</string>
+    <string name="regex_dotall">. = semua</string>
+    <string name="regex_test_text">Teks uji</string>
+    <string name="regex_test_text_hint">Tempel teks sampel di sini…</string>
+    <string name="regex_results_none">Tidak ada kecocokan</string>
+    <string name="regex_results_header">Ditemukan %1$d kecocokan%2$s</string>
+    <string name="regex_truncated_more"> — menampilkan %1$d pertama</string>
+    <string name="regex_error">Kesalahan pola: %1$s</string>
+    <string name="regex_timeout">Uji memakan waktu terlalu lama — sederhanakan pola</string>
+    <string name="color_preview">Pratinjau warna</string>
+    <string name="color_none">Tidak ada warna di dokumen ini</string>
+    <string name="color_count">%1$d warna%2$s — ketuk untuk melompat</string>
+    <string name="color_truncated_more"> (%1$d pertama ditampilkan)</string>
+    <string name="format_selection">Format seleksi</string>
+    <string name="format_selection_empty">Pilih teks yang akan diformat dulu</string>
+    <string name="format_on_save_failed">Format saat menyimpan gagal — disimpan tanpa diubah</string>
+    <string name="close">Tutup</string>
+    <string name="color_line">baris %1$d</string>
+    <string name="grep_title">Cari di folder</string>
+    <string name="grep_query_hint">Teks atau pola pencarian</string>
+    <string name="grep_regex">Regex</string>
+    <string name="grep_no_results">Tidak ada hasil</string>
+    <string name="grep_summary">%1$d kecocokan di %2$d file — dipindai %3$d, biner dilewati %4$d</string>
+    <string name="grep_truncated">(terpotong)</string>
+    <string name="grep_error">Pencarian gagal: %1$s</string>
+    <string name="grep_empty_query">Masukkan teks yang dicari</string>
+    <string name="grep_no_folder">Belum ada folder dipilih</string>
+    <string name="grep_file_gone">File tidak lagi ditemukan di folder</string>
+    <string name="grep_in_folder">Cari di folder</string>
 </resources>

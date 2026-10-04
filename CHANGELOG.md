@@ -9,6 +9,42 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
 - USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
 
+## [0.11.0] - 2026-10-04
+
+### Added
+- **Paket Utilitas Teks** (menu editor → "Alat teks"): Base64 enkode/dekode
+  (alfabet standar + URL-safe, validasi UTF-8 ketat), URL enkode/dekode,
+  escape/unescape HTML (entitas bernama + numerik), hash MD5/SHA-1/SHA-256,
+  transformasi case (camelCase/snake_case/kebab-case), urutkan/hapus
+  duplikat/balik baris (gaya line break file dipertahankan), escape/unescape
+  JSON. Bekerja pada seleksi bila ada, selain itu seluruh dokumen; hasil masuk
+  undo stack; input tidak valid ditolak dengan posisi kesalahan.
+- **Pencarian multi-file (grep folder)** dari peramban folder: telusuri pohon
+  SAF (batas 8 kedalaman / 400 file / 1 MB per file), mode regex/literal,
+  peka huruf opsional, lewati file biner (sniff NUL), pratinjau baris
+  terpotong 200 karakter, batas hasil per-file & total dengan penanda
+  terpotong; ketuk hasil membuka file di editor.
+- **Uji regex interaktif**: dialog live (debounce 250 ms) menampilkan kecocokan
+  + capture group dengan offset, opsi ignore-case/multiline/dotall, batas
+  input 1 juta karakter, proteksi zero-length match, timeout 3 detik —
+  hanya-baca, dokumen tidak pernah berubah.
+- **Pratinjau warna**: ekstrak `#RGB/#RGBA/#RRGGBB/#RRGGBBAA`, `rgb()/rgba()`,
+  `hsl()/hsla()` (konversi standar), dan 148 nama warna CSS; swatch + nomor
+  baris, ketuk untuk melompat; notasi cacat dilewati dengan penghitung,
+  batas 1.000 kemunculan.
+- **Format seleksi**: format hanya blok terpilih (mode lenient, tanpa final
+  newline tambahan; aturan re-indent seragam dari indentasi baris pertama).
+- **Format on save + .editorconfig**: toggle Lanjutan (default MATI); config
+  subset `indent_style/indent_size/tab_width/end_of_line/
+  trim_trailing_whitespace/insert_final_newline` diparse dari `.editorconfig`
+  di folder file (glob exact/\*/\?), digabung last-wins, dipetakan ke
+  FormatOptions; sepenuhnya fail-safe — kegagalan config/formatter tidak
+  pernah mencegah penyimpanan.
+- 5 core murni baru + 70 unit test per-cabang (TextUtilitiesTest,
+  RegexTesterTest, FolderGrepTest, ColorExtractorTest, EditorConfigParserTest)
+  + 2 E2E baru (TextToolsE2eTest). Verifikasi pra-push via port Python 1:1
+  (121 kasus, 121 pass) yang menemukan 3 bug algoritma nyata sebelum CI.
+
 ## [0.10.0] - 2026-10-04
 
 ### Added

@@ -180,6 +180,16 @@ class FolderBrowserActivity : AppCompatActivity() {
             binding.emptyView.visibility = if (empty) View.VISIBLE else View.GONE
             binding.entries.visibility = if (empty) View.GONE else View.VISIBLE
             binding.toolbar.menu.clear()
+            // v0.11.0: grep the whole tree (stays available at any depth).
+            binding.toolbar.menu.add(getString(R.string.grep_in_folder)).apply {
+                setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+                setOnMenuItemClickListener {
+                    rootTree?.let { tree ->
+                        startActivity(GrepActivity.createIntent(this@FolderBrowserActivity, tree.uri))
+                    }
+                    true
+                }
+            }
             binding.toolbar.menu.add(getString(R.string.up)).apply {
                 setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                 setOnMenuItemClickListener {

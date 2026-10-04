@@ -94,4 +94,67 @@
     <string name="pref_advanced">Advanced</string>
     <string name="storage_git_path">owner/repo/branch</string>
     <string name="storage_gitlab_host">GitLab host (e.g. gitlab.com)</string>
+
+    <!-- v0.11.0: text tools, regex tester, colors, grep, format extras -->
+    <string name="pref_format_on_save">Format on save</string>
+    <string name="pref_format_on_save_summary">Run the Code Formatter automatically before every save (.editorconfig is honored when present next to the file)</string>
+    <string name="text_tools">Text tools</string>
+    <string name="text_tools_scope_document">Applied to the whole document</string>
+    <string name="text_tools_scope_selection">Applied to the selection</string>
+    <string name="text_tools_done">Applied</string>
+    <string name="text_tools_unchanged">No change</string>
+    <string name="text_tools_error">Text tools failed: %1$s</string>
+    <string-array name="text_tools_ops">
+        <item>Base64 encode</item>
+        <item>Base64 decode</item>
+        <item>URL encode</item>
+        <item>URL decode</item>
+        <item>HTML escape</item>
+        <item>HTML unescape</item>
+        <item>MD5 hash</item>
+        <item>SHA-1 hash</item>
+        <item>SHA-256 hash</item>
+        <item>To camelCase</item>
+        <item>To snake_case</item>
+        <item>To kebab-case</item>
+        <item>Sort lines (A→Z)</item>
+        <item>Sort lines (Z→A)</item>
+        <item>Remove duplicate lines</item>
+        <item>Reverse line order</item>
+        <item>JSON escape</item>
+        <item>JSON unescape</item>
+    </string-array>
+    <string name="regex_tester">Regex tester</string>
+    <string name="regex_pattern">Pattern</string>
+    <string name="regex_pattern_hint">e.g. \\w+@\\w+\\.\\w+</string>
+    <string name="regex_ignore_case">Ignore case</string>
+    <string name="regex_multiline">^ $ multi</string>
+    <string name="regex_dotall">. = all</string>
+    <string name="regex_test_text">Test text</string>
+    <string name="regex_test_text_hint">Paste sample text here…</string>
+    <string name="regex_results_none">No matches</string>
+    <string name="regex_results_header">Found %1$d match(es)%2$s</string>
+    <string name="regex_truncated_more"> — showing the first %1$d</string>
+    <string name="regex_error">Pattern error: %1$s</string>
+    <string name="regex_timeout">The test took too long — simplify the pattern</string>
+    <string name="color_preview">Color preview</string>
+    <string name="color_none">No colors found in this document</string>
+    <string name="color_count">%1$d color(s)%2$s — tap to jump</string>
+    <string name="color_truncated_more"> (first %1$d shown)</string>
+    <string name="format_selection">Format selection</string>
+    <string name="format_selection_empty">Select text to format first</string>
+    <string name="format_on_save_failed">Format on save failed — saved unchanged</string>
+    <string name="close">Close</string>
+    <string name="color_line">line %1$d</string>
+    <string name="grep_title">Search in folder</string>
+    <string name="grep_query_hint">Search text or pattern</string>
+    <string name="grep_regex">Regex</string>
+    <string name="grep_no_results">No results</string>
+    <string name="grep_summary">%1$d match(es) in %2$d file(s) — scanned %3$d, binary skipped %4$d</string>
+    <string name="grep_truncated">(truncated)</string>
+    <string name="grep_error">Search failed: %1$s</string>
+    <string name="grep_empty_query">Enter the text to search</string>
+    <string name="grep_no_folder">No folder selected</string>
+    <string name="grep_file_gone">File not found in the folder anymore</string>
+    <string name="grep_in_folder">Search in folder</string>
 </resources>

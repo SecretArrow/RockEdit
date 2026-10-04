@@ -3,12 +3,15 @@ package com.secretarrow.rockedit.ui
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.KeyListener
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
@@ -24,7 +27,9 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
+import com.secretarrow.rockedit.core.ColorExtractor
 import com.secretarrow.rockedit.core.CursorNav
+import com.secretarrow.rockedit.core.EditorConfigParser
 import com.secretarrow.rockedit.core.EditorTab
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
@@ -37,16 +42,22 @@ import com.secretarrow.rockedit.core.FormatterRegistry
 import com.secretarrow.rockedit.core.LineBreak
 import com.secretarrow.rockedit.core.LineOps
 import com.secretarrow.rockedit.core.PistonClient
+import com.secretarrow.rockedit.core.RegexTester
 import com.secretarrow.rockedit.core.SearchEngine
 import com.secretarrow.rockedit.core.SettingsRepository
 import com.secretarrow.rockedit.core.SyntaxRegistry
 import com.secretarrow.rockedit.core.TabManager
 import com.secretarrow.rockedit.core.TabPersistence
 import com.secretarrow.rockedit.core.TextStats
+import com.secretarrow.rockedit.core.TextUtilities
 import com.secretarrow.rockedit.databinding.ActivityEditorBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
@@ -585,6 +596,8 @@ class EditorActivity : AppCompatActivity() {
         val uriStr = tab.uri ?: return
         val target = saveLineBreakForFile()
         lifecycleScope.launch {
+            // v0.11.0: opt-in format-on-save runs BEFORE the bytes are written.
+            maybeFormatOnSave(tab)
             val ok = withContext(Dispatchers.IO) {
                 writeText(Uri.parse(uriStr), tab.lastCommitted, target, tab.charsetName)
             }
@@ -996,6 +1009,10 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_undo -> performUndo()
             R.id.action_redo -> performRedo()
             R.id.action_format -> formatDocument()
+            R.id.action_format_selection -> formatSelection()
+            R.id.action_text_tools -> showTextToolsDialog()
+            R.id.action_regex_test -> showRegexTesterDialog()
+            R.id.action_colors -> showColorsDialog()
             R.id.action_find -> showFindDialog()
             R.id.action_goto -> showGotoDialog()
             R.id.action_duplicate_line -> applyLineOp(LineOps::duplicateLine)
@@ -1189,6 +1206,351 @@ class EditorActivity : AppCompatActivity() {
                 else getString(R.string.format_error_parse_generic)
             FormatErrorCode.TIMEOUT -> getString(R.string.format_error_timeout)
             FormatErrorCode.INTERNAL_ERROR -> getString(R.string.format_error_generic)
+        }
+    }
+
+    // ------------------------------------------------------ v0.11.0 tools
+
+    /**
+     * Formats only the selected block (lenient mode: fragments often contain
+     * unbalanced braces). Re-indent rule (documented in rockedit.md §4.11):
+     * when the formatter stripped a non-empty first-line indent, every line
+     * of the output is prefixed with that original indent (uniform shift).
+     */
+    private fun formatSelection() {
+        val tab = tabManager.activeTab() ?: return
+        val editable = binding.editor.text ?: return
+        if (tab.readOnly) {
+            toast(getString(R.string.read_only_toast))
+            return
+        }
+        val text = editable.toString()
+        val selStart = binding.editor.selectionStart
+        val selEnd = binding.editor.selectionEnd
+        if (selStart < 0 || selEnd <= selStart) {
+            toast(getString(R.string.format_selection_empty))
+            return
+        }
+        val start = selStart.coerceIn(0, text.length)
+        val end = selEnd.coerceIn(0, text.length)
+        if (start >= end) {
+            toast(getString(R.string.format_selection_empty))
+            return
+        }
+        val fragment = text.substring(start, end)
+        val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id ?: "txt"
+        val originalIndent = fragment.takeWhile { it == ' ' || it == '\t' }
+        toast(getString(R.string.format_running))
+        lifecycleScope.launch {
+            val baseOptions = FormatOptions(
+                lineBreak = LineBreak.detect(fragment, fallback = LineBreak.LF),
+                lenient = true,
+                // A selection never gains a final newline of its own.
+                insertFinalNewline = false
+            )
+            val options = editorConfigOptionsFor(tab, baseOptions)
+                .copy(lenient = true, insertFinalNewline = false)
+            val result = withContext(Dispatchers.Default) {
+                FormatterRegistry.default().format(FormatRequest(fragment, languageId, options))
+            }
+            when (result) {
+                is FormatResult.Success -> {
+                    if (!result.changed) {
+                        toast(getString(R.string.format_unchanged))
+                        return@launch
+                    }
+                    var formatted = result.formattedText
+                    if (originalIndent.isNotEmpty() && !formatted.startsWith(originalIndent)) {
+                        val breakValue = LineBreak.detect(formatted, LineBreak.LF).value
+                        formatted = formatted.split(Regex("\r\n|\n|\r"))
+                            .joinToString(breakValue) { originalIndent + it }
+                    }
+                    applyingUndoRedo = false
+                    editable.replace(start, end, formatted)
+                    binding.editor.setSelection(
+                        (start + formatted.length).coerceAtMost(text.length),
+                        (start + formatted.length).coerceAtMost(text.length)
+                    )
+                    updateGutter()
+                    dirtyChanged()
+                    toast(getString(R.string.format_done, result.durationMs))
+                }
+                is FormatResult.Skipped -> toast(getString(R.string.format_nothing))
+                is FormatResult.Failure -> toast(formatErrorMessage(result.error))
+            }
+        }
+    }
+
+    /** Text tools dialog: 18 pure transformations on selection or document. */
+    private fun showTextToolsDialog() {
+        val opLabels = resources.getStringArray(R.array.text_tools_ops)
+        val ops = TextUtilities.Op.values()
+        // Defensive: label table and enum must agree; fall back to enum names.
+        val labels: Array<String> = if (opLabels.size == ops.size) opLabels else ops.map { it.name }.toTypedArray()
+        val selStart = binding.editor.selectionStart
+        val selEnd = binding.editor.selectionEnd
+        val hasSelection = selStart >= 0 && selEnd > selStart
+        AlertDialog.Builder(this)
+            .setTitle(R.string.text_tools)
+            .setMessage(
+                getString(
+                    if (hasSelection) R.string.text_tools_scope_selection
+                    else R.string.text_tools_scope_document
+                )
+            )
+            .setItems(labels) { _, which ->
+                if (which in ops.indices) applyTextTool(ops[which])
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun applyTextTool(op: TextUtilities.Op) {
+        val tab = tabManager.activeTab() ?: return
+        val editable = binding.editor.text ?: return
+        if (tab.readOnly) {
+            toast(getString(R.string.read_only_toast))
+            return
+        }
+        val text = editable.toString()
+        val selStart = binding.editor.selectionStart
+        val selEnd = binding.editor.selectionEnd
+        val hasSelection = selStart >= 0 && selEnd > selStart && selEnd <= text.length
+        val input = if (hasSelection) text.substring(selStart, selEnd) else text
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.Default) { TextUtilities.run(op, input) }
+            when (result) {
+                is TextUtilities.TextResult.Success -> {
+                    if (!result.changed) {
+                        toast(getString(R.string.text_tools_unchanged))
+                        return@launch
+                    }
+                    applyingUndoRedo = false
+                    if (hasSelection) {
+                        editable.replace(selStart, selEnd, result.text)
+                        val newEnd = (selStart + result.text.length).coerceAtMost(text.length)
+                        binding.editor.setSelection(selStart.coerceAtMost(newEnd), newEnd)
+                    } else {
+                        editable.replace(0, text.length, result.text)
+                        binding.editor.setSelection(0)
+                    }
+                    updateGutter()
+                    dirtyChanged()
+                    toast(getString(R.string.text_tools_done))
+                }
+                is TextUtilities.TextResult.Skipped -> toast(getString(R.string.format_nothing))
+                is TextUtilities.TextResult.Failure ->
+                    toast(getString(R.string.text_tools_error, result.error.message))
+            }
+        }
+    }
+
+    /** Interactive regex tester: live matches + capture groups, read-only. */
+    private fun showRegexTesterDialog() {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_regex_test, null)
+        val patternInput = view.findViewById<EditText>(R.id.regex_pattern)
+        val textInput = view.findViewById<EditText>(R.id.regex_test_text)
+        val ignoreCase = view.findViewById<CheckBox>(R.id.regex_ignore_case)
+        val multiline = view.findViewById<CheckBox>(R.id.regex_multiline)
+        val dotAll = view.findViewById<CheckBox>(R.id.regex_dotall)
+        val results = view.findViewById<TextView>(R.id.regex_results)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.regex_tester)
+            .setView(view)
+            .setPositiveButton(R.string.close, null)
+            .show()
+        var pending: Job? = null
+        val schedule = {
+            pending?.cancel()
+            pending = lifecycleScope.launch {
+                delay(250) // debounce: one run per pause in typing
+                runRegexTest(
+                    patternInput.text?.toString().orEmpty(),
+                    textInput.text?.toString().orEmpty(),
+                    RegexTester.Flags(ignoreCase.isChecked, multiline.isChecked, dotAll.isChecked),
+                    results
+                )
+            }
+        }
+        val watcher = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) = schedule()
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+        }
+        patternInput.addTextChangedListener(watcher)
+        textInput.addTextChangedListener(watcher)
+        ignoreCase.setOnClickListener { schedule() }
+        multiline.setOnClickListener { schedule() }
+        dotAll.setOnClickListener { schedule() }
+    }
+
+    private fun runRegexTest(pattern: String, text: String, flags: RegexTester.Flags, resultsView: TextView) {
+        lifecycleScope.launch {
+            val outcome = try {
+                withTimeout(3_000) {
+                    withContext(Dispatchers.Default) { RegexTester.run(pattern, text, flags) }
+                }
+            } catch (e: TimeoutCancellationException) {
+                // The engine is not interruptible, but the dialog stops
+                // waiting: documented trade-off for pathological patterns.
+                resultsView.text = getString(R.string.regex_timeout)
+                return@launch
+            }
+            when (outcome) {
+                is RegexTester.RegexOutcome.Failure ->
+                    resultsView.text = getString(R.string.regex_error, outcome.error.message)
+                is RegexTester.RegexOutcome.Found -> {
+                    val found = outcome.result
+                    if (found.matches.isEmpty()) {
+                        resultsView.text = getString(R.string.regex_results_none)
+                    } else {
+                        val shown = found.matches.take(20)
+                        val suffix = if (found.matchesTruncated || found.matches.size > shown.size) {
+                            getString(R.string.regex_truncated_more, shown.size)
+                        } else ""
+                        val header = getString(R.string.regex_results_header, found.matches.size, suffix)
+                        val body = shown.mapIndexed { i, match ->
+                            val groups = match.groups.drop(1)
+                                .joinToString(" ") { g -> "[${g.text ?: "—"}]" }
+                            "#${i + 1} [${match.start}, ${match.end}) \"${text.substring(
+                                match.start.coerceIn(0, text.length),
+                                match.end.coerceIn(0, text.length)
+                            )}\" $groups"
+                        }.joinToString("\n")
+                        resultsView.text = header + "\n" + body
+                    }
+                }
+            }
+        }
+    }
+
+    /** Lists every color literal in the document; tapping jumps to it. */
+    private fun showColorsDialog() {
+        val text = binding.editor.text?.toString().orEmpty()
+        lifecycleScope.launch {
+            val summary = withContext(Dispatchers.Default) { ColorExtractor.extract(text) }
+            if (summary.colors.isEmpty()) {
+                toast(getString(R.string.color_none))
+                return@launch
+            }
+            val shown = summary.colors.take(100)
+            val title = getString(
+                R.string.color_count,
+                summary.colors.size,
+                if (summary.colors.size > shown.size) {
+                    getString(R.string.color_truncated_more, shown.size)
+                } else ""
+            )
+            val adapter = object : android.widget.ArrayAdapter<ColorExtractor.ColorOccurrence>(
+                this@EditorActivity, R.layout.item_color, shown
+            ) {
+                override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                    val row = convertView ?: LayoutInflater.from(context)
+                        .inflate(R.layout.item_color, parent, false)
+                    val swatch = row.findViewById<View>(R.id.grep_swatch)
+                    val label = row.findViewById<TextView>(R.id.grep_color_text)
+                    val occurrence = shown[position]
+                    swatch.setBackgroundColor(occurrence.argb.toInt())
+                    label.text = "${occurrence.source}  ·  ${getString(
+                        R.string.color_line, CursorNav.lineForOffset(text, occurrence.start)
+                    )}"
+                    return row
+                }
+            }
+            AlertDialog.Builder(this@EditorActivity)
+                .setTitle(title)
+                .setAdapter(adapter) { _, which ->
+                    val target = shown[which].start.coerceIn(0, text.length)
+                    binding.editor.setSelection(target)
+                    binding.editor.requestFocus()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
+    }
+
+    /**
+     * Merges a sibling .editorconfig (same SAF folder) into [base]. Any
+     * problem — non-SAF URI, revoked grant, broken config — silently keeps
+     * [base]: config support must never block formatting or saving.
+     */
+    private fun editorConfigOptionsFor(tab: EditorTab, base: FormatOptions): FormatOptions {
+        val uriStr = tab.uri ?: return base
+        return try {
+            val content = readSiblingEditorConfig(Uri.parse(uriStr)) ?: return base
+            val config = EditorConfigParser.parse(content)
+            val resolved = EditorConfigParser.resolve(config, tab.name)
+            EditorConfigParser.toFormatOptions(resolved, base)
+        } catch (e: Exception) {
+            base
+        }
+    }
+
+    private fun readSiblingEditorConfig(fileUri: Uri): String? {
+        return try {
+            val docId = DocumentsContract.getDocumentId(fileUri)
+            val parentId = docId.substringBeforeLast('/')
+            if (parentId.isEmpty() || parentId == docId) return null
+            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(fileUri, parentId)
+            var configUri: Uri? = null
+            contentResolver.query(
+                childrenUri,
+                arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME
+                ),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    if (cursor.getString(1) == ".editorconfig") {
+                        configUri = DocumentsContract.buildDocumentUriUsingTree(
+                            fileUri, cursor.getString(0)
+                        )
+                        break
+                    }
+                }
+            }
+            val found = configUri ?: return null
+            contentResolver.openInputStream(found)?.bufferedReader()?.readText()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * v0.11.0 format-on-save: opt-in, .editorconfig-aware, strictly
+     * fail-safe — any formatter or config problem leaves the document
+     * unchanged and never blocks the save itself.
+     */
+    private suspend fun maybeFormatOnSave(tab: EditorTab) {
+        if (!App.settings(this).formatOnSave) return
+        if (tab.readOnly) return
+        val text = tab.lastCommitted
+        if (text.isBlank()) return
+        try {
+            val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id ?: "txt"
+            val baseOptions = FormatOptions(lineBreak = LineBreak.detect(text, fallback = LineBreak.LF))
+            val options = editorConfigOptionsFor(tab, baseOptions)
+            val result = withContext(Dispatchers.Default) {
+                FormatterRegistry.default().format(FormatRequest(text, languageId, options))
+            }
+            if (result is FormatResult.Success && result.changed) {
+                val editable = binding.editor.text
+                if (editable != null) {
+                    applyingUndoRedo = false
+                    editable.replace(0, text.length, result.formattedText)
+                    binding.editor.setSelection(0)
+                    updateGutter()
+                    dirtyChanged()
+                } else {
+                    // Editor view already torn down: keep the payload in sync.
+                    tab.lastCommitted = result.formattedText
+                }
+            }
+        } catch (e: Exception) {
+            toast(getString(R.string.format_on_save_failed))
         }
     }
 
