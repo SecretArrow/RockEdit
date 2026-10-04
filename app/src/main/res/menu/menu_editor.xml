@@ -154,4 +154,24 @@
         android:id="@+id/action_insert_datetime"
         android:title="@string/insert_datetime"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_hex_view"
+        android:title="@string/hex_view"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_match_brace"
+        android:title="@string/match_brace"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_todo_scan"
+        android:title="@string/todo_scan"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_clipboard_history"
+        android:title="@string/clipboard_history"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_split_view"
+        android:title="@string/split_view"
+        app:showAsAction="never" />
 </menu>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Penampil hex (v0.13.0). Kunci sama persis dengan values/strings_hex.xml. -->
+    <string name="hex_title">Penampil hex</string>
+    <string name="hex_too_large">File terlalu besar: %1$d byte, batas %2$d byte. Hanya file hingga 1 MiB yang bisa didump.</string>
+    <string name="hex_read_failed">Gagal: %1$s</string>
+    <string name="hex_empty_file">0 byte</string>
+    <string name="hex_copied">Dump hex disalin ke clipboard</string>
+    <string name="hex_copy_dump">Salin dump</string>
+    <string name="hex_bytes">%1$d byte</string>
+    <string name="hex_range">byte %1$s sampai %2$s</string>
+    <string name="hex_uri_invalid">Alamat file (URI) tidak valid atau tidak ada. Buka penampil hex dari sebuah file.</string>
+</resources>

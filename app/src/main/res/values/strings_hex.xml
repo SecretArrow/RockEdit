@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hex viewer (v0.13.0). Separate file so it never collides with the
+         shared strings.xml / strings_extra.xml owned by the main agent. -->
+    <string name="hex_title">Hex viewer</string>
+    <string name="hex_too_large">File too large: %1$d bytes, limit %2$d bytes. Only files up to 1 MiB can be dumped.</string>
+    <string name="hex_read_failed">Failed: %1$s</string>
+    <string name="hex_empty_file">0 byte</string>
+    <string name="hex_copied">Hex dump copied to clipboard</string>
+    <string name="hex_copy_dump">Copy dump</string>
+    <string name="hex_bytes">%1$d bytes</string>
+    <string name="hex_range">bytes %1$s to %2$s</string>
+    <string name="hex_uri_invalid">Invalid or missing file address (URI). Open the hex viewer from a file instead.</string>
+</resources>

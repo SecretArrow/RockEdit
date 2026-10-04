@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/split_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/split_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface" />
+
+    <LinearLayout
+        android:id="@+id/split_panes"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/split_pane_a"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/pane_a"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:fontFamily="monospace"
+                android:gravity="top|start"
+                android:hint="@string/split_pane_hint"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine|textNoSuggestions"
+                android:padding="8dp"
+                android:textSize="14sp"
+                android:typeface="monospace" />
+
+            <TextView
+                android:id="@+id/status_a"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/gutter_background"
+                android:ellipsize="end"
+                android:paddingStart="8dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="4dp"
+                android:singleLine="true"
+                android:textColor="@color/gutter_text"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/split_divider"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/gutter_text" />
+
+        <LinearLayout
+            android:id="@+id/split_pane_b"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/pane_b"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@null"
+                android:fontFamily="monospace"
+                android:gravity="top|start"
+                android:hint="@string/split_pane_hint"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine|textNoSuggestions"
+                android:padding="8dp"
+                android:textSize="14sp"
+                android:typeface="monospace" />
+
+            <TextView
+                android:id="@+id/status_b"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/gutter_background"
+                android:ellipsize="end"
+                android:paddingStart="8dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="4dp"
+                android:singleLine="true"
+                android:textColor="@color/gutter_text"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

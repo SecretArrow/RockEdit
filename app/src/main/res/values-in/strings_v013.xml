@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.13.0: judul menu + toast sisi editor untuk penampil hex, pencocokan
+         tanda kurung, pemindai TODO, riwayat papan klip, dan tampilan belah.
+         Berkas mandiri; kembaran Indonesia dari values/strings_v013.xml. -->
+    <string name="hex_view">Penampil hex</string>
+    <string name="match_brace">Pasangkan tanda kurung</string>
+    <string name="todo_scan">Pindai TODO</string>
+    <string name="clipboard_history">Riwayat papan klip</string>
+    <string name="split_view">Tampilan belah</string>
+    <string name="hex_needs_file">Simpan file dulu untuk melihat byte mentahnya</string>
+    <string name="brace_not_found">Tidak ada tanda kurung di posisi kursor</string>
+    <string name="brace_unmatched">Pasangan tanda kurung tidak ditemukan</string>
+    <string name="todo_dialog_title">Penanda ditemukan: %1$d</string>
+    <string name="todo_truncated">Daftar terpotong (batas tercapai)</string>
+    <string name="todo_too_large">Dokumen terlalu besar untuk dipindai (batas 1 juta karakter)</string>
+    <string name="todo_none">Tidak ada penanda TODO/FIXME</string>
+    <string name="todo_item_row">%1$d: [%2$s] %3$s</string>
+    <string name="clip_dialog_title">Riwayat papan klip</string>
+    <string name="clip_empty">Riwayat papan klip kosong</string>
+    <string name="clip_clear">Bersihkan</string>
+    <string name="clip_cleared">Riwayat papan klip dibersihkan</string>
+</resources>

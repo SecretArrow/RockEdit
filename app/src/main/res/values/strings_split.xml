@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.13.0: split view. Self-contained file: keys are identical in
+         values-in/strings_split.xml (Indonesian), all prefixed split_. -->
+    <string name="split_title">Split view</string>
+    <string name="split_pane_hint">Start typing…</string>
+    <string name="split_load_b">Load file into pane B</string>
+    <string name="split_save_b">Save pane B as…</string>
+    <string name="split_toggle_orientation">Toggle split orientation</string>
+    <string name="split_swap_panes">Swap panes</string>
+    <string name="split_too_large">File too large for split view (limit 1M characters)</string>
+    <string name="split_read_failed">Could not read the file</string>
+    <string name="split_saved">Pane B saved</string>
+    <string name="split_save_failed">Could not save pane B</string>
+    <string name="split_discard_title">Unsaved changes</string>
+    <string name="split_discard_body">One or both panes have unsaved changes. Discard them and close?</string>
+    <string name="split_saved_to">Saved to %1$s</string>
+    <string name="split_untitled_pane">Untitled</string>
+    <string name="split_no_uri">No file was selected</string>
+    <string name="split_switched">Loaded into pane B</string>
+    <string name="split_swapped">Panes swapped</string>
+    <string name="split_orientation">Split orientation switched</string>
+</resources>

@@ -1,5 +1,6 @@
 package com.secretarrow.rockedit.ui
 
+import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -28,6 +29,8 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
+import com.secretarrow.rockedit.core.BraceMatcher
+import com.secretarrow.rockedit.core.ClipboardHistoryStore
 import com.secretarrow.rockedit.core.ColorExtractor
 import com.secretarrow.rockedit.core.CursorNav
 import com.secretarrow.rockedit.core.EditorConfigParser
@@ -53,6 +56,7 @@ import com.secretarrow.rockedit.core.TabManager
 import com.secretarrow.rockedit.core.TabPersistence
 import com.secretarrow.rockedit.core.TextStats
 import com.secretarrow.rockedit.core.TextUtilities
+import com.secretarrow.rockedit.core.TodoScanner
 import com.secretarrow.rockedit.databinding.ActivityEditorBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -84,6 +88,9 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEditorBinding
     private lateinit var settings: SettingsRepository
     private lateinit var tabPersistence: TabPersistence
+
+    /** Clipboard history (v0.13.0): captured on resume, inserted on demand. */
+    private val clipboardHistory by lazy { ClipboardHistoryStore(App.keyValueStore(this)) }
 
     private val tabManager = TabManager()
     private var editorBoundTabId = -1
@@ -872,6 +879,176 @@ class EditorActivity : AppCompatActivity() {
             .show()
     }
 
+    // ------------------------------------------------ v0.13.0 tool menu
+
+    override fun onResume() {
+        super.onResume()
+        captureClipboard()
+    }
+
+    /**
+     * Best-effort clipboard capture: on Android 10+ an app may read the
+     * clipboard only while focused, which is exactly the case here, so no
+     * extra permission is involved. Failures are non-actionable by design
+     * (restricted builds throw SecurityException; a malformed clip can throw
+     * while reading items) and are swallowed deliberately - capture is an
+     * optimization for the history feature, never a user-visible action, so
+     * an error toast on every resume would be worse than the failure itself.
+     */
+    private fun captureClipboard() {
+        try {
+            val cm = getSystemService(CLIPBOARD_SERVICE) as? ClipboardManager
+            val clip = cm?.primaryClip
+            val text = if (clip != null && clip.itemCount > 0) {
+                clip.getItemAt(0).coerceToText(this)?.toString()
+            } else {
+                null
+            }
+            if (!text.isNullOrBlank()) {
+                clipboardHistory.add(text)
+            }
+        } catch (e: Exception) {
+            // Documented best-effort ignore: see the KDoc above.
+        }
+    }
+
+    /** Hex viewer reads the saved file's raw bytes; unsaved buffers refuse. */
+    private fun openHexView() {
+        val uriStr = tabManager.activeTab()?.uri
+        if (uriStr == null) {
+            toast(getString(R.string.hex_needs_file))
+            return
+        }
+        startActivity(HexViewerActivity.createIntent(this, Uri.parse(uriStr)))
+    }
+
+    /** Hands the live buffer to the split screen (process-local, capped). */
+    private fun openSplitView() {
+        val text = binding.editor.text?.toString().orEmpty()
+        if (text.length > SPLIT_HANDOFF_MAX_CHARS) {
+            toast(getString(R.string.split_too_large))
+            return
+        }
+        SplitEditorActivity.pendingPaneA = text
+        startActivity(Intent(this, SplitEditorActivity::class.java))
+    }
+
+    /**
+     * Selects from the cursor bracket to its partner. Tries the character
+     * under the caret first, then the one right before it - standard editor
+     * behaviour for a caret sitting just after a closing bracket.
+     */
+    private fun matchBrace() {
+        val text = binding.editor.text?.toString().orEmpty()
+        if (text.isEmpty()) {
+            toast(getString(R.string.brace_not_found))
+            return
+        }
+        var index = binding.editor.selectionStart.coerceIn(0, text.lastIndex)
+        var result = BraceMatcher.matchAt(text, index)
+        if (result is BraceMatcher.MatchResult.NoBracketAtCursor && index > 0) {
+            index -= 1
+            result = BraceMatcher.matchAt(text, index)
+        }
+        when (result) {
+            is BraceMatcher.MatchResult.Matched -> {
+                binding.editor.setSelection(
+                    min(index, result.partnerIndex),
+                    max(index, result.partnerIndex) + 1
+                )
+                binding.editor.requestFocus()
+            }
+            is BraceMatcher.MatchResult.NoBracketAtCursor ->
+                toast(getString(R.string.brace_not_found))
+            is BraceMatcher.MatchResult.Unmatched ->
+                toast(getString(R.string.brace_unmatched))
+        }
+    }
+
+    /** Lists TODO/FIXME/HACK/XXX/BUG/NOTE markers; tapping jumps to the line. */
+    private fun scanTodos() {
+        val text = binding.editor.text?.toString().orEmpty()
+        when (val result = TodoScanner.scan(text)) {
+            is TodoScanner.ScanResult.Failure ->
+                toast(getString(R.string.todo_too_large))
+            is TodoScanner.ScanResult.Success -> {
+                if (result.items.isEmpty()) {
+                    toast(getString(R.string.todo_none))
+                    return
+                }
+                val labels = result.items.map { item ->
+                    getString(
+                        R.string.todo_item_row,
+                        item.lineNumber,
+                        item.marker,
+                        item.message.ifEmpty { "-" }
+                    )
+                }.toTypedArray()
+                val builder = AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.todo_dialog_title, result.items.size))
+                if (result.truncated) {
+                    builder.setMessage(R.string.todo_truncated)
+                }
+                builder
+                    .setItems(labels) { _, which ->
+                        val offset = CursorNav.offsetForLine(
+                            text, result.items[which].lineNumber
+                        )
+                        binding.editor.setSelection(offset)
+                        binding.editor.requestFocus()
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+            }
+        }
+    }
+
+    /** Clipboard history: tap inserts at the caret, neutral button clears. */
+    private fun showClipboardHistoryDialog() {
+        val entries = clipboardHistory.list()
+        if (entries.isEmpty()) {
+            toast(getString(R.string.clip_empty))
+            return
+        }
+        val labels = entries.map { entry ->
+            val preview = entry.text.replace('\n', ' ').take(60)
+            (if (entry.pinned) "\u2605 " else "") + preview
+        }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle(R.string.clip_dialog_title)
+            .setItems(labels) { _, which ->
+                insertAtCursor(entries[which].text)
+            }
+            .setNeutralButton(R.string.clip_clear) { _, _ ->
+                clipboardHistory.clear()
+                toast(getString(R.string.clip_cleared))
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Inserts [text] at the caret, replacing the selection if one exists.
+     * Mirrors [insertSnippet]: respects read-only mode and records into the
+     * undo stack through the shared editable watcher.
+     */
+    private fun insertAtCursor(text: String) {
+        val editable = binding.editor.text ?: return
+        val tab = tabManager.activeTab()
+        if (tab?.readOnly == true) {
+            toast(getString(R.string.read_only_toast))
+            return
+        }
+        val length = editable.length
+        val start = binding.editor.selectionStart.coerceIn(0, length)
+        val end = binding.editor.selectionEnd.coerceIn(start, length)
+        applyingUndoRedo = false
+        editable.replace(start, end, text)
+        binding.editor.setSelection(start + text.length)
+        updateGutter()
+        dirtyChanged()
+    }
+
     private fun shareText() {
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
@@ -1064,6 +1241,11 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_reopen_encoding -> showReopenEncodingDialog()
             R.id.action_save_encoding -> showSaveEncodingDialog()
             R.id.action_insert_datetime -> insertDateTime()
+            R.id.action_hex_view -> openHexView()
+            R.id.action_match_brace -> matchBrace()
+            R.id.action_todo_scan -> scanTodos()
+            R.id.action_clipboard_history -> showClipboardHistoryDialog()
+            R.id.action_split_view -> openSplitView()
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
                 return true
@@ -1985,6 +2167,9 @@ class EditorActivity : AppCompatActivity() {
         private const val SNAPSHOT_LIMIT = 200_000
         private const val SNAPSHOT_TOTAL_BUDGET = 500_000
         private const val MAX_DIFF_CHARS = 2_000_000
+
+        /** Split pane A handoff cap; SplitEditorActivity enforces the same. */
+        private const val SPLIT_HANDOFF_MAX_CHARS = 1_000_000
         private const val MAX_DIFF_BYTES = 4_000_000
 
         /** Convenience starter used by MainActivity and tests. */

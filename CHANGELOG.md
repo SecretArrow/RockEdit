@@ -9,6 +9,46 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
 - USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
 
+## [0.13.0] - 2026-10-05
+
+### Added
+- **Penampil hex**: byte mentah file tersimpan dari menu editor. Mesin dump
+  murni Kotlin (`core/HexDump.kt`): offset 8 digit hex, kolom ascii
+  (non-printable `.`), batas 1 MiB (ditolak dengan pesan), file kosong
+  menampilkan "0 byte", tombol **Salin dump**, dan parser dump-tulang-balik
+  ke byte dengan kesalahan berposisi (ODD_HEX/INVALID_HEX/EMPTY/TOO_LARGE);
+  layar `HexViewerActivity` (RecyclerView monospace, banner kesalahan
+  informatif, URI invalid tidak pernah crash).
+- **Pasangkan tanda kurung**: pilih dari kurung di kursor ke pasangannya
+  (`core/BraceMatcher.kt`, iteratif tanpa rekursi, budget pemindaian 1 MiB).
+  Melewati string/char literal (escape backslash berjiritan), komentar baris
+  `//` dan blok `/* */`; pasangan lain dilacak di stack agar interleave benar
+  (`{ [(] }` tidak salah pasang); kursor tepat setelah kurung tutup juga
+  dicoba; tak berpasangan ditolak dengan alasan spesifik, tanpa crash.
+- **Pindai TODO**: temukan TODO/FIXME/HACK/XXX/BUG/NOTE (+tag `TODO(p1)`)
+  di dokumen aktif (`core/TodoScanner.kt`): word-boundary, case-insensitive
+  default, nomor baris/kolom/offset tepat (\n, \r\n, tab), pesan dipotong
+  200 karakter, batas 1 juta karakter & 1.000 hasil (ditandai terpotong);
+  ketuk hasil untuk lompat ke barisnya.
+- **Riwayat papan klip**: tangkap otomatis saat editor aktif (best-effort,
+  tanpa izin tambahan — Android 10+ hanya mengizinkan baca saat fokus),
+  dedupe berurutan, pin (★), batas 200 entri / 100 ribu karakter per entri,
+  eviksi terlama-tak-pin dulu, persist via KeyValueStore (data korup dimuat
+  sebagai pustaka kosong fail-safe), pencarian case-insensitive; ketuk untuk
+  menyisip di kursor (hormati mode read-only + undo stack), tombol Bersihkan.
+- **Tampilan belah (split view)**: dua panel editor monospace berdampingan
+  (`SplitEditorActivity`): panel A menerima buffer aktif (proses-lokal,
+  batas 1 juta karakter), panel B memuat file via SAF (deteksi charset,
+  tolak >1 juta karakter) dan simpan-ke UTF-8, tukar panel, ubah arah belah,
+  penanda perubahan (●), dan konfirmasi buang saat keluar; undo native IME
+  (keputusan v1, didokumentasikan).
+
+### Changed
+- Menu editor: 5 entri alat baru; manifest mendaftarkan `HexViewerActivity`
+  dan `SplitEditorActivity`.
+- Workflow **Autofix** baru: ktlint (pinned 1.3.1) `--format` dikomit
+  otomatis (`[skip ci]`) pada push main, dispatch manual, dan jadwal mingguan.
+
 ## [0.12.0] - 2026-10-05
 
 ### Added

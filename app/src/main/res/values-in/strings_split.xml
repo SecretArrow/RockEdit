@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.13.0: tampilan terpisah. Kunci identik dengan
+         values/strings_split.xml, semua berawalan split_. -->
+    <string name="split_title">Tampilan terpisah</string>
+    <string name="split_pane_hint">Mulai menulis…</string>
+    <string name="split_load_b">Muat file ke panel B</string>
+    <string name="split_save_b">Simpan panel B sebagai…</string>
+    <string name="split_toggle_orientation">Ubah orientasi tampilan terpisah</string>
+    <string name="split_swap_panes">Tukar panel</string>
+    <string name="split_too_large">File terlalu besar untuk tampilan terpisah (batas 1 juta karakter)</string>
+    <string name="split_read_failed">Tidak dapat membaca file</string>
+    <string name="split_saved">Panel B tersimpan</string>
+    <string name="split_save_failed">Tidak dapat menyimpan panel B</string>
+    <string name="split_discard_title">Perubahan belum disimpan</string>
+    <string name="split_discard_body">Satu atau kedua panel memiliki perubahan yang belum disimpan. Buang dan tutup?</string>
+    <string name="split_saved_to">Tersimpan ke %1$s</string>
+    <string name="split_untitled_pane">Tanpa judul</string>
+    <string name="split_no_uri">Tidak ada file yang dipilih</string>
+    <string name="split_switched">Dimuat ke panel B</string>
+    <string name="split_swapped">Panel ditukar</string>
+    <string name="split_orientation">Orientasi tampilan terpisah diubah</string>
+</resources>

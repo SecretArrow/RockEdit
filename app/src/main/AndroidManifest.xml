@@ -79,6 +79,15 @@
             android:name=".ui.DiffActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.HexViewerActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.SplitEditorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <provider
             android:name=".remote.RemoteContentProvider"
             android:authorities="${applicationId}.remote"

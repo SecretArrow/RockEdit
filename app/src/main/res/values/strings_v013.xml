@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.13.0: menu titles + editor-side toasts for the hex viewer, brace
+         matching, TODO scanner, clipboard history and split view.
+         Self-contained file; values-in/strings_v013.xml is the Indonesian twin. -->
+    <string name="hex_view">Hex viewer</string>
+    <string name="match_brace">Matching bracket</string>
+    <string name="todo_scan">Scan TODO</string>
+    <string name="clipboard_history">Clipboard history</string>
+    <string name="split_view">Split view</string>
+    <string name="hex_needs_file">Save the file first to view its raw bytes</string>
+    <string name="brace_not_found">No bracket at the cursor</string>
+    <string name="brace_unmatched">No matching bracket found</string>
+    <string name="todo_dialog_title">Markers found: %1$d</string>
+    <string name="todo_truncated">List truncated (limit reached)</string>
+    <string name="todo_too_large">Document too large to scan (limit 1M characters)</string>
+    <string name="todo_none">No TODO/FIXME markers found</string>
+    <string name="todo_item_row">%1$d: [%2$s] %3$s</string>
+    <string name="clip_dialog_title">Clipboard history</string>
+    <string name="clip_empty">Clipboard history is empty</string>
+    <string name="clip_clear">Clear</string>
+    <string name="clip_cleared">Clipboard history cleared</string>
+</resources>
