@@ -5,8 +5,9 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -16,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.secretarrow.rockedit.ui.StorageManagerActivity
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -34,12 +36,13 @@ class StorageManagerE2eTest {
 
         onView(withId(R.id.btn_add_connection)).perform(click())
 
-        onView(withId(R.id.input_name)).perform(typeText("ci-ftp"), closeSoftKeyboard())
-        onView(withId(R.id.input_host)).perform(typeText("127.0.0.1"), closeSoftKeyboard())
-        onView(withId(R.id.input_user)).perform(typeText("ci"), closeSoftKeyboard())
-        onView(withId(R.id.input_password)).perform(typeText("pw"), closeSoftKeyboard())
+        // The dialog is a ScrollView; scroll to each field before typing.
+        onView(withId(R.id.input_name)).perform(scrollTo(), typeText("ci-ftp"), closeSoftKeyboard())
+        onView(withId(R.id.input_host)).perform(scrollTo(), typeText("127.0.0.1"), closeSoftKeyboard())
+        onView(withId(R.id.input_user)).perform(scrollTo(), typeText("ci"), closeSoftKeyboard())
+        onView(withId(R.id.input_password)).perform(scrollTo(), typeText("pw"), closeSoftKeyboard())
 
-        onView(withText(android.R.string.ok)).perform(click())
+        onView(withText(R.string.save)).perform(click())
 
         // Poll until the dialog is dismissed and the list shows the entry.
         val deadline = System.currentTimeMillis() + 5000
@@ -54,6 +57,6 @@ class StorageManagerE2eTest {
                 Thread.sleep(100)
             }
         }
-        assert(found)
+        assertTrue("Connection never appeared in the list", found)
     }
 }
