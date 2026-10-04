@@ -94,12 +94,12 @@ class DiffSnippetE2eTest {
         }, "diff summary rendered")
 
         waitUntil({
-            onView(withText(containsString("+ BRAVO"))).check(matches(isDisplayed()))
+            onView(withText(containsString("+BRAVO"))).check(matches(isDisplayed()))
             true
         }, "insert row visible")
 
         waitUntil({
-            onView(withText(containsString("- bravo"))).check(matches(isDisplayed()))
+            onView(withText(containsString("-bravo"))).check(matches(isDisplayed()))
             true
         }, "delete row visible")
 

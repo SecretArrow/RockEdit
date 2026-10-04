@@ -73,7 +73,7 @@ class SnippetStoreTest {
         assertTrue(ok(s.create("Greeting", "kotlin", "hello")) .isNotEmpty())
         val result = s.create("  greeting ", "kotlin", "hi")
         assertEquals(ErrorCode.DUPLICATE_NAME, fail(result).code)
-        assertTrue(result.message.contains("Greeting"))
+        assertTrue(fail(result).message.contains("Greeting"))
     }
 
     @Test
@@ -298,28 +298,28 @@ class SnippetStoreTest {
     @Test
     fun dollarBeforeNonPlaceholderStaysLiteral() {
         val result = expandOk("\$name and \$x9 end")
-        assertEquals("$name and $x9 end", result.text)
+        assertEquals("\$name and \$x9 end", result.text)
         assertTrue(result.stops.isEmpty())
     }
 
     @Test
     fun unclosedBraceDegradesToLiteral() {
         val result = expandOk("prefix \${1:open tail")
-        assertEquals("prefix ${1:open tail", result.text)
+        assertEquals("prefix \${1:open tail", result.text)
         assertTrue(result.stops.isEmpty())
     }
 
     @Test
     fun malformedIndexStaysVerbatim() {
         val result = expandOk("keep \${x:me} intact")
-        assertEquals("keep ${x:me} intact", result.text)
+        assertEquals("keep \${x:me} intact", result.text)
         assertTrue(result.stops.isEmpty())
     }
 
     @Test
     fun negativeIndexStaysVerbatim() {
         val result = expandOk("keep \${-1:me} intact")
-        assertEquals("keep ${-1:me} intact", result.text)
+        assertEquals("keep \${-1:me} intact", result.text)
     }
 
     @Test
