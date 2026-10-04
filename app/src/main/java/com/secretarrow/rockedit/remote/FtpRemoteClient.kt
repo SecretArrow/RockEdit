@@ -5,6 +5,7 @@ import com.secretarrow.rockedit.core.RemoteClient
 import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
+import com.secretarrow.rockedit.core.RemoteType
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPSClient
@@ -78,6 +79,10 @@ class FtpRemoteClient(private val connection: RemoteConnection) : RemoteClient {
         if (!client.deleteFile(target)) {
             client.removeDirectory(target)
         }
+    }
+
+    override fun close() {
+        // Stateless: per-operation connections are closed after each call.
     }
 
     private inline fun <T> withFtp(block: (FTPClient) -> T): T {

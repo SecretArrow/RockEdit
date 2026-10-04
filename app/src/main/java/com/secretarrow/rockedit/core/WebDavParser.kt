@@ -99,9 +99,9 @@ object WebDavParser {
         return try {
             val text = parser.nextText().trim()
             // RFC 1123: "Tue, 01 Jan 2024 12:00:00 GMT"
-            java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME
-                .parse(text, java.time.temporal.TemporalQueries.zonedDateTime())
-                ?.toInstant()?.toEpochMilli()
+            val format = java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", java.util.Locale.US)
+            format.timeZone = java.util.TimeZone.getTimeZone("GMT")
+            format.parse(text)?.time
         } catch (_: Exception) {
             null
         }

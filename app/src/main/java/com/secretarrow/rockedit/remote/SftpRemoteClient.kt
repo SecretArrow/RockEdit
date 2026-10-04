@@ -7,7 +7,6 @@ import com.secretarrow.rockedit.core.RemotePath
 import net.schmizz.sshj.SSHClient
 import net.schmizz.sshj.sftp.SFTPClient
 import net.schmizz.sshj.transport.verification.PromiscuousVerifier
-import net.schmizz.sshj.userauth.password.PasswordAuthenticator
 import net.schmizz.sshj.xfer.FileSystemFile
 import java.io.File
 import java.util.concurrent.TimeUnit

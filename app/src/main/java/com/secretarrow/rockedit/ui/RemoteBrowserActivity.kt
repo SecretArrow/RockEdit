@@ -1,6 +1,7 @@
 package com.secretarrow.rockedit.ui
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
@@ -107,7 +108,9 @@ class RemoteBrowserActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     val ok = withContext(Dispatchers.IO) {
                         try {
-                            client()?.use { it.mkdir(target) } != null
+                            val c = client() ?: return@withContext false
+                            c.use { it.mkdir(target) }
+                            true
                         } catch (_: Exception) {
                             false
                         }
@@ -149,15 +152,7 @@ class RemoteBrowserActivity : AppCompatActivity() {
                 result.map { FolderSort.Entry(it.name, it.isFolder, it.size, it.lastModified) },
                 settings.sortFoldersFirst
             )
-            adapter.submitList(visible.map {
-                RemoteFile(
-                    name = it.name,
-                    path = RemotePath.child(path, it.name),
-                    isFolder = it.isFolder,
-                    size = it.size,
-                    lastModified = it.lastModified
-                )
-            })
+            adapter.submitList(visible)
             val empty = visible.isEmpty()
             binding.emptyView.visibility = if (empty) View.VISIBLE else View.GONE
             binding.entries.visibility = if (empty) View.GONE else View.VISIBLE

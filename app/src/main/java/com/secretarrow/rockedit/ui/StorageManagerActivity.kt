@@ -118,18 +118,23 @@ class StorageManagerActivity : AppCompatActivity() {
                 setPadding(dp(12), dp(10), dp(12), dp(10))
                 isClickable = true
                 isFocusable = true
-                setOnClickListener {
-                    selectedType = type
-                    typeButtons.forEach { b ->
-                        b.setBackgroundColor(getColor(R.color.tab_chip_inactive))
-                    }
-                    setBackgroundColor(getColor(R.color.tab_chip_active))
-                    if (portInput.text.isNullOrEmpty()) {
-                        portInput.hint = type.defaultPort.toString()
-                    }
-                }
                 typeContainer.addView(this)
             }
+        }
+        fun selectType(type: RemoteType) {
+            selectedType = type
+            val index = types.indexOf(type)
+            typeButtons.forEachIndexed { i, button ->
+                button.setBackgroundColor(
+                    getColor(if (i == index) R.color.tab_chip_active else R.color.tab_chip_inactive)
+                )
+            }
+            if (portInput.text.isNullOrEmpty()) {
+                portInput.hint = type.defaultPort.toString()
+            }
+        }
+        typeButtons.forEachIndexed { index, button ->
+            button.setOnClickListener { selectType(types[index]) }
         }
 
         existing?.let { c ->
@@ -138,10 +143,8 @@ class StorageManagerActivity : AppCompatActivity() {
             portInput.setText(c.port.toString())
             userInput.setText(c.user)
             pathInput.setText(c.initialPath)
-            // Select the current type chip.
-            val index = types.indexOf(c.type)
-            typeButtons.getOrNull(index)?.performClick()
-        } ?: typeButtons.first().performClick()
+            selectType(c.type)
+        } ?: selectType(RemoteType.FTP)
 
         AlertDialog.Builder(this)
             .setTitle(
