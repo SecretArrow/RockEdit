@@ -112,8 +112,9 @@ class SmartContractFormatterTest {
         val src = "(define-data-var counter int 0)\n(define-public (inc)\n(begin\n" +
             "(var-set counter (+ 1 (var-get counter)))\n(ok (var-get counter))\n)\n)"
         val out = ok(run(src, "clarity"))
-        assertTrue("begin must be indented two levels", out.contains("\n        (begin"))
-        assertTrue("body must be three levels deep", out.contains("\n            (var-set counter"))
+        // (inc) closes on the opener line, so the body sits one level in.
+        assertTrue("begin must be indented one level", out.contains("\n    (begin"))
+        assertTrue("body must be two levels deep", out.contains("\n        (var-set counter"))
         assertEquals(out, ok(run(out, "clarity")))
     }
 

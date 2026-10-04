@@ -113,10 +113,11 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
         // PASS 2 — detect the indentation unit (GCD of positive deltas).
         val unit = detectIndentUnit(lines, kinds, widths)
         if (unit <= 0) {
-            // Nothing to rescale — but a reported validation error (e.g. a
-            // tab used for indentation) must still surface.
+            // Nothing to rescale — but trailing whitespace is still cleaned
+            // (never inside docstrings) and a reported validation error
+            // (e.g. a tab used for indentation) must still surface.
             pendingError?.let { return FormatResult.Failure(it) }
-            return formatLinesVerbatim(lines, options)
+            return formatWhitespaceOnly(lines, kinds, options)
         }
 
         // PASS 3 — rescale; CODE lines must match the unit exactly (strict).
@@ -265,10 +266,22 @@ class IndentFormatter(nowMs: () -> Long = System::currentTimeMillis) : AbstractC
 
     // -------------------------------------------------------------- shared
 
-    private fun formatLinesVerbatim(lines: List<String>, options: FormatOptions): FormatResult {
-        val joined = lines.joinToString("\n")
-        val formatted = applyFinalTouches(joined, options, trimTrailing = false)
-        return FormatResult.Success(formatted, formatted != joined, 0L)
+    private fun formatWhitespaceOnly(
+        lines: List<String>,
+        kinds: Array<LineKind>,
+        options: FormatOptions
+    ): FormatResult {
+        val out = StringBuilder()
+        for (index in lines.indices) {
+            val content = if (kinds[index] == LineKind.VERBATIM) {
+                lines[index]
+            } else {
+                lines[index].trimEnd(' ', '\t')
+            }
+            appendLine(out, index, lines.size, content)
+        }
+        val formatted = applyFinalTouches(out, options, trimTrailing = false)
+        return FormatResult.Success(formatted, formatted != lines.joinToString("\n"), 0L)
     }
 
     private fun appendLine(out: StringBuilder, index: Int, total: Int, content: String) {
