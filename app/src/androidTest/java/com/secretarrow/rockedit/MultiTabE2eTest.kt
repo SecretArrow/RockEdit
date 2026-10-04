@@ -73,12 +73,13 @@ class MultiTabE2eTest {
         val intentA = newTestFile("e2e_multi_a.txt", "alpha content\n")
         val intentB = newTestFile("e2e_multi_b.txt", "beta content\n")
 
-        ActivityScenario.launch<EditorActivity>(intentA)
+        val scenarioA = ActivityScenario.launch<EditorActivity>(intentA)
         waitForEditorText("alpha content")
 
-        // Open the second file while the editor is on screen: singleTask
-        // delivers it through onNewIntent, which adds a tab.
-        ActivityScenario.launch<EditorActivity>(intentB)
+        // Open the second file from the editor's own activity context: the
+        // singleTask instance is reused, so the intent arrives as a new tab
+        // through onNewIntent.
+        scenarioA.onActivity { activity -> activity.startActivity(intentB) }
         waitForEditorText("beta content")
 
         waitForTabChip("e2e_multi_a.txt")
