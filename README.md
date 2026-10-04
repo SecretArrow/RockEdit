@@ -4,43 +4,50 @@
 ![E2E](https://github.com/SecretArrow/RockEdit/actions/workflows/e2e.yml/badge.svg)
 
 **Rock Edit** adalah editor teks & kode yang cepat, stabil, dan **100% perangkat lunak bebas**
-(GPL-3.0) untuk Android — tanpa iklan, tanpa akun, tanpa telemetri, tanpa izin internet.
-Semua file dan kredensial Anda tidak pernah meninggalkan perangkat.
+(GPL-3.0) untuk Android — tanpa iklan, tanpa akun, tanpa telemetri. Kredensial Anda
+terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
+menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.3.0)
+## Fitur (v0.8.0)
 
 - Buka & simpan file teks apa pun lewat Storage Access Framework (tanpa izin storage!)
-- Editor multi-baris dengan **undo/redo tanpa batas praktis** (100 langkah berkapasitas penuh)
-- **Penyorotan sintaks untuk 20 bahasa** (Kotlin, Java, C/C++, C#, Go, Rust, JS/TS, Python,
-  Ruby, PHP, Swift, Shell, SQL, JSON, YAML, XML, HTML, CSS) — deteksi otomatis dari ekstensi,
-  palet terang/gelap/AMOLED, dapat dimatikan dari menu
+- **Editor multi-tab** (maks 10): indikator perubahan, tutup per tab / tutup lainnya,
+  pemulihan set tab terbuka antar-sesi (muat isi secara lazy), undo/bookmark/encoding per-tab
+- **Penyorotan sintaks 48 bahasa** (Kotlin, Java, C/C++, C#, Go, Rust, JS/TS, Python, Ruby,
+  PHP, Swift, Shell, SQL, JSON, YAML, XML, HTML, CSS, Lua, Perl, R, ObjC, Dart, Scala,
+  Groovy, Haskell, Elixir, Clojure, F#, VB, Assembly, TOML, INI, Makefile, CMake, Batch,
+  PowerShell, Vue, GraphQL, Julia, Nim, OCaml, LaTeX, Zig, Protobuf) + nama populer
+  tanpa ekstensi (Makefile, Dockerfile, Gemfile) — palet terang/gelap/AMOLED
 - **Buka ulang dengan encoding** & **simpan dengan encoding** (UTF-8/16/32, Shift_JIS, GBK,
   Big5, EUC-KR, dan lainnya) di atas deteksi otomatis
-- **Ukuran font** editor dapat diatur (12–24sp) + **simpan otomatis** saat pindah aplikasi (opsional)
-- Nomor baris + gutter tersinkron, word wrap (on/off), mode baca-saja
-- **Operasi baris**: duplikat, hapus, naik/turunkan baris (LF/CR/CRLF aman, masuk undo)
-- **Bookmark per-baris**: tandai baris penting, lompat lewat daftar penanda
-- **Pemulihan posisi**: kursor & scroll per file diingat saat dibuka ulang
-- **Cari / Ganti** dengan opsi peka-huruf, wrap-around, ganti satu/semua
-- **Lompat ke baris** + **statistik** karakter/kata/baris + **sisipkan tanggal/waktu**
-- **Deteksi encoding otomatis** (juniversalchardet) + peringatan file binary
-- **Deteksi & pertahankan line break** file (LF / CR / CRLF), dapat dipaksa di pengaturan
+- **Buka folder** (peramban SAF: breadcrumb, folder di atas, filter file tersembunyi,
+  folder terakhir diingat) — file langsung menjadi tab
+- **Storage Manager: FTP, FTPS, SFTP, WebDAV** — file remote dibuka seperti file lokal,
+  simpan = unggah balik; kata sandi terenkripsi (Android Keystore, AES-GCM)
+- **GitHub & GitLab via Personal Access Token** — telusuri repositori (owner/repo/branch),
+  simpan = commit sungguhan
+- **Pratinjau HTML & Markdown** (renderer Markdown murni, tema mengikuti aplikasi)
+- **Jalankan kode daring** via Piston (28 bahasa) — opt-in, default MATI
+- **Cetak** dokumen (PDF A4 via layar cetak Android)
+- **Backup / restore data JSON** via SAF: pengaturan, file terbaru, sesi kursor,
+  bookmark, dan set tab terbuka
+- **Operasi baris** (duplikat/hapus/naik/turun), **bookmark per-baris**, **pemulihan posisi
+  kursor+scroll per file**, **cari/ganti** (peka huruf, wrap-around), **lompat ke baris**,
+  **statistik**, **sisipkan tanggal/waktu**, ukuran font, auto-save
 - Daftar **file terbaru** (maks. 40) + terima teks dari aplikasi lain (share-in)
 - Tema terang/gelap/**hitam AMOLED**/ikuti sistem, mode **layar penuh**, bahasa Indonesia + Inggris
-- Bagikan teks ke aplikasi lain
-- Dialog "perubahan belum disimpan" saat keluar — pekerjaan Anda tidak hilang begitu saja
+- **Bantuan** offline (FAQ), layar **Lisensi** open-source
 
 ## Roadmap
 
-Rencana lengkap menuju paritas fitur penuh ada di dokumen blueprint proyek:
-highlight syntax untuk ratusan bahasa, multi-tab, folder drawer, Storage Manager
-(FTP/SFTP/WebDAV/Drive/Dropbox/OneDrive/GitHub/GitLab), preview HTML/Markdown,
-backup/restore, dan lainnya — dirilis bertahap lewat pipeline CI/CD ini.
+Rencana lengkap & status: cloud OAuth (Drive/Dropbox/OneDrive — perlu registrasi klien),
+USB OTG & mode root (butuh perangkat fisik), AsciiDoc, lokalisasi 30+ bahasa.
 
 ## Privasi
 
-- **Tanpa izin internet** — secara teknis mustahil mengirim data Anda ke mana pun
 - Tanpa analitik, tanpa crash-report pihak ketiga, tanpa iklan
+- Izin INTERNET hanya dipakai untuk koneksi yang Anda konfigurasikan sendiri
+  (Storage Manager) dan eksekusi daring yang bersifat opt-in
 - Kode sumber terbuka penuh: audit sendiri kapan pun
 
 ## Build
