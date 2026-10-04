@@ -54,8 +54,12 @@ class HexDumpTest {
         val result = lines(HexDump.toDumpLines(byteArrayOf(0x48)))
         assertEquals(1, result.size)
         assertEquals(0L, result[0].offset)
-        assertEquals("48", result[0].hexText)
-        assertEquals("H", result[0].asciiText)
+        // Alignment contract: hex and ascii columns are padded to the full
+        // line width so every dump line lines up.
+        assertEquals("48", result[0].hexText.trimEnd())
+        assertEquals(39, result[0].hexText.length)
+        assertEquals("H", result[0].asciiText.trimEnd())
+        assertEquals(16, result[0].asciiText.length)
     }
 
     @Test
@@ -105,7 +109,7 @@ class HexDumpTest {
         val data = byteArrayOf(0xAB.toByte(), 0xCD.toByte())
         val options = HexDump.DumpOptions(uppercase = true, offsetBase = 0xCAFE)
         val line = lines(HexDump.toDumpLines(data, options))[0]
-        assertEquals("AB CD", line.hexText)
+        assertEquals("AB CD", line.hexText.trimEnd())
         assertTrue(HexDump.toDumpText(data, options).startsWith("0000CAFE  "))
     }
 

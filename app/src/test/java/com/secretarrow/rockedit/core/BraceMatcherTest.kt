@@ -102,10 +102,15 @@ class BraceMatcherTest {
     }
 
     @Test
-    fun ourCloserAtDepthZeroIsUnbalanced() {
-        // "(( )))": the second ')' beyond depth 0 proves broken source.
-        val result = unmatched(BraceMatcher.matchAt("(( )))", 0))
-        assertTrue(result.reason.contains("unbalanced"))
+    fun firstCloserAtDepthZeroMatchesTheObviousPair() {
+        // "(( )))": editors match the first '(' with the first ')'; the stray
+        // third ')' does not change the obvious pair (documented decision in
+        // the BraceMatcher KDoc: only a non-empty inner-pair stack reports
+        // "unbalanced").
+        val hit = matched(BraceMatcher.matchAt("(( )))", 0))
+        assertEquals(4, hit.partnerIndex)
+        assertEquals('(', hit.bracket)
+        assertTrue(hit.isOpener)
     }
 
     @Test
@@ -121,9 +126,10 @@ class BraceMatcherTest {
     }
 
     @Test
-    fun interleavedBackwardFromSquareReportsNoOpening() {
+    fun interleavedBackwardFromSquareReportsUnbalanced() {
         val result = unmatched(BraceMatcher.matchAt("([)]", 3))
-        assertTrue(result.reason.contains("no opening '['"))
+        assertTrue(result.reason.contains("unbalanced"))
+        assertTrue(result.reason.contains("'['"))
     }
 
     // -------------------------------------------------- cursor & bounds
