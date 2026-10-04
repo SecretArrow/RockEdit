@@ -109,7 +109,9 @@ class HexDumpTest {
         val data = byteArrayOf(0xAB.toByte(), 0xCD.toByte())
         val options = HexDump.DumpOptions(uppercase = true, offsetBase = 0xCAFE)
         val line = lines(HexDump.toDumpLines(data, options))[0]
-        assertEquals("AB CD", line.hexText.trimEnd())
+        // Two bytes sit inside ONE group of two: the separator only appears
+        // before a NEW group, so the partial line renders as "ABCD".
+        assertEquals("ABCD", line.hexText.trimEnd())
         assertTrue(HexDump.toDumpText(data, options).startsWith("0000CAFE  "))
     }
 
