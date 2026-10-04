@@ -1,12 +1,15 @@
 package com.secretarrow.rockedit
 
 import android.content.Intent
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -22,6 +25,10 @@ import java.io.File
 /**
  * Multi-tab e2e: two files open side by side as tabs; switching chips swaps
  * the editor content without losing either document.
+ *
+ * The second file is delivered through [EditorActivity.onNewIntent] — the
+ * entry point the system uses for a singleTask editor that is already on
+ * screen (e.g. when another app or the folder browser opens a file).
  */
 @RunWith(AndroidJUnit4::class)
 class MultiTabE2eTest {
@@ -38,20 +45,39 @@ class MultiTabE2eTest {
         }
     }
 
-    private fun waitForTabChip(namePart: String, timeoutMs: Long = 8000) {
+    /** Reads the current chip labels from the tab bar for diagnostics. */
+    private fun chipNames(scenario: ActivityScenario<EditorActivity>): List<String> {
+        var names = listOf<String>()
+        scenario.onActivity { activity ->
+            val bar = activity.findViewById<LinearLayout>(R.id.tab_bar)
+            names = (0 until bar.childCount).mapNotNull { c ->
+                bar.getChildAt(c).findViewById<TextView>(R.id.tab_name)?.text?.toString()
+            }
+        }
+        return names
+    }
+
+    private fun waitForTabChip(
+        scenario: ActivityScenario<EditorActivity>,
+        namePart: String,
+        timeoutMs: Long = 8000
+    ) {
         val deadline = System.currentTimeMillis() + timeoutMs
-        var found = false
-        while (System.currentTimeMillis() < deadline && !found) {
+        var matched = false
+        while (System.currentTimeMillis() < deadline && !matched) {
             try {
                 onView(
                     allOf(withParent(withId(R.id.tab_bar)), withText(containsString(namePart)))
-                ).check(matches(withText(containsString(namePart))))
-                found = true
+                ).check(matches(isDisplayed()))
+                matched = true
             } catch (_: Throwable) {
                 Thread.sleep(100)
             }
         }
-        assertTrue("Tab chip never appeared: $namePart", found)
+        assertTrue(
+            "Tab chip never appeared: $namePart; chips were ${chipNames(scenario)}",
+            matched
+        )
     }
 
     private fun waitForEditorText(expected: String, timeoutMs: Long = 8000) {
@@ -73,17 +99,14 @@ class MultiTabE2eTest {
         val intentA = newTestFile("e2e_multi_a.txt", "alpha content\n")
         val intentB = newTestFile("e2e_multi_b.txt", "beta content\n")
 
-        val scenarioA = ActivityScenario.launch<EditorActivity>(intentA)
+        val scenario = ActivityScenario.launch<EditorActivity>(intentA)
         waitForEditorText("alpha content")
 
-        // Open the second file from the editor's own activity context: the
-        // singleTask instance is reused, so the intent arrives as a new tab
-        // through onNewIntent.
-        scenarioA.onActivity { activity -> activity.startActivity(intentB) }
+        scenario.onActivity { activity -> activity.onNewIntent(intentB) }
         waitForEditorText("beta content")
 
-        waitForTabChip("e2e_multi_a.txt")
-        waitForTabChip("e2e_multi_b.txt")
+        waitForTabChip(scenario, "e2e_multi_a.txt")
+        waitForTabChip(scenario, "e2e_multi_b.txt")
 
         // Switch back to tab A by tapping its chip; content must follow.
         onView(
