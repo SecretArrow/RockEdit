@@ -1,6 +1,7 @@
 package com.secretarrow.rockedit
 
 import android.content.Intent
+import android.widget.ListView
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
@@ -13,7 +14,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.secretarrow.rockedit.ui.EditorActivity
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.instanceOf
+import org.hamcrest.Matchers.`is`
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,8 +80,16 @@ class TextToolsE2eTest {
         }, "editor loaded")
 
         tapOverflowItem(R.string.text_tools)
-        // The dialog lists localized op labels; pick "Sort lines (A→Z)".
-        onView(withText("Sort lines (A→Z)")).perform(click())
+        // The dialog's list view may recycle off-screen items on small
+        // screens: onData + atPosition forces the item into view. Index 12
+        // is TextUtilities.Op.SORT_LINES_ASC (locale-independent by design).
+        waitUntil({
+            Espresso.onData(allOf(`is`(instanceOf(String::class.java))))
+                .inAdapterView(`is`(instanceOf(ListView::class.java)))
+                .atPosition(12)
+                .perform(click())
+            true
+        }, "sort item clicked")
 
         waitUntil({
             onView(withId(R.id.editor)).check(
@@ -109,7 +121,12 @@ class TextToolsE2eTest {
             true
         }, "regex results rendered")
 
-        // The document must be untouched: the tester is read-only.
-        onView(withId(R.id.editor)).check(matches(withText(containsString(original))))
+        // Dismiss the dialog, then prove the document is untouched: the
+        // tester is read-only.
+        Espresso.pressBack()
+        waitUntil({
+            onView(withId(R.id.editor)).check(matches(withText(containsString(original))))
+            true
+        }, "editor visible again with original text")
     }
 }
