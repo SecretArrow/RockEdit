@@ -8,6 +8,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
@@ -118,11 +119,13 @@ class MultiTabE2eTest {
         waitForTabChip(scenario, "e2e_multi_b.txt")
 
         // Switch back to tab A by tapping its chip; content must follow.
-        chipMatcher("e2e_multi_a.txt").perform(click())
+        // The tab bar may have scrolled the chip out of view (the active tab
+        // auto-scrolls into view), so scroll it back before clicking.
+        chipMatcher("e2e_multi_a.txt").perform(scrollTo(), click())
         waitForEditorText("alpha content")
 
         // And forward to tab B again.
-        chipMatcher("e2e_multi_b.txt").perform(click())
+        chipMatcher("e2e_multi_b.txt").perform(scrollTo(), click())
         waitForEditorText("beta content")
     }
 }
