@@ -75,6 +75,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".ui.DiffActivity"
+            android:exported="false" />
+
         <provider
             android:name=".remote.RemoteContentProvider"
             android:authorities="${applicationId}.remote"

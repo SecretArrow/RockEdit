@@ -12,4 +12,10 @@
     <!-- Tab chips -->
     <color name="tab_chip_active">#334155</color>
     <color name="tab_chip_inactive">#00000000</color>
+
+    <!-- Diff rows (v0.12.0) -->
+    <color name="diff_insert_bg">#15301B</color>
+    <color name="diff_delete_bg">#371D1D</color>
+    <color name="diff_gap_fg">#64748B</color>
+    <color name="diff_row_text">#E2E8F0</color>
 </resources>

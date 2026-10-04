@@ -157,4 +157,39 @@
     <string name="grep_no_folder">No folder selected</string>
     <string name="grep_file_gone">File not found in the folder anymore</string>
     <string name="grep_in_folder">Search in folder</string>
+
+    <!-- Compare with file (v0.12.0) -->
+    <string name="diff_with_file">Compare with file…</string>
+    <string name="diff_title">Compare</string>
+    <string name="diff_running">Comparing…</string>
+    <string name="diff_summary">%1$d added, %2$d removed, %3$d unchanged</string>
+    <string name="diff_identical">Documents are identical</string>
+    <string name="diff_fell_back"> — file too complex for a minimal diff, shown as whole blocks</string>
+    <string name="diff_truncated"> — first %1$d rows shown</string>
+    <string name="diff_error_read">Could not read the selected file</string>
+    <string name="diff_error_binary">Binary files cannot be compared</string>
+    <string name="diff_error_picker">No file picker available</string>
+    <string name="diff_error_generic">Comparison failed: %1$s</string>
+    <string name="diff_too_large">File too large to compare (line limit exceeded)</string>
+    <string name="diff_side_document">document</string>
+    <string name="diff_side_file">file</string>
+    <string name="diff_gap_rows">%1$d unchanged lines</string>
+
+    <!-- Snippets (v0.12.0) -->
+    <string name="snippets">Snippets</string>
+    <string name="snippet_insert_hint">Tap a snippet to insert it at the cursor</string>
+    <string name="snippet_new">New snippet…</string>
+    <string name="snippet_manage">Delete snippets…</string>
+    <string name="snippet_none">No snippets for %1$s yet — create one?</string>
+    <string name="snippet_name_hint">Name</string>
+    <string name="snippet_language_hint">Language (kotlin, python, all…)</string>
+    <string name="snippet_body_hint">Body</string>
+    <string name="snippet_body_help">Placeholders: $1 $2 insert tabstops, ${1:default} fills text, $$ is a literal $, $0 marks the final cursor position.</string>
+    <string name="snippet_save">Save</string>
+    <string name="snippet_saved">Snippet saved</string>
+    <string name="snippet_deleted">Snippet deleted</string>
+    <string name="snippet_delete_missing">Snippet was already gone</string>
+    <string name="snippet_inserted">Snippet inserted</string>
+    <string name="snippet_error">Snippet error: %1$s</string>
+    <string name="snippet_delete_hint">Tap a snippet to delete it</string>
 </resources>

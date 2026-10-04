@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="12dp">
+
+    <EditText
+        android:id="@+id/snippet_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/snippet_name_hint"
+        android:importantForAutofill="no"
+        android:inputType="textCapWords"
+        android:singleLine="true" />
+
+    <EditText
+        android:id="@+id/snippet_language"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/snippet_language_hint"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:singleLine="true" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:text="@string/snippet_body_help"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@+id/snippet_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="top"
+        android:hint="@string/snippet_body_hint"
+        android:importantForAutofill="no"
+        android:inputType="textMultiLine|textNoSuggestions"
+        android:minLines="4" />
+</LinearLayout>

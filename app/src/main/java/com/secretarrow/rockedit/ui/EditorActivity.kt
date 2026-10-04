@@ -34,6 +34,7 @@ import com.secretarrow.rockedit.core.EditorConfigParser
 import com.secretarrow.rockedit.core.EditorTab
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
+import com.secretarrow.rockedit.core.FolderGrep
 import com.secretarrow.rockedit.core.FormatErrorCode
 import com.secretarrow.rockedit.core.FormatError
 import com.secretarrow.rockedit.core.FormatOptions
@@ -46,6 +47,7 @@ import com.secretarrow.rockedit.core.PistonClient
 import com.secretarrow.rockedit.core.RegexTester
 import com.secretarrow.rockedit.core.SearchEngine
 import com.secretarrow.rockedit.core.SettingsRepository
+import com.secretarrow.rockedit.core.SnippetStore
 import com.secretarrow.rockedit.core.SyntaxRegistry
 import com.secretarrow.rockedit.core.TabManager
 import com.secretarrow.rockedit.core.TabPersistence
@@ -59,6 +61,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
@@ -107,6 +110,13 @@ class EditorActivity : AppCompatActivity() {
                     tab.name = DisplayNames.resolve(this, uri)
                     writeTo(tab)
                 }
+            }
+        }
+
+    private val diffFileLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                startDiffWithFile(uri)
             }
         }
 
@@ -1014,6 +1024,8 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_text_tools -> showTextToolsDialog()
             R.id.action_regex_test -> showRegexTesterDialog()
             R.id.action_colors -> showColorsDialog()
+            R.id.action_snippets -> showSnippetsDialog()
+            R.id.action_diff_with_file -> pickDiffFile()
             R.id.action_find -> showFindDialog()
             R.id.action_goto -> showGotoDialog()
             R.id.action_duplicate_line -> applyLineOp(LineOps::duplicateLine)
@@ -1550,6 +1562,272 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
+    // ------------------------------------------------ v0.12.0 diff & snippets
+
+    /** Opens the SAF picker for the "other" side of a comparison. */
+    private fun pickDiffFile() {
+        try {
+            diffFileLauncher.launch(
+                arrayOf(
+                    "text/*",
+                    "application/json",
+                    "application/xml",
+                    "application/javascript",
+                    "application/x-yaml"
+                )
+            )
+        } catch (e: Exception) {
+            // No file picker on the device (or the resolver failed).
+            toast(getString(R.string.diff_error_picker))
+        }
+    }
+
+    /**
+     * Prepares the comparison: both sides go through private cache files
+     * because intent extras are size-limited. Any failure here is a localized
+     * toast — a broken comparison never mutates the document.
+     */
+    private fun startDiffWithFile(otherUri: Uri) {
+        val current = binding.editor.text?.toString().orEmpty()
+        if (current.length > MAX_DIFF_CHARS) {
+            toast(getString(R.string.diff_too_large))
+            return
+        }
+        toast(getString(R.string.diff_running))
+        lifecycleScope.launch {
+            val picked = withContext(Dispatchers.IO) { readDiffSource(otherUri) }
+            when {
+                picked == null -> toast(getString(R.string.diff_error_read))
+                picked.binary -> toast(getString(R.string.diff_error_binary))
+                picked.content == null || picked.content.length > MAX_DIFF_CHARS ->
+                    toast(getString(R.string.diff_too_large))
+                else -> {
+                    val docFile = File(cacheDir, "diff_doc_${System.nanoTime()}.txt")
+                    val otherFile = File(cacheDir, "diff_other_${System.nanoTime()}.txt")
+                    try {
+                        withContext(Dispatchers.IO) {
+                            docFile.writeText(current, Charsets.UTF_8)
+                            otherFile.writeText(picked.content, Charsets.UTF_8)
+                        }
+                        startActivity(
+                            DiffActivity.createIntent(
+                                this@EditorActivity,
+                                docFile.absolutePath,
+                                otherFile.absolutePath
+                            )
+                        )
+                    } catch (e: Exception) {
+                        toast(getString(R.string.diff_error_generic, e.message ?: "?"))
+                        try {
+                            docFile.delete()
+                            otherFile.delete()
+                        } catch (_: Exception) {
+                            // Cache cleanup is best-effort; the dir is private.
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Outcome of reading the picked side: unreadable / binary / content. */
+    private class DiffRead(val content: String?, val binary: Boolean)
+
+    private fun readDiffSource(uri: Uri): DiffRead? = try {
+        val stream = contentResolver.openInputStream(uri) ?: return null
+        stream.use { input ->
+            val buffer = java.io.ByteArrayOutputStream()
+            val chunk = ByteArray(16 * 1024)
+            var read = input.read(chunk)
+            var sniffed = 0
+            var binary = false
+            while (read >= 0) {
+                if (sniffed < FolderGrep.BINARY_SNIFF_BYTES) {
+                    val limit = minOf(read, FolderGrep.BINARY_SNIFF_BYTES - sniffed)
+                    for (i in 0 until limit) {
+                        if (chunk[i] == 0.toByte()) {
+                            binary = true
+                            break
+                        }
+                    }
+                    sniffed += limit
+                }
+                if (binary) return DiffRead(null, true)
+                if (buffer.size() >= MAX_DIFF_BYTES) break
+                val toWrite = minOf(read, MAX_DIFF_BYTES - buffer.size())
+                buffer.write(chunk, 0, toWrite)
+                if (toWrite < read) break
+                read = input.read(chunk)
+            }
+            if (binary) {
+                DiffRead(null, true)
+            } else {
+                DiffRead(
+                    EncodingDetector.decode(buffer.toByteArray(), EncodingDetector.DEFAULT_CHARSET),
+                    false
+                )
+            }
+        }
+    } catch (e: Exception) {
+        null
+    }
+
+    /** Lists insertable snippets (current language + wildcard) as rows. */
+    private fun showSnippetsDialog() {
+        val store = SnippetStore(App.keyValueStore(this))
+        val tab = tabManager.activeTab()
+        val languageId = tab?.let { SyntaxRegistry.languageForFileName(it.name)?.id } ?: "txt"
+        val available = store.list(languageId)
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_snippet_list, null)
+        val container = view.findViewById<LinearLayout>(R.id.snippet_container)
+        val ripple = android.util.TypedValue()
+        val hasRipple = theme.resolveAttribute(
+            android.R.attr.selectableItemBackground, ripple, true
+        )
+        val rowParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        var dialog: AlertDialog? = null
+
+        fun addRow(label: String, onClick: () -> Unit) {
+            val row = TextView(this)
+            row.text = label
+            row.textSize = 16f
+            row.isClickable = true
+            row.isFocusable = true
+            row.setPadding(dp(20), dp(14), dp(20), dp(14))
+            if (hasRipple) row.setBackgroundResource(ripple.resourceId)
+            row.setOnClickListener {
+                dialog?.dismiss()
+                onClick()
+            }
+            container.addView(row, rowParams)
+        }
+
+        for (snippet in available) {
+            addRow("${snippet.name}  (${snippet.language})") { insertSnippet(store, snippet) }
+        }
+        if (available.isEmpty()) {
+            addRow(getString(R.string.snippet_none, languageId)) {
+                showNewSnippetDialog(store, languageId)
+            }
+        }
+        addRow(getString(R.string.snippet_new)) { showNewSnippetDialog(store, languageId) }
+        addRow(getString(R.string.snippet_manage)) { showDeleteSnippetDialog(store) }
+
+        dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.snippets)
+            .setView(view)
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    /**
+     * Inserts the expanded snippet at the caret, replacing the selection if
+     * one exists. Respects read-only mode and the undo stack; the caret lands
+     * on the body's `$0` stop (or the end of the inserted text).
+     */
+    private fun insertSnippet(store: SnippetStore, snippet: SnippetStore.Snippet) {
+        val editable = binding.editor.text ?: return
+        val tab = tabManager.activeTab() ?: return
+        if (tab.readOnly) {
+            toast(getString(R.string.read_only_toast))
+            return
+        }
+        when (val result = SnippetStore.Insert.expand(snippet.body)) {
+            is SnippetStore.Insert.InsertResult.Failure ->
+                toast(getString(R.string.snippet_error, result.message))
+            is SnippetStore.Insert.InsertResult.Success -> {
+                val length = editable.length
+                val start = binding.editor.selectionStart.coerceIn(0, length)
+                val end = binding.editor.selectionEnd.coerceIn(start, length)
+                applyingUndoRedo = false
+                editable.replace(start, end, result.text)
+                val caret = (start + SnippetStore.Insert.finalCaret(result))
+                    .coerceIn(0, editable.length)
+                binding.editor.setSelection(caret)
+                updateGutter()
+                dirtyChanged()
+                store.touch(snippet.id)
+                toast(getString(R.string.snippet_inserted))
+            }
+        }
+    }
+
+    /** Create form; stays open on validation failure so the user can retry. */
+    private fun showNewSnippetDialog(store: SnippetStore, languageId: String) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_snippet_form, null)
+        val nameInput = view.findViewById<EditText>(R.id.snippet_name)
+        val languageInput = view.findViewById<EditText>(R.id.snippet_language)
+        val bodyInput = view.findViewById<EditText>(R.id.snippet_body)
+        languageInput.setText(languageId)
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.snippet_new)
+            .setView(view)
+            .setPositiveButton(R.string.snippet_save, null)
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val name = nameInput.text?.toString().orEmpty()
+            val language = languageInput.text?.toString().orEmpty()
+            val body = bodyInput.text?.toString().orEmpty()
+            when (val result = store.create(name, language, body)) {
+                is SnippetStore.MutateResult.Failure ->
+                    toast(getString(R.string.snippet_error, result.message))
+                is SnippetStore.MutateResult.Success -> {
+                    toast(getString(R.string.snippet_saved))
+                    dialog.dismiss()
+                }
+            }
+        }
+    }
+
+    /** Delete list; every tap removes exactly one snippet (defensive no-op if already gone). */
+    private fun showDeleteSnippetDialog(store: SnippetStore) {
+        val all = store.list()
+        if (all.isEmpty()) {
+            toast(getString(R.string.snippet_none, SnippetStore.LANG_ALL))
+            return
+        }
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_snippet_list, null)
+        val container = view.findViewById<LinearLayout>(R.id.snippet_container)
+        val hint = view.findViewById<TextView>(R.id.snippet_hint)
+        hint.setText(R.string.snippet_delete_hint)
+        val ripple = android.util.TypedValue()
+        val hasRipple = theme.resolveAttribute(
+            android.R.attr.selectableItemBackground, ripple, true
+        )
+        val rowParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        var dialog: AlertDialog? = null
+        for (snippet in all) {
+            val row = TextView(this)
+            row.text = "${snippet.name}  (${snippet.language})"
+            row.textSize = 16f
+            row.isClickable = true
+            row.isFocusable = true
+            row.setPadding(dp(20), dp(14), dp(20), dp(14))
+            if (hasRipple) row.setBackgroundResource(ripple.resourceId)
+            row.setOnClickListener {
+                dialog?.dismiss()
+                if (store.delete(snippet.id)) {
+                    toast(getString(R.string.snippet_deleted))
+                } else {
+                    toast(getString(R.string.snippet_delete_missing))
+                }
+            }
+            container.addView(row, rowParams)
+        }
+        dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.snippet_manage)
+            .setView(view)
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
     /**
      * v0.11.0 format-on-save: opt-in, .editorconfig-aware, strictly
      * fail-safe — any formatter or config problem leaves the document
@@ -1706,6 +1984,8 @@ class EditorActivity : AppCompatActivity() {
         private const val F_COMMITTED = "committed"
         private const val SNAPSHOT_LIMIT = 200_000
         private const val SNAPSHOT_TOTAL_BUDGET = 500_000
+        private const val MAX_DIFF_CHARS = 2_000_000
+        private const val MAX_DIFF_BYTES = 4_000_000
 
         /** Convenience starter used by MainActivity and tests. */
         fun createIntent(context: android.content.Context, uri: Uri?): Intent =

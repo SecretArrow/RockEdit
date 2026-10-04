@@ -9,6 +9,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
 - USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
 
+## [0.12.0] - 2026-10-05
+
+### Added
+- **Diff viewer (Bandingkan dengan file…)**: bandingkan dokumen aktif dengan
+  file lain (pemilih SAF, dekode otomatis, file biner ditolak via sniff NUL).
+  Mesin diff LCS murni Kotlin (`core/DiffEngine.kt`): trim prefix/suffix,
+  deterministik (tie-break DELETE), opsi abaikan-whitespace/abaikan-huruf,
+  batas 100 ribu baris (ditolak dengan pesan) dan batas matriks 4 juta sel
+  (fallback seluruh-blok dengan penanda `fellBack`, memori tetap terkendali).
+  Layar `DiffActivity` merender baris `-`/`+` dengan sorotan warna
+  terang/gelap, collapse baris tak berubah (konteks 3), ringkasan
+  ditambah/dihapus/tak-berubah, batas render 2.000 baris; kedua file cache
+  selalu dihapus setelah dibaca.
+- **Snippet manager**: cuplikan kode bernama per bahasa + wildcard `all`
+  (`core/SnippetStore.kt`, persist JSON via KeyValueStore). Sisipan dengan
+  tabstop `$1..$9`, default `${1:teks}`, escape `$$`, posisi kursor akhir
+  `$0`; placeholder cacat (`${x:...}`, `${` tanpa tutup, `$` tunggal)
+  didegradasi literal sehingga tidak ada teks yang hilang. Validasi ketat:
+  nama kosong/kepanjangan (>80), duplikat case-insensitive, isi
+  kosong/kepanjangan (>64 ribu karakter); penyimpanan korup dimuat sebagai
+  pustaka kosong (fail-safe). Dialog daftar (tap untuk sisip), form buat
+  (tetap terbuka saat validasi gagal), dan daftar hapus; frekuensi pakai
+  dihitung untuk pengurutan.
+
 ## [0.11.0] - 2026-10-04
 
 ### Added

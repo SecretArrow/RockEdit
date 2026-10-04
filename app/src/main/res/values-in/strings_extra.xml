@@ -157,4 +157,39 @@
     <string name="grep_no_folder">Belum ada folder dipilih</string>
     <string name="grep_file_gone">File tidak lagi ditemukan di folder</string>
     <string name="grep_in_folder">Cari di folder</string>
+
+    <!-- Bandingkan dengan file (v0.12.0) -->
+    <string name="diff_with_file">Bandingkan dengan file…</string>
+    <string name="diff_title">Bandingkan</string>
+    <string name="diff_running">Membandingkan…</string>
+    <string name="diff_summary">%1$d ditambah, %2$d dihapus, %3$d tak berubah</string>
+    <string name="diff_identical">Dokumen identik</string>
+    <string name="diff_fell_back"> — file terlalu kompleks untuk diff minimal, ditampilkan per blok utuh</string>
+    <string name="diff_truncated"> — %1$d baris pertama ditampilkan</string>
+    <string name="diff_error_read">Tidak dapat membaca file yang dipilih</string>
+    <string name="diff_error_binary">File biner tidak dapat dibandingkan</string>
+    <string name="diff_error_picker">Pemilih file tidak tersedia</string>
+    <string name="diff_error_generic">Perbandingan gagal: %1$s</string>
+    <string name="diff_too_large">File terlalu besar untuk dibandingkan (batas baris terlampaui)</string>
+    <string name="diff_side_document">dokumen</string>
+    <string name="diff_side_file">file</string>
+    <string name="diff_gap_rows">%1$d baris tak berubah</string>
+
+    <!-- Snippet (v0.12.0) -->
+    <string name="snippets">Snippet</string>
+    <string name="snippet_insert_hint">Ketuk snippet untuk menyisipkannya di kursor</string>
+    <string name="snippet_new">Snippet baru…</string>
+    <string name="snippet_manage">Hapus snippet…</string>
+    <string name="snippet_none">Belum ada snippet untuk %1$s — buat satu?</string>
+    <string name="snippet_name_hint">Nama</string>
+    <string name="snippet_language_hint">Bahasa (kotlin, python, all…)</string>
+    <string name="snippet_body_hint">Isi</string>
+    <string name="snippet_body_help">Placeholder: $1 $2 menyisipkan tabstop, ${1:default} mengisi teks, $$ adalah $ literal, $0 menandai posisi kursor akhir.</string>
+    <string name="snippet_save">Simpan</string>
+    <string name="snippet_saved">Snippet tersimpan</string>
+    <string name="snippet_deleted">Snippet terhapus</string>
+    <string name="snippet_delete_missing">Snippet sudah tidak ada</string>
+    <string name="snippet_inserted">Snippet disisipkan</string>
+    <string name="snippet_error">Kesalahan snippet: %1$s</string>
+    <string name="snippet_delete_hint">Ketuk snippet untuk menghapusnya</string>
 </resources>

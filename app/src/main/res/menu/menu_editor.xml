@@ -30,6 +30,14 @@
         android:title="@string/color_preview"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_snippets"
+        android:title="@string/snippets"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_diff_with_file"
+        android:title="@string/diff_with_file"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_save_as"
         android:title="@string/save_as"
         app:showAsAction="never" />
