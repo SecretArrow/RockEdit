@@ -10,6 +10,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
 - Bracket pair colorization: butuh perombakan tampilan editor (sisa backlog item 4)
 
+## [0.14.1] - 2026-10-05
+
+### Changed
+- Pipeline rilis kini menerbitkan **Android App Bundle (AAB)** bersama APK di setiap
+  GitHub Release — prasyarat unggah ke Google Play — dengan `SHA256SUMS.txt` gabungan
+  untuk keduanya (`app-release.apk` + `app-release.aab`).
+- Catatan rilis diperbarui: instruksi instalasi APK dan petunjuk pemakaian AAB.
+
 ## [0.14.0] - 2026-10-05
 
 ### Added

@@ -1,6 +1,6 @@
 name: Release
 
-# Auto-release: push a tag `vX.Y.Z` to build a signed APK and publish a GitHub Release.
+# Auto-release: push a tag `vX.Y.Z` to build a signed APK + AAB and publish a GitHub Release.
 permissions:
   contents: write
 
@@ -44,17 +44,19 @@ jobs:
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "Release: versionName=$VERSION_NAME versionCode=$VERSION_CODE"
 
-      - name: Build signed release APK
+      - name: Build signed release APK + AAB
         run: |
-          ./gradlew --no-daemon :app:assembleRelease --parallel --stacktrace \
+          ./gradlew --no-daemon :app:assembleRelease :app:bundleRelease --parallel --stacktrace \
             -ProckeditVersionCode=${{ steps.ver.outputs.version_code }} \
             -ProckeditVersionName=${{ steps.ver.outputs.version_name }}
 
-      - name: Generate SHA256SUMS
+      - name: Collect artifacts + SHA256SUMS
         run: |
-          cd app/build/outputs/apk/release
-          sha256sum app-release.apk > SHA256SUMS.txt
-          cat SHA256SUMS.txt
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/
+          cp app/build/outputs/bundle/release/app-release.aab dist/
+          (cd dist && sha256sum app-release.apk app-release.aab > SHA256SUMS.txt)
+          cat dist/SHA256SUMS.txt
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
@@ -67,7 +69,7 @@ jobs:
             Editor teks & kode cepat untuk Android — **100% gratis dan bebas (GPL-3.0)**, tanpa iklan, tanpa telemetri, tanpa izin berbahaya.
 
             ### Instalasi
-            1. Unduh `app-release.apk` di bawah.
+            1. Unduh `app-release.apk` di bawah (untuk unggah ke Google Play, gunakan `app-release.aab`).
             2. Verifikasi checksum dengan `SHA256SUMS.txt` bila memunginkan.
             3. Instal (izinkan instalasi dari sumber ini bila diminta).
 
@@ -75,5 +77,6 @@ jobs:
             - Kode sumber: GPL-3.0 — https://github.com/SecretArrow/RockEdit
             - Tidak ada data yang meninggalkan perangkat Anda. Tanpa izin internet pada versi ini.
           files: |
-            app/build/outputs/apk/release/app-release.apk
-            app/build/outputs/apk/release/SHA256SUMS.txt
+            dist/app-release.apk
+            dist/app-release.aab
+            dist/SHA256SUMS.txt
