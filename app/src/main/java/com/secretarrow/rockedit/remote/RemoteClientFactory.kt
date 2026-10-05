@@ -48,7 +48,12 @@ object RemoteClientFactory {
         context: Context,
         connection: RemoteConnection,
     ): StoreBackedCloudAuth {
-        val store = OAuthTokenStore(com.secretarrow.rockedit.core.App.keyValueStore(context), KeystoreEncryptor)
+        val store =
+            OAuthTokenStore(
+                com.secretarrow.rockedit.core.App
+                    .keyValueStore(context),
+                KeystoreEncryptor,
+            )
         return StoreBackedCloudAuth(connection, store, OAuthTokenExchanger(CloudRuntime.http))
     }
 }

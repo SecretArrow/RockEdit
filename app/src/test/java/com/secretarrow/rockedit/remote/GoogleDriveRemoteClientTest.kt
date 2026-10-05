@@ -3,13 +3,13 @@ package com.secretarrow.rockedit.remote
 import com.secretarrow.rockedit.core.CloudResponse
 import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteType
-import java.io.FileNotFoundException
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.FileNotFoundException
 
 /** Per-branch tests for [GoogleDriveRemoteClient] (v0.15.0). */
 class GoogleDriveRemoteClientTest {
@@ -116,7 +116,12 @@ class GoogleDriveRemoteClientTest {
             FakeCloudHttp { _, _, _, _ -> CloudResponse(200, emptyMap(), "file-bytes".toByteArray()) }
         val bytes = client(fake).read("/a.txt")
         assertEquals("file-bytes", bytes.toString(Charsets.UTF_8))
-        assertTrue(fake.calls.last().url.contains("alt=media"))
+        assertTrue(
+            fake.calls
+                .last()
+                .url
+                .contains("alt=media"),
+        )
     }
 
     @Test

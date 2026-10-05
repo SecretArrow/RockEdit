@@ -5,8 +5,8 @@ import com.secretarrow.rockedit.core.CloudHttp
 import com.secretarrow.rockedit.core.CloudResponse
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
-import java.io.FileNotFoundException
 import org.json.JSONObject
+import java.io.FileNotFoundException
 
 /**
  * Dropbox API v2 client (path-native). Uses three hosts:

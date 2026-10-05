@@ -31,8 +31,9 @@ object UsbOtgSupport {
     /** Lists attached USB mass-storage devices (empty on any lookup problem). */
     fun attachedDevices(context: Context): List<UsbDevice> =
         try {
-            val usbManager = context.getSystemService(Context.USB_SERVICE) as? UsbManager
-                ?: return emptyList()
+            val usbManager =
+                context.getSystemService(Context.USB_SERVICE) as? UsbManager
+                    ?: return emptyList()
             usbManager.deviceList.values.filter { device ->
                 val hasInterface =
                     (0 until device.interfaceCount).any { i -> device.getInterface(i).interfaceClass == UsbOtgLogic.MSC_CLASS }

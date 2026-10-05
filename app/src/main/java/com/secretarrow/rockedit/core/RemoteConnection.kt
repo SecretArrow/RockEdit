@@ -159,7 +159,11 @@ class RemoteConnectionStore(
     }
 
     /** Returns the decrypted connection or null. */
-    fun find(id: Long): RemoteConnection? = list().firstOrNull { it.id == id }?.let { it.copy(password = decryptPassword(it.password), clientSecret = decryptPassword(it.clientSecret)) }
+    fun find(id: Long): RemoteConnection? =
+        list()
+            .firstOrNull {
+                it.id == id
+            }?.let { it.copy(password = decryptPassword(it.password), clientSecret = decryptPassword(it.clientSecret)) }
 
     private fun decryptPassword(cipher: String): String =
         if (cipher.isEmpty()) {

@@ -4,10 +4,10 @@ import com.secretarrow.rockedit.core.CloudAuth
 import com.secretarrow.rockedit.core.CloudHttp
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
-import java.io.FileNotFoundException
-import java.net.URLEncoder
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.FileNotFoundException
+import java.net.URLEncoder
 
 /**
  * Google Drive v3 client. Drive is id-based, so the client resolves virtual
@@ -90,15 +90,16 @@ class GoogleDriveRemoteClient(
             val boundary = "rockedit_drive_${System.nanoTime()}"
             val metadata = JSONObject().put("name", name).put("parents", JSONArray().put(parentId))
             val body =
-                ByteArrayOutputStream().apply {
-                    write("--$boundary\r\n".toByteArray())
-                    write("Content-Type: $JSON_TYPE\r\n\r\n".toByteArray())
-                    write(metadata.toString().toByteArray())
-                    write("\r\n--$boundary\r\n".toByteArray())
-                    write("Content-Type: $OCTET_STREAM\r\n\r\n".toByteArray())
-                    write(data)
-                    write("\r\n--$boundary--\r\n".toByteArray())
-                }.toByteArray()
+                ByteArrayOutputStream()
+                    .apply {
+                        write("--$boundary\r\n".toByteArray())
+                        write("Content-Type: $JSON_TYPE\r\n\r\n".toByteArray())
+                        write(metadata.toString().toByteArray())
+                        write("\r\n--$boundary\r\n".toByteArray())
+                        write("Content-Type: $OCTET_STREAM\r\n\r\n".toByteArray())
+                        write(data)
+                        write("\r\n--$boundary--\r\n".toByteArray())
+                    }.toByteArray()
             val response =
                 http.request(
                     "POST",
@@ -155,8 +156,9 @@ class GoogleDriveRemoteClient(
                 if (cached != null) {
                     cached
                 } else {
-                    val id = lookupChildId(current, segment)
-                        ?: throw FileNotFoundException("'$built' does not exist on Google Drive — create the folder first")
+                    val id =
+                        lookupChildId(current, segment)
+                            ?: throw FileNotFoundException("'$built' does not exist on Google Drive — create the folder first")
                     idCache[built] = id
                     id
                 }
@@ -179,7 +181,9 @@ class GoogleDriveRemoteClient(
 
     private fun parseModified(iso: String): Long =
         try {
-            java.time.Instant.parse(iso).toEpochMilli()
+            java.time.Instant
+                .parse(iso)
+                .toEpochMilli()
         } catch (_: Exception) {
             0L
         }

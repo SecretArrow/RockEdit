@@ -3,11 +3,11 @@ package com.secretarrow.rockedit.remote
 import com.secretarrow.rockedit.core.CloudResponse
 import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteType
-import java.io.FileNotFoundException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.FileNotFoundException
 
 /** Per-branch tests for [DropboxRemoteClient] (v0.15.0). */
 class DropboxRemoteClientTest {
@@ -50,7 +50,12 @@ class DropboxRemoteClientTest {
         val fake =
             FakeCloudHttp { _, _, _, _ -> json(200, """{"cursor":"C","has_more":false,"entries":[]}""") }
         client(fake).list("/Docs/Sub")
-        assertTrue(fake.calls.single().bodyText().contains("\"path\":\"/Docs/Sub\""))
+        assertTrue(
+            fake.calls
+                .single()
+                .bodyText()
+                .contains("\"path\":\"/Docs/Sub\""),
+        )
     }
 
     @Test

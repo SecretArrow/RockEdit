@@ -140,11 +140,10 @@ class RemoteBrowserActivity : AppCompatActivity() {
             .show()
     }
 
-    private suspend fun client(): com.secretarrow.rockedit.core.RemoteClient? {
-        return withContext(Dispatchers.IO) {
+    private suspend fun client(): com.secretarrow.rockedit.core.RemoteClient? =
+        withContext(Dispatchers.IO) {
             RemoteClients.open(this@RemoteBrowserActivity, connectionId)
         }
-    }
 
     private fun refresh() {
         binding.breadcrumb.text = RemotePath.normalize(path)

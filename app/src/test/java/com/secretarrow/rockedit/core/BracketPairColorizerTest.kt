@@ -7,6 +7,7 @@ import org.junit.Test
 /** Per-branch tests for [BracketPairColorizer] (v0.15.0). */
 class BracketPairColorizerTest {
     private fun offsets(brackets: List<BracketPairColorizer.ColoredBracket>) = brackets.map { it.offset }
+
     private fun depths(brackets: List<BracketPairColorizer.ColoredBracket>) = brackets.map { it.depth }
 
     @Test

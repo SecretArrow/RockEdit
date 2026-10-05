@@ -30,7 +30,10 @@ class CloudResponse(
 
     /** Case-insensitive header lookup; empty string when absent. */
     fun header(name: String): String =
-        headers.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value.orEmpty()
+        headers.entries
+            .firstOrNull { it.key.equals(name, ignoreCase = true) }
+            ?.value
+            .orEmpty()
 
     val isSuccess: Boolean get() = code in 200..299
 }

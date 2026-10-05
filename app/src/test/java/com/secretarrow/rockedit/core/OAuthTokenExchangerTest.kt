@@ -1,7 +1,6 @@
 package com.secretarrow.rockedit.core
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -11,7 +10,10 @@ class OAuthTokenExchangerTest {
 
     private fun exchanger(fake: FakeCloudHttp) = OAuthTokenExchanger(fake, clock = { fixedNow })
 
-    private fun fakeResponding(code: Int, body: String) = FakeCloudHttp { _, _, _, _ -> CloudResponse(code, emptyMap(), body.toByteArray()) }
+    private fun fakeResponding(
+        code: Int,
+        body: String,
+    ) = FakeCloudHttp { _, _, _, _ -> CloudResponse(code, emptyMap(), body.toByteArray()) }
 
     @Test
     fun `exchange code success parses all standard fields`() {
@@ -43,7 +45,12 @@ class OAuthTokenExchangerTest {
         val result =
             exchanger(fake).refreshTokens(CloudProvider.DROPBOX, "cid", "SECRET", "RT-1")
         assertTrue(result is OAuthExchangeResult.Success)
-        assertTrue(fake.calls.single().bodyText().contains("client_secret=SECRET"))
+        assertTrue(
+            fake.calls
+                .single()
+                .bodyText()
+                .contains("client_secret=SECRET"),
+        )
     }
 
     @Test
@@ -51,7 +58,12 @@ class OAuthTokenExchangerTest {
         val fake = fakeResponding(200, """{"access_token":"AT"}""")
         val result = exchanger(fake).refreshTokens(CloudProvider.ONEDRIVE, "cid", "OPT", "RT-1")
         assertTrue(result is OAuthExchangeResult.Success)
-        assertTrue(fake.calls.single().bodyText().contains("client_secret=OPT"))
+        assertTrue(
+            fake.calls
+                .single()
+                .bodyText()
+                .contains("client_secret=OPT"),
+        )
     }
 
     @Test
