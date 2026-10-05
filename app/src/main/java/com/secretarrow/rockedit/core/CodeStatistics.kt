@@ -41,7 +41,6 @@ package com.secretarrow.rockedit.core
  *    the scan is a single O(n) pass
  */
 object CodeStatistics {
-
     /** Leading-space widths considered when picking the common indent width. */
     private val COMMON_WIDTHS = intArrayOf(1, 2, 3, 4, 6, 8)
 
