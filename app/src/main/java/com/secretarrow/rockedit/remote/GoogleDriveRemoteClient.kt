@@ -200,4 +200,7 @@ class GoogleDriveRemoteClient(
         const val FOLDER_MIME = "application/vnd.google-apps.folder"
         const val ROOT = "root"
     }
+    override fun close() {
+        // Stateless transport: nothing to release per connection instance.
+    }
 }

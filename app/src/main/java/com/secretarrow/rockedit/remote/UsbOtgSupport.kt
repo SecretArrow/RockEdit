@@ -74,14 +74,17 @@ object UsbOtgSupport {
             throw IllegalStateException("initializing the USB device failed: ${UsbOtgLogic.describeError(e)}")
         }
         val fileSystem =
-            usbDevice.partitions.firstOrNull()?.fileSystem
-                ?: run {
-                    try {
-                        usbDevice.close()
-                    } catch (_: Exception) {
-                    }
-                    throw IllegalStateException("no readable FAT partition found on '${device.deviceName}'")
+            try {
+                usbDevice.partitions.firstOrNull()?.fileSystem
+            } catch (_: Exception) {
+                null
+            } ?: run {
+                try {
+                    usbDevice.close()
+                } catch (_: Exception) {
                 }
+                throw IllegalStateException("no readable FAT partition found on '${device.deviceName}'")
+            }
         val label = UsbOtgLogic.displayName(device.manufacturerName, device.productName, "USB storage")
         val client = UsbOtgRemoteClient(LibAumsVolumeFs(fileSystem), label)
         Session.client = client

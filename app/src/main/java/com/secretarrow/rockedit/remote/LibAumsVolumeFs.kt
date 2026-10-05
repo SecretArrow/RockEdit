@@ -23,17 +23,17 @@ class LibAumsVolumeFs(
     override fun listFiles(dirPath: String): List<RemoteFile> {
         val folder = resolve(dirPath)
         if (!folder.isDirectory) throw FileNotFoundException("'$dirPath' is not a folder on the USB volume")
-        val children = folder.list() ?: return emptyList()
+        val children = folder.listFiles()
         val out = ArrayList<RemoteFile>(children.size)
         for (child in children) {
-            val name = child.name ?: continue
+            val name = child.name
             if (name.isEmpty()) continue
             out.add(
                 RemoteFile(
                     name = name,
                     path = RemotePath.child(dirPath, name),
                     isFolder = child.isDirectory,
-                    size = if (child.isDirectory) -1 else child.length,
+                    size = if (child.isDirectory) -1L else child.length,
                 ),
             )
         }
@@ -103,7 +103,7 @@ class LibAumsVolumeFs(
         folder: UsbFile,
         name: String,
     ): UsbFile? {
-        val children = folder.list() ?: return null
+        val children = folder.listFiles()
         for (child in children) {
             if (child.name == name) return child
         }

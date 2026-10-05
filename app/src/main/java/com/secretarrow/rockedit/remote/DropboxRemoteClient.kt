@@ -136,4 +136,7 @@ class DropboxRemoteClient(
         const val RPC = "https://api.dropboxapi.com/2/files"
         const val CONTENT = "https://content.dropboxapi.com/2/files"
     }
+    override fun close() {
+        // Stateless transport: nothing to release per connection instance.
+    }
 }
