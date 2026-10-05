@@ -69,7 +69,9 @@ class WasmFormatterCatalogTest {
     @Test
     fun catalogKeysMatchFormatterSupportedLanguages() {
         val formatter =
-            WasmCodeFormatter { _, _ -> throw UnsupportedOperationException("not used here") }
+            WasmCodeFormatter(
+                launchHost = { _, _ -> throw UnsupportedOperationException("not used here") },
+            )
         assertEquals(WasmFormatterCatalog.languages, formatter.supportedLanguages)
         assertTrue(formatter.supportedLanguages.isNotEmpty())
     }

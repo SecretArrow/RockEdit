@@ -73,7 +73,7 @@ class PdfExportPlannerTest {
         for (raw in text.split('\n')) {
             lineNo++
             if (raw.isEmpty()) {
-                expected.add(if (options.lineNumbers) lineNo else null to "")
+                expected.add((if (options.lineNumbers) lineNo else null) to "")
                 continue
             }
             var start = 0
