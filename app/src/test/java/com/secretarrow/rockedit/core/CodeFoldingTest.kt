@@ -29,8 +29,7 @@ class CodeFoldingTest {
 
     private fun folding(languageId: String = "kotlin"): CodeFolding = CodeFolding(languageId)
 
-    private fun pythonBlocks(count: Int): String =
-        (0 until count).joinToString("") { "def f$it():\n    pass\n" }
+    private fun pythonBlocks(count: Int): String = (0 until count).joinToString("") { "def f$it():\n    pass\n" }
 
     // ------------------------------------------------------- brace folding
 

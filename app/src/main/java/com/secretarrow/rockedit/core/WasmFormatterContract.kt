@@ -58,7 +58,11 @@ object WasmFormatterContract {
         options: FormatOptions,
     ): String {
         val out = StringBuilder(text.length + 128)
-        out.append("{\"").append(KEY_ID).append("\":\"").append(escapeJson(id))
+        out
+            .append("{\"")
+            .append(KEY_ID)
+            .append("\":\"")
+            .append(escapeJson(id))
         out.append("\",\"parser\":\"").append(escapeJson(parser))
         out.append("\",\"text\":\"").append(escapeJson(text))
         out.append("\",\"options\":{\"tabWidth\":").append(options.indentSize)
@@ -78,9 +82,16 @@ object WasmFormatterContract {
         text: String,
     ): String =
         StringBuilder(text.length + 32)
-            .append("{\"").append(KEY_ID).append("\":\"").append(escapeJson(id))
-            .append("\",\"").append(KEY_OK).append("\":true,\"").append(KEY_TEXT)
-            .append("\":\"").append(escapeJson(text))
+            .append("{\"")
+            .append(KEY_ID)
+            .append("\":\"")
+            .append(escapeJson(id))
+            .append("\",\"")
+            .append(KEY_OK)
+            .append("\":true,\"")
+            .append(KEY_TEXT)
+            .append("\":\"")
+            .append(escapeJson(text))
             .append("\"}")
             .toString()
 
@@ -91,10 +102,20 @@ object WasmFormatterContract {
         message: String,
     ): String =
         StringBuilder(message.length + 64)
-            .append("{\"").append(KEY_ID).append("\":\"").append(escapeJson(id))
-            .append("\",\"").append(KEY_OK).append("\":false,\"").append(KEY_CODE)
-            .append("\":\"").append(escapeJson(code))
-            .append("\",\"").append(KEY_MESSAGE).append("\":\"").append(escapeJson(message))
+            .append("{\"")
+            .append(KEY_ID)
+            .append("\":\"")
+            .append(escapeJson(id))
+            .append("\",\"")
+            .append(KEY_OK)
+            .append("\":false,\"")
+            .append(KEY_CODE)
+            .append("\":\"")
+            .append(escapeJson(code))
+            .append("\",\"")
+            .append(KEY_MESSAGE)
+            .append("\":\"")
+            .append(escapeJson(message))
             .append("\"}")
             .toString()
 
@@ -145,22 +166,30 @@ object WasmFormatterContract {
 
     /** One parsed top-level JSON value. Numbers/null/containers are "Other". */
     private sealed interface JsonValue {
-        data class Str(val value: String) : JsonValue
+        data class Str(
+            val value: String,
+        ) : JsonValue
 
-        data class Bool(val value: Boolean) : JsonValue
+        data class Bool(
+            val value: Boolean,
+        ) : JsonValue
 
         object Other : JsonValue
     }
 
     /** Internal control-flow signal of the hand-rolled scanner. Never leaks. */
-    private class MalformedJsonException(message: String) : Exception(message)
+    private class MalformedJsonException(
+        message: String,
+    ) : Exception(message)
 
     /**
      * Minimal strict JSON scanner: enough to read the flat envelope object
      * (string/boolean top-level values) and to skip anything else
      * (numbers, null, nested containers) in a string-aware, balanced way.
      */
-    private class JsonScanner(private val src: String) {
+    private class JsonScanner(
+        private val src: String,
+    ) {
         private var pos = 0
 
         fun atEnd(): Boolean = pos >= src.length

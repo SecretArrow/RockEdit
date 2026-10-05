@@ -22,7 +22,9 @@ sealed class PdfExportResult {
         val bytes: Long,
     ) : PdfExportResult()
 
-    data class Failure(val message: String) : PdfExportResult()
+    data class Failure(
+        val message: String,
+    ) : PdfExportResult()
 }
 
 /**

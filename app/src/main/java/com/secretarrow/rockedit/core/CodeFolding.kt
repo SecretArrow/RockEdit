@@ -25,9 +25,15 @@ enum class FoldErrorCode {
  *   explicitly documented otherwise (REGION_GONE pruning).
  */
 sealed class FoldResult {
-    data class Done(val text: String, val hiddenLines: Int) : FoldResult()
+    data class Done(
+        val text: String,
+        val hiddenLines: Int,
+    ) : FoldResult()
 
-    data class Failure(val code: FoldErrorCode, val message: String) : FoldResult()
+    data class Failure(
+        val code: FoldErrorCode,
+        val message: String,
+    ) : FoldResult()
 }
 
 /**
@@ -35,7 +41,10 @@ sealed class FoldResult {
  * endLine > startLine, so every range hides at least one body line. The
  * opener line (startLine) stays visible when the range is folded.
  */
-data class FoldRange(val startLine: Int, val endLine: Int)
+data class FoldRange(
+    val startLine: Int,
+    val endLine: Int,
+)
 
 /**
  * Code folding engine (backlog P0#4, v0.14.0): computes foldable line ranges,
@@ -128,7 +137,9 @@ data class FoldRange(val startLine: Int, val endLine: Int)
  * @property languageId the language id exactly as passed to the constructor
  *   (lookups normalize it by trimming and lowercasing internally).
  */
-class CodeFolding(languageId: String) {
+class CodeFolding(
+    languageId: String,
+) {
     val languageId: String = languageId
 
     private val normalizedLanguageId = languageId.trim().lowercase()
@@ -234,7 +245,10 @@ class CodeFolding(languageId: String) {
      * region matches, REGION_CONTAINS_PLACEHOLDER when the chosen region
      * holds a placeholder, TOO_MANY_FOLDS when the archive is full.
      */
-    fun foldAtLine(text: String, line: Int): FoldResult =
+    fun foldAtLine(
+        text: String,
+        line: Int,
+    ): FoldResult =
         guarded(text) { input ->
             if (input.length > MAX_TEXT_CHARS) return@guarded tooLarge(input.length)
             val lines = normalize(input).split('\n')
@@ -273,7 +287,10 @@ class CodeFolding(languageId: String) {
      * archived backing (text changed or state lost); REGION_GONE also prunes
      * archive entries that no longer occur in the text.
      */
-    fun unfoldAtLine(text: String, line: Int): FoldResult =
+    fun unfoldAtLine(
+        text: String,
+        line: Int,
+    ): FoldResult =
         guarded(text) { input ->
             if (input.length > MAX_TEXT_CHARS) return@guarded tooLarge(input.length)
             val lines = normalize(input).split('\n').toMutableList()
@@ -315,7 +332,10 @@ class CodeFolding(languageId: String) {
     // ------------------------------------------------------------ internals
 
     /** Single funnel for the documented never-throws guarantee. */
-    private inline fun guarded(text: String, op: (String) -> FoldResult): FoldResult =
+    private inline fun guarded(
+        text: String,
+        op: (String) -> FoldResult,
+    ): FoldResult =
         try {
             op(text)
         } catch (t: Throwable) {
@@ -341,10 +361,12 @@ class CodeFolding(languageId: String) {
                 "restore archive",
         )
 
-    private fun noFoldRange(detail: String): FoldResult.Failure =
-        FoldResult.Failure(FoldErrorCode.NO_FOLD_RANGE, detail)
+    private fun noFoldRange(detail: String): FoldResult.Failure = FoldResult.Failure(FoldErrorCode.NO_FOLD_RANGE, detail)
 
-    private fun containsPlaceholder(range: FoldRange, line: Int): FoldResult.Failure =
+    private fun containsPlaceholder(
+        range: FoldRange,
+        line: Int,
+    ): FoldResult.Failure =
         FoldResult.Failure(
             FoldErrorCode.REGION_CONTAINS_PLACEHOLDER,
             "fold region lines ${range.startLine}..${range.endLine} contains " +
@@ -352,28 +374,30 @@ class CodeFolding(languageId: String) {
                 "(nested folds are not supported)",
         )
 
-    private fun tooManyFolds(total: Int, requested: Int): FoldResult.Failure =
+    private fun tooManyFolds(
+        total: Int,
+        requested: Int,
+    ): FoldResult.Failure =
         FoldResult.Failure(
             FoldErrorCode.TOO_MANY_FOLDS,
             "$total active fold(s) would exceed the limit of $MAX_ACTIVE_FOLDS " +
                 "(requested $requested more); unfold some regions first",
         )
 
-    private fun notAPlaceholder(detail: String): FoldResult.Failure =
-        FoldResult.Failure(FoldErrorCode.NOT_A_PLACEHOLDER, detail)
+    private fun notAPlaceholder(detail: String): FoldResult.Failure = FoldResult.Failure(FoldErrorCode.NOT_A_PLACEHOLDER, detail)
 
-    private fun regionGone(detail: String): FoldResult.Failure =
-        FoldResult.Failure(FoldErrorCode.REGION_GONE, detail)
+    private fun regionGone(detail: String): FoldResult.Failure = FoldResult.Failure(FoldErrorCode.REGION_GONE, detail)
 
     private fun normalize(text: String): String = text.replace("\r\n", "\n")
 
-    private fun allRanges(lines: List<String>): List<FoldRange> =
-        if (usesIndentStyle) indentRanges(lines) else braceRanges(lines)
+    private fun allRanges(lines: List<String>): List<FoldRange> = if (usesIndentStyle) indentRanges(lines) else braceRanges(lines)
 
-    private fun foreignPlaceholder(lines: List<String>): String? =
-        lines.firstOrNull { isPlaceholderLine(it) && !archive.containsKey(it) }
+    private fun foreignPlaceholder(lines: List<String>): String? = lines.firstOrNull { isPlaceholderLine(it) && !archive.containsKey(it) }
 
-    private fun firstPlaceholderIn(lines: List<String>, range: FoldRange): Int {
+    private fun firstPlaceholderIn(
+        lines: List<String>,
+        range: FoldRange,
+    ): Int {
         for (i in range.startLine..range.endLine) {
             if (isPlaceholderLine(lines[i])) return i
         }
@@ -381,7 +405,10 @@ class CodeFolding(languageId: String) {
     }
 
     /** Deepest region with startLine == line (smallest endLine wins). */
-    private fun deepestStartingAt(all: List<FoldRange>, line: Int): FoldRange? {
+    private fun deepestStartingAt(
+        all: List<FoldRange>,
+        line: Int,
+    ): FoldRange? {
         var best: FoldRange? = null
         for (range in all) {
             if (range.startLine != line) continue
@@ -392,7 +419,10 @@ class CodeFolding(languageId: String) {
     }
 
     /** Deepest region with startLine < line <= endLine (max start, min end). */
-    private fun deepestContaining(all: List<FoldRange>, line: Int): FoldRange? {
+    private fun deepestContaining(
+        all: List<FoldRange>,
+        line: Int,
+    ): FoldRange? {
         var best: FoldRange? = null
         for (range in all) {
             if (range.startLine >= line || line > range.endLine) continue
@@ -421,8 +451,7 @@ class CodeFolding(languageId: String) {
         return out
     }
 
-    private fun sortedRanges(found: List<FoldRange>): List<FoldRange> =
-        found.sortedWith(compareBy({ it.startLine }, { -it.endLine }))
+    private fun sortedRanges(found: List<FoldRange>): List<FoldRange> = found.sortedWith(compareBy({ it.startLine }, { -it.endLine }))
 
     /**
      * Brace-family scan: pairs `{`/`}` with a stack while skipping strings,
@@ -582,7 +611,10 @@ class CodeFolding(languageId: String) {
      * archive key unique — unfolding then restores the exact body even for
      * sibling folds that look identical.
      */
-    private fun applyFold(lines: MutableList<String>, range: FoldRange): Int {
+    private fun applyFold(
+        lines: MutableList<String>,
+        range: FoldRange,
+    ): Int {
         val opener = lines[range.startLine]
         val body = lines.subList(range.startLine + 1, range.endLine + 1).toList()
         val base = indentOf(opener) + PLACEHOLDER_PREFIX + body.size + PLACEHOLDER_SUFFIX
@@ -684,7 +716,10 @@ class CodeFolding(languageId: String) {
             return line.substring(digitsStart, digitsStart + digitRunLength(line, digitsStart)).toIntOrNull()
         }
 
-        private fun digitRunLength(line: String, from: Int): Int {
+        private fun digitRunLength(
+            line: String,
+            from: Int,
+        ): Int {
             var k = from
             while (k < line.length && line[k] in '0'..'9') k++
             return k - from

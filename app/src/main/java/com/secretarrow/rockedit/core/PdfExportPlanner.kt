@@ -35,7 +35,9 @@ data class PdfLine(
     val segments: List<PdfSegment>,
 )
 
-data class PdfPage(val lines: List<PdfLine>)
+data class PdfPage(
+    val lines: List<PdfLine>,
+)
 
 data class PdfPlan(
     val pages: List<PdfPage>,
@@ -44,7 +46,9 @@ data class PdfPlan(
 
 /** Sealed result contract: callers cannot miss a branch. */
 sealed class PdfPlanResult {
-    data class Success(val plan: PdfPlan) : PdfPlanResult()
+    data class Success(
+        val plan: PdfPlan,
+    ) : PdfPlanResult()
 
     data class Failure(
         val code: PdfExportErrorCode,
@@ -104,8 +108,7 @@ object PdfExportPlanner {
      * Canonical normalization: `\r\n` and lone `\r` become `\n`, tabs become
      * four spaces. Tokens MUST be computed from the output of this function.
      */
-    fun preprocess(text: String): String =
-        text.replace("\r\n", "\n").replace('\r', '\n').replace("\t", "    ")
+    fun preprocess(text: String): String = text.replace("\r\n", "\n").replace('\r', '\n').replace("\t", "    ")
 
     /**
      * Plans pages for [text] (already preprocessed) using [tokens] computed
@@ -151,7 +154,14 @@ object PdfExportPlanner {
             val firstNumber = if (options.lineNumbers) index + 1 else null
             cursor =
                 appendLineChunks(
-                    flat, text, lineStart, lineEnd, firstNumber, ordered, cursor, options,
+                    flat,
+                    text,
+                    lineStart,
+                    lineEnd,
+                    firstNumber,
+                    ordered,
+                    cursor,
+                    options,
                 )
             lineStart = lineEnd + 1
         }

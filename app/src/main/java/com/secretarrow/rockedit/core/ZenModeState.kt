@@ -45,7 +45,9 @@ data class ZenSnapshot(
  */
 sealed class ZenResult {
     /** Zen was entered; [state] carries the pre-zen snapshot to restore. */
-    data class Entered(val state: ZenActive) : ZenResult()
+    data class Entered(
+        val state: ZenActive,
+    ) : ZenResult()
 
     /**
      * Zen was already active: the original [ZenActive] (and its
@@ -174,11 +176,12 @@ object ZenMode {
         tabsVisible: Boolean,
         fontSizeSp: Float,
     ): ZenSnapshot {
-        val safeFont = if (fontSizeSp.isNaN() || fontSizeSp.isInfinite()) {
-            ZenSnapshot.DEFAULT_FONT_SP
-        } else {
-            fontSizeSp.coerceIn(ZenSnapshot.MIN_FONT_SP, ZenSnapshot.MAX_FONT_SP)
-        }
+        val safeFont =
+            if (fontSizeSp.isNaN() || fontSizeSp.isInfinite()) {
+                ZenSnapshot.DEFAULT_FONT_SP
+            } else {
+                fontSizeSp.coerceIn(ZenSnapshot.MIN_FONT_SP, ZenSnapshot.MAX_FONT_SP)
+            }
         return ZenSnapshot(toolbarVisible, tabsVisible, safeFont)
     }
 }

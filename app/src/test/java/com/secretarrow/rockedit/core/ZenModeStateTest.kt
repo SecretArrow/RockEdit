@@ -16,16 +16,16 @@ import org.junit.Test
  * round trip.
  */
 class ZenModeStateTest {
-
     private fun snapshot(
         toolbar: Boolean = true,
         tabs: Boolean = true,
         font: Float = 14f,
-    ): ZenSnapshot = ZenSnapshot(
-        toolbarVisible = toolbar,
-        tabsVisible = tabs,
-        fontSizeSp = font,
-    )
+    ): ZenSnapshot =
+        ZenSnapshot(
+            toolbarVisible = toolbar,
+            tabsVisible = tabs,
+            fontSizeSp = font,
+        )
 
     private fun entered(result: ZenResult): ZenResult.Entered {
         assertTrue("expected Entered, was $result", result is ZenResult.Entered)
@@ -207,19 +207,21 @@ class ZenModeStateTest {
 
     @Test
     fun sanitizePassesVisibilityThrough() {
-        val clean = ZenMode.sanitizeSnapshot(
-            toolbarVisible = true,
-            tabsVisible = false,
-            fontSizeSp = 14f,
-        )
+        val clean =
+            ZenMode.sanitizeSnapshot(
+                toolbarVisible = true,
+                tabsVisible = false,
+                fontSizeSp = 14f,
+            )
         assertTrue(clean.toolbarVisible)
         assertFalse(clean.tabsVisible)
 
-        val flipped = ZenMode.sanitizeSnapshot(
-            toolbarVisible = false,
-            tabsVisible = true,
-            fontSizeSp = 14f,
-        )
+        val flipped =
+            ZenMode.sanitizeSnapshot(
+                toolbarVisible = false,
+                tabsVisible = true,
+                fontSizeSp = 14f,
+            )
         assertFalse(flipped.toolbarVisible)
         assertTrue(flipped.tabsVisible)
     }

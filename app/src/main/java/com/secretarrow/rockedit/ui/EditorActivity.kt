@@ -38,9 +38,9 @@ import com.secretarrow.rockedit.core.EditorConfigParser
 import com.secretarrow.rockedit.core.EditorTab
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
-import com.secretarrow.rockedit.core.FolderGrep
 import com.secretarrow.rockedit.core.FoldErrorCode
 import com.secretarrow.rockedit.core.FoldResult
+import com.secretarrow.rockedit.core.FolderGrep
 import com.secretarrow.rockedit.core.FormatError
 import com.secretarrow.rockedit.core.FormatErrorCode
 import com.secretarrow.rockedit.core.FormatOptions
@@ -1654,9 +1654,7 @@ class EditorActivity : AppCompatActivity() {
      * replace path as Format (so undo, dirty flag, gutter and highlighter
      * stay consistent), and a localized toast for every outcome.
      */
-    private fun applyFoldOperation(
-        op: (CodeFolding, String) -> FoldResult,
-    ) {
+    private fun applyFoldOperation(op: (CodeFolding, String) -> FoldResult) {
         val tab = tabManager.activeTab() ?: return
         val editable = binding.editor.text ?: return
         if (tab.readOnly) {

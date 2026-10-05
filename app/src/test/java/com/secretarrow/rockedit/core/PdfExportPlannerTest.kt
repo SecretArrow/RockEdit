@@ -23,8 +23,7 @@ class PdfExportPlannerTest {
             "kotlin must be registered in SyntaxRegistry"
         }
 
-    private fun tokenize(text: String): List<SyntaxToken> =
-        SyntaxTokenizer.tokenize(text, kotlinLanguage)
+    private fun tokenize(text: String): List<SyntaxToken> = SyntaxTokenizer.tokenize(text, kotlinLanguage)
 
     /** Runs the documented pipeline for one call: tokenize(pre) then plan(pre, tokens). */
     private fun planTok(
@@ -127,7 +126,11 @@ class PdfExportPlannerTest {
         val plan = successOf(PdfExportPlanner.plan("", emptyList(), PdfExportOptions())).plan
         assertEquals(1, plan.pages.size)
         assertEquals(1, plan.sourceLineCount)
-        val line = plan.pages.single().lines.single()
+        val line =
+            plan.pages
+                .single()
+                .lines
+                .single()
         assertEquals(1, line.number)
         assertEquals(listOf(PdfSegment("", null)), line.segments)
     }
@@ -383,7 +386,12 @@ class PdfExportPlannerTest {
         val text = (1..PdfExportPlanner.LINES_PER_PAGE).joinToString("\n") { "l$it" }
         val plan = successOf(planTok(text)).plan
         assertEquals(1, plan.pages.size)
-        assertEquals(PdfExportPlanner.LINES_PER_PAGE, plan.pages.single().lines.size)
+        assertEquals(
+            PdfExportPlanner.LINES_PER_PAGE,
+            plan.pages
+                .single()
+                .lines.size,
+        )
     }
 
     @Test
@@ -432,7 +440,12 @@ class PdfExportPlannerTest {
             (PdfExportPlanner.MAX_EXPORT_LINES + PdfExportPlanner.LINES_PER_PAGE - 1) /
                 PdfExportPlanner.LINES_PER_PAGE
         assertEquals(expectedPages, plan.pages.size)
-        assertEquals(32, plan.pages.last().lines.size)
+        assertEquals(
+            32,
+            plan.pages
+                .last()
+                .lines.size,
+        )
     }
 
     // -------------------------------------------------------- token guards
