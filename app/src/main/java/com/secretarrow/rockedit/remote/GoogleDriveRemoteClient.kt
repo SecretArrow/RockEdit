@@ -2,10 +2,12 @@ package com.secretarrow.rockedit.remote
 
 import com.secretarrow.rockedit.core.CloudAuth
 import com.secretarrow.rockedit.core.CloudHttp
+import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.net.URLEncoder
 

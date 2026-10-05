@@ -77,7 +77,7 @@ dependencies {
     implementation("com.github.albfernandez:juniversalchardet:2.5.0")
     // Storage Manager (v0.6.0): FTP/FTPS + SFTP. WebDAV is dependency-free.
     implementation("commons-net:commons-net:3.11.0")
-    implementation("com.github.mjdev:libaums:0.7.3")
+    implementation("com.github.mjdev:libaums:0.7.4")
     implementation("com.hierynomus:sshj:0.38.0")
 
     testImplementation("junit:junit:4.13.2")

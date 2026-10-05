@@ -6,6 +6,7 @@ import com.github.mjdev.libaums.fs.UsbFileInputStream
 import com.github.mjdev.libaums.fs.UsbFileOutputStream
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
+import com.secretarrow.rockedit.core.UsbOtgLogic
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 
@@ -22,7 +23,7 @@ class LibAumsVolumeFs(
     override fun listFiles(dirPath: String): List<RemoteFile> {
         val folder = resolve(dirPath)
         if (!folder.isDirectory) throw FileNotFoundException("'$dirPath' is not a folder on the USB volume")
-        val children = folder.listFiles() ?: return emptyList()
+        val children = folder.list() ?: return emptyList()
         val out = ArrayList<RemoteFile>(children.size)
         for (child in children) {
             val name = child.name ?: continue
@@ -32,7 +33,7 @@ class LibAumsVolumeFs(
                     name = name,
                     path = RemotePath.child(dirPath, name),
                     isFolder = child.isDirectory,
-                    size = if (child.isDirectory) -1 else child.length(),
+                    size = if (child.isDirectory) -1 else child.length,
                 ),
             )
         }
@@ -102,7 +103,7 @@ class LibAumsVolumeFs(
         folder: UsbFile,
         name: String,
     ): UsbFile? {
-        val children = folder.listFiles() ?: return null
+        val children = folder.list() ?: return null
         for (child in children) {
             if (child.name == name) return child
         }

@@ -7,6 +7,7 @@ import com.secretarrow.rockedit.core.OAuthTokenExchanger
 import com.secretarrow.rockedit.core.OAuthTokenStore
 import com.secretarrow.rockedit.core.RemoteClient
 import com.secretarrow.rockedit.core.RemoteConnection
+import com.secretarrow.rockedit.core.RemoteType
 import com.secretarrow.rockedit.core.StoreBackedCloudAuth
 
 /**

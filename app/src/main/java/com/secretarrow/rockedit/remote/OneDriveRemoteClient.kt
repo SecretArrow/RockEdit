@@ -3,6 +3,7 @@ package com.secretarrow.rockedit.remote
 import com.secretarrow.rockedit.core.CloudAuth
 import com.secretarrow.rockedit.core.CloudHttp
 import com.secretarrow.rockedit.core.CloudResponse
+import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteFile
 import com.secretarrow.rockedit.core.RemotePath
 import org.json.JSONObject

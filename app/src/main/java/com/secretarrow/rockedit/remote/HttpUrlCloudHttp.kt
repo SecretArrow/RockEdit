@@ -49,7 +49,11 @@ class HttpUrlCloudHttp(
                 } else {
                     stream.use { readCapped(it, MAX_BODY_BYTES) }
                 }
-            val headersOut = conn.headerFields.filterKeys { it != null }.mapKeys { it.key as String }
+            val headersOut =
+                conn.headerFields
+                    .filterKeys { it != null }
+                    .mapKeys { it.key as String }
+                    .mapValues { it.value.joinToString(",") }
             return CloudResponse(code, headersOut, bytes)
         } finally {
             conn.disconnect()

@@ -74,7 +74,7 @@ object UsbOtgSupport {
             throw IllegalStateException("initializing the USB device failed: ${UsbOtgLogic.describeError(e)}")
         }
         val fileSystem =
-            usbDevice.volumes.firstOrNull()?.fileSystem
+            usbDevice.partitions.firstOrNull()?.fileSystem
                 ?: run {
                     try {
                         usbDevice.close()
