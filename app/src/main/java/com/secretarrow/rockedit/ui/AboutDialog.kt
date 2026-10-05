@@ -65,12 +65,12 @@ object AboutDialog {
                     .setTitle(R.string.about_title)
                     .setMessage(
                         AboutInfo.creditLine(activity.getString(R.string.about_creator_label)) +
-                            "\n" + AboutInfo.titleLine(
-                            activity.getString(R.string.app_name),
-                            BuildConfig.VERSION_NAME,
-                        ),
-                    )
-                    .setPositiveButton(android.R.string.ok, null)
+                            "\n" +
+                            AboutInfo.titleLine(
+                                activity.getString(R.string.app_name),
+                                BuildConfig.VERSION_NAME,
+                            ),
+                    ).setPositiveButton(android.R.string.ok, null)
                     .show()
             }.getOrNull()
         }
