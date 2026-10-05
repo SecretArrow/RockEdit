@@ -197,9 +197,12 @@ object CodeStatistics {
                 }
             }
             // Trailing whitespace applies to EVERY non-blank line (code and
-            // comment-only alike) per the KDoc definition.
-            val last = line[n - 1]
-            if (totalNonWs > 0 && (last == ' ' || last == '\t')) trailingWhitespaceLines++
+            // comment-only alike) per the KDoc definition. The guard also
+            // protects the index: empty lines have no last character.
+            if (totalNonWs > 0) {
+                val last = line[n - 1]
+                if (last == ' ' || last == '\t') trailingWhitespaceLines++
+            }
         }
 
         val lineCount = lines.size
