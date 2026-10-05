@@ -6,6 +6,7 @@ import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matchers.containsString
@@ -25,13 +26,8 @@ class AboutE2eTest {
         openActionBarOverflowOrOptionsMenu(
             InstrumentationRegistry.getInstrumentation().targetContext,
         )
-        onView(withTextId(R.string.about)).perform(click())
-        onView(withId(R.id.about_creator)).check(matches(withTextContains("Maragung")))
+        onView(withText(R.string.about)).perform(click())
+        // withText(Matcher<String>) wraps the string matcher into a View matcher.
+        onView(withId(R.id.about_creator)).check(matches(withText(containsString("Maragung"))))
     }
-
-    private fun withTextId(id: Int) =
-        androidx.test.espresso.matcher.ViewMatchers
-            .withText(id)
-
-    private fun withTextContains(text: String) = org.hamcrest.Matchers.containsString(text)
 }
