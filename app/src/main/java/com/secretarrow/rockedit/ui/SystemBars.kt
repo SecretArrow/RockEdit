@@ -53,7 +53,10 @@ object SystemBars {
      * Takes [ComponentActivity] because enableEdgeToEdge is defined on it;
      * every Rock Edit screen is an AppCompatActivity, which qualifies.
      */
-    fun install(activity: ComponentActivity, root: View) {
+    fun install(
+        activity: ComponentActivity,
+        root: View,
+    ) {
         activity.enableEdgeToEdge()
         val baseLeft = root.paddingLeft
         val baseTop = root.paddingTop
@@ -79,7 +82,10 @@ object SystemBars {
      * read from the effective configuration so it also reacts to the app's
      * light/dark/AMOLED setting, not just the system toggle.
      */
-    private fun applyIconAppearance(activity: Activity, root: View) {
+    private fun applyIconAppearance(
+        activity: Activity,
+        root: View,
+    ) {
         val window = activity.window
         val nightMode =
             activity.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
