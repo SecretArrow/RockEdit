@@ -1,5 +1,6 @@
 package com.secretarrow.rockedit.core
 
+import com.secretarrow.rockedit.remote.FakeCloudHttp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
