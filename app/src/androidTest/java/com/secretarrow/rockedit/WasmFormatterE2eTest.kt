@@ -115,7 +115,9 @@ class WasmFormatterE2eTest {
     @Test
     fun wasmHostFormatsJavaScriptDirectly() {
         val formatter =
-            WasmCodeFormatter { payload, budgetMs -> WasmFormatterHost.launch(payload, budgetMs) }
+            WasmCodeFormatter(
+                launchHost = { payload, budgetMs -> WasmFormatterHost.launch(payload, budgetMs) },
+            )
         val holder = AtomicReference<FormatResult?>(null)
         // launch() blocks on latches — never run it on the test main thread.
         val worker =
