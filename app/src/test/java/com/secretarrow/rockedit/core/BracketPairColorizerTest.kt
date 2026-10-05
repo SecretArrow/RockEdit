@@ -25,7 +25,7 @@ class BracketPairColorizerTest {
         // Code brackets only: ( ) at 2/3, { at 5, } at 23; the pair inside the
         // string literal is ignored.
         assertEquals(listOf(2, 3, 5, 23), offsets(result))
-        assertEquals(listOf(1, 1, 2, 1), depths(result))
+        assertEquals(listOf(1, 1, 1, 1), depths(result))
     }
 
     @Test
@@ -44,7 +44,7 @@ class BracketPairColorizerTest {
     fun `brackets inside block comments are ignored and scanner resumes`() {
         val result = BracketPairColorizer.colorize("/* ( [ ) */ y{z}")
         // Comment content ignored; scanning resumes after the comment.
-        assertEquals(listOf(12, 14), offsets(result))
+        assertEquals(listOf(13, 15), offsets(result))
     }
 
     @Test
