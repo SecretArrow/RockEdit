@@ -646,12 +646,13 @@ check("crlfIsNormalizedToLf",
       f.unfold_all(folded[1]) == ("DONE", text.replace("\r\n", "\n"), 4))
 f = CodeFolding("python")
 first_fold = f.fold_at_line(PYTHON_TWO_DEFS, 0)
+count_after_first = f.active_fold_count()
 second_fold = f.fold_at_line(first_fold[1], 3)
+count_after_second = f.active_fold_count()
 restored_all = f.unfold_all(first_fold[1])
 check("activeFoldCountTracksArchive",
-      f.active_fold_count() == 0 and
-      first_fold[0] == "DONE" and f.active_fold_count() == 1 and
-      second_fold[0] == "DONE" and f.active_fold_count() == 2 and
+      first_fold[0] == "DONE" and count_after_first == 1 and
+      second_fold[0] == "DONE" and count_after_second == 2 and
       restored_all == ("DONE", PYTHON_TWO_DEFS, 2) and f.active_fold_count() == 0)
 f = CodeFolding("python")
 folded = f.fold_all("def a():\n    x = 1\n    y = 2\n")[1]
