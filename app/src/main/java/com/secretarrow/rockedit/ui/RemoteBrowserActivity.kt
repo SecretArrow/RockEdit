@@ -14,8 +14,10 @@ import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.FolderSort
 import com.secretarrow.rockedit.core.RemoteClient
 import com.secretarrow.rockedit.core.RemotePath
+import com.secretarrow.rockedit.core.UsbOtgLogic
 import com.secretarrow.rockedit.databinding.ActivityRemoteBrowserBinding
-import com.secretarrow.rockedit.remote.RemoteClientFactory
+import com.secretarrow.rockedit.remote.RemoteClients
+import com.secretarrow.rockedit.remote.UsbOtgSupport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -45,16 +47,22 @@ class RemoteBrowserActivity : AppCompatActivity() {
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         connectionId = intent.getLongExtra(EXTRA_CONNECTION_ID, -1L)
+        val usbSession = connectionId == UsbOtgLogic.SENTINEL_CONNECTION_ID
         val connection = App.remoteConnections(this).find(connectionId)
-        if (connection == null) {
+        if (connection == null && !usbSession) {
             Toast.makeText(this, R.string.open_failed, Toast.LENGTH_SHORT).show()
             finish()
             return
         }
-        supportActionBar?.title = connection.name
+        supportActionBar?.title =
+            if (usbSession) {
+                UsbOtgSupport.Session.label.ifEmpty { getString(R.string.storage_usb_section) }
+            } else {
+                connection?.name.orEmpty()
+            }
         path =
             RemotePath.normalize(
-                savedInstanceState?.getString(STATE_PATH) ?: connection.initialPath,
+                savedInstanceState?.getString(STATE_PATH) ?: connection?.initialPath ?: "/",
             )
 
         adapter =
@@ -133,10 +141,9 @@ class RemoteBrowserActivity : AppCompatActivity() {
     }
 
     private suspend fun client(): com.secretarrow.rockedit.core.RemoteClient? {
-        val connection =
-            App.remoteConnections(this).find(connectionId)
-                ?: return null
-        return withContext(Dispatchers.IO) { RemoteClientFactory.create(connection) }
+        return withContext(Dispatchers.IO) {
+            RemoteClients.open(this@RemoteBrowserActivity, connectionId)
+        }
     }
 
     private fun refresh() {

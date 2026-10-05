@@ -228,6 +228,8 @@ Halaman untuk mengelola koneksi remote; tombol FAB untuk menambah koneksi. **Tip
 
 Operasi file di storage remote **identik dengan file lokal** (buka, edit, simpan, save as, rename, delete, bookmark).
 
+**Status implementasi Rock Edit (v0.15.0):** FTP/FTPS/SFTP/WebDAV/GitHub/GitLab terkoneksi penuh; **Google Drive/Dropbox/OneDrive via OAuth** dengan prinsip "klien OAuth milik pengguna" (tanpa client ID bawaan — lebih ketat dari referensi), access/refresh token terenkripsi Android Keystore dan refresh otomatis; **USB OTG** (volume FAT pertama via libaums) terbuka dari Storage Manager dengan alur izin USB standar.
+
 ### 4.5 Bookmarks & Recent Files
 
 **Bookmarks** *(ref v1.3.0)*:
@@ -349,7 +351,7 @@ Prioritas P0 (nilai tinggi, biaya rendah, tetap offline):
 1. **Paket Utilitas Teks** (✅ v0.11.0) — Base64/URL/HTML-entity encode-decode, hash MD5/SHA-1/SHA-256, transform case (camel/snake/kebab), sort/dedupe/reverse baris, JSON escape/unescape. Murni Kotlin (`core/TextUtilities.kt`), 5 pengurai dengan error berposisi, bekerja pada seleksi atau dokumen penuh, hasil masuk undo stack.
 2. **Pencarian multi-file (grep folder)** (✅ v0.11.0) — regex/literal di seluruh pohon SAF folder (batas kedalaman/jumlah/ukuran, lewati biner, penanda terpotong), hasil dapat diklik untuk membuka file; core murni `core/FolderGrep.kt` + `ui/GrepActivity.kt`.
 3. **Regex tester interaktif** (✅ v0.11.0) — live match & capture group dengan offset, ignore-case/multiline/dotall, proteksi zero-length match, timeout; hanya-baca (`core/RegexTester.kt`).
-4. **Code folding** (✅ v0.14.0) — lipat/bentangkan blok dari menu editor (`core/CodeFolding.kt` murni Kotlin): profil kurung `{}` sadar string/char/multiline-string/komentar untuk keluarga C/Java/JS/Rust/protobuf dkk., profil **indentasi** untuk Python/Vyper/Ruby/Lua/Elixir/Julia/LaTeX; lipat semua, bentangkan semua, lipat/bentangkan di kursor; body diganti placeholder `⟦⋯ N ⟧` (ordinal `#k` saat jumlah baris sama — kunci arsip selalu unik, body tak pernah tertukar); hasil masuk undo stack; batas 1 juta karakter & 256 lipatan aktif; lipatan bertingkat ditolak informatif; placeholder asing terdeteksi (PLACEHOLDER_AMBIGUOUS). Sisa item (warna kurung berpasangan) tetap ditunda: butuh perombakan editor view.
+4. **Code folding** (✅ v0.14.0) — lipat/bentangkan blok dari menu editor (`core/CodeFolding.kt` murni Kotlin): profil kurung `{}` sadar string/char/multiline-string/komentar untuk keluarga C/Java/JS/Rust/protobuf dkk., profil **indentasi** untuk Python/Vyper/Ruby/Lua/Elixir/Julia/LaTeX; lipat semua, bentangkan semua, lipat/bentangkan di kursor; body diganti placeholder `⟦⋯ N ⟧` (ordinal `#k` saat jumlah baris sama — kunci arsip selalu unik, body tak pernah tertukar); hasil masuk undo stack; batas 1 juta karakter & 256 lipatan aktif; lipatan bertingkat ditolak informatif; placeholder asing terdeteksi (PLACEHOLDER_AMBIGUOUS). Sisa item (warna kurung berpasangan) selesai di v0.15.0 — lihat 4.14.
 5. **Preview warna CSS/HTML/XML** (✅ v0.11.0) — ekstraksi `#hex`/`rgb()/rgba()/hsl()/hsla()` + 148 nama warna CSS (`core/ColorExtractor.kt`); dialog swatch, tap melompat ke kemunculan.
 6. **Format-on-save + dukungan `.editorconfig`** (✅ v0.11.0) — toggle per aplikasi (default mati); `core/EditorConfigParser.kt` membaca subset `indent_style/indent_size/tab_width/end_of_line/trim_trailing_whitespace/insert_final_newline` dari `.editorconfig` di folder file (glob exact/`*`/`?`, merge last-wins) dan mengganti `FormatOptions` otomatis; seluruh jalur fail-safe.
 7. **Format seleksi** (✅ v0.11.0) — format hanya blok terpilih dengan mode lenient, tanpa final newline tambahan; re-indent seragam dari indentasi baris pertama; sinkron dengan undo stack.
@@ -389,6 +391,14 @@ Empat fitur terakhir dari backlog §4.12, dengan templat defensive programming y
 4. **Mode zen** (`core/ZenModeState.kt`) — state machine immutable: enter idempoten (rotasi tidak menimpa snapshot asli), exit memulihkan persis, clamp font 8–40sp, NaN/Infinity → default 14sp; integrasi EditorActivity: toolbar+tab disembunyikan, editor & gutter diskalakan bersama, Back keluar zen dulu. 23 tes.
 
 Kontrak tetap: tanpa izin baru, tanpa jaringan (prettier dibundel; WebView memuat aset lokal saja), seluruh pesan galat terlokalisasi (strings_v014*.xml EN/ID), lisensi prettier MIT dicantumkan di layar Lisensi. Total unit test kini 800+; sisa backlog: bracket pair colorization, ekspor gambar, charset lab, TextMate kustom, statistik kode, panel ganda tablet.
+
+### 4.14 Bracket Colors, Cloud OAuth & USB OTG (v0.15.0 — selesai)
+
+1. **Bracket pair colorization** (`core/BracketPairColorizer.kt`, murni Kotlin) — kurung `( ) [ ] { }` berwarna per kedalaman bersarang (palet 4 warna, terang/gelap/AMOLED), sadar string/char/komentar baris & blok; string tak tertutup di-reset per baris (fail-safe), kurung tak berpasangan di-clamp agar tak pernah negatif; toggle di Settings (default nyala); dijalankan dalam pipeline re-highlight dengan batas 150 ribu karakter. 15 tes cabang.
+2. **Cloud OAuth (Google Drive / Dropbox / OneDrive)** — tanpa client ID bawaan (privasi/FOSS): pengguna mendaftarkan klien sendiri, dialog menyediakan generator URL otorisasi + tempel kode; penukaran token via endpoint resmi (`core/OAuthTokenExchanger.kt`, semua kegagalan HTTP/JSON/jaringan berkode informatif), penyimpanan access/refresh token **terenkripsi** (`core/OAuthTokenStore.kt`), refresh otomatis dengan pelestarian refresh token lama (`core/StoreBackedCloudAuth.kt`). Transport: `GoogleDriveRemoteClient` (resolusi path→id ber-cache, multipart upload, PATCH saat file ada), `DropboxRemoteClient` (API v2, paging `has_more` dibatasi, konflik mkdir no-op-safe), `OneDriveRemoteClient` (Graph, redirect pre-authenticated diikuti **tanpa** Authorization). Hapus koneksi = hapus token. Bukti lengkap: `docs/CLOUD_USB_BRACKETS.md`.
+3. **USB OTG** — perangkat mass-storage terdeteksi (device/interface class 0x08), izin USB standar, volume FAT pertama dibuka via libaums 0.7.3 (`remote/LibAumsVolumeFs.kt`); file dijelajahi lewat browser remote (sentinel id) dan dibuka ke editor dengan undo/tab/encoding penuh; logika murni diuji tanpa hardware (`core/UsbOtgLogic.kt` + `remote/UsbOtgRemoteClient.kt`, 13 tes); verifikasi perangkat fisik tetap langkah manual pra-rilis.
+
+Semua fitur mengikuti template defensive programming (pemetaan kasus → kode tanpa jalur mati → tabel kasus → tes per cabang → asumsi eksplisit) dan tanpa izin baru yang berbahaya (USB memakai alur izin runtime bawaan Android).
 
 ---
 

@@ -6,9 +6,41 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased]
 
 ### Planned
-- Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
-- USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
-- Bracket pair colorization: butuh perombakan tampilan editor (sisa backlog item 4)
+- Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
+- Sesi OAuth via browser in-app (loopback server) sebagai alternatif alur tempel-kode
+
+## [0.15.0] - 2026-10-05
+
+### Added
+- **Bracket pair colorization** (backlog item 4 — selesai): kurung `( ) [ ] { }`
+  diberi warna sesuai kedalaman bersarang (palet 4 warna, varian terang/gelap),
+  sadar string/char/komentar, toggle di Settings; murni Kotlin
+  (`core/BracketPairColorizer.kt`) dengan 15 tes cabang.
+- **Cloud OAuth** (backlog Cloud OAuth — selesai): koneksi **Google Drive**,
+  **Dropbox**, dan **OneDrive** di Storage Manager (`RemoteType` baru). Tanpa
+  client ID bawaan — pengguna mendaftarkan klien OAuth-nya sendiri (privasi,
+  FOSS): dialog menghasilkan URL otorisasi, kode ditukar token via endpoint
+  resmi (`core/OAuthTokenExchanger.kt`), access/refresh token tersimpan
+  **terenkripsi** (`core/OAuthTokenStore.kt`, Android Keystore), refresh
+  otomatis saat kedaluwarsa (`core/StoreBackedCloudAuth.kt`). Klien transport
+  `GoogleDriveRemoteClient` (resolusi path→id + cache), `DropboxRemoteClient`
+  (API v2 + paging `has_more`), `OneDriveRemoteClient` (Graph, ikuti redirect
+  pre-authenticated **tanpa** membocorkan Authorization). Semua cabang
+  defensif ter-tes (HTTP error, JSON rusak, field hilang, konflik, paging,
+  redirect).
+- **USB OTG** (backlog USB OTG — selesai): perangkat mass-storage yang
+  terpasang tampil di Storage Manager; izin USB → volume FAT dibuka via
+  libaums 0.7.3 (`remote/LibAumsVolumeFs.kt`), file dijelajahi lewat browser
+  remote dengan sentinel id, buka file langsung ke editor (undo, tab,
+  encoding bekerja seperti file lokal). Logika murni di `core/UsbOtgLogic.kt`
+  + `remote/UsbOtgRemoteClient.kt` (13 tes).
+- Simpan koneksi kini memvalidasi sebelum menutup dialog — input tidak pernah
+  hilang pada jalur galat (host/klien kosong, otorisasi gagal).
+
+### Changed
+- Koneksi cloud menyimpan `client_id` (polos) dan `client_secret`
+  (terenkripsi); JSON lama tetap terbaca (kolom opsional).
+- Menambahkan repositori JitPack untuk dependensi libaums.
 
 ## [0.14.1] - 2026-10-05
 

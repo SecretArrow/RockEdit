@@ -8,7 +8,7 @@
 terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
 menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.14.1)
+## Fitur (v0.15.0)
 
 - Buka & simpan file teks apa pun lewat Storage Access Framework (tanpa izin storage!)
 - **Editor multi-tab** (maks 10): indikator perubahan, tutup per tab / tutup lainnya,
@@ -22,6 +22,8 @@ menghubungkan layanan (Storage Manager / eksekusi daring).
   terang/gelap/AMOLED
 - **Buka ulang dengan encoding** & **simpan dengan encoding** (UTF-8/16/32, Shift_JIS, GBK,
   Big5, EUC-KR, dan lainnya) di atas deteksi otomatis
+- **Cloud & USB (v0.15.0)**: Google Drive / Dropbox / OneDrive via OAuth klien Anda sendiri (token terenkripsi) + akses USB OTG (FAT) — semua lewat Storage Manager
+- **Warna pasangan kurung (v0.15.0)**: kurung berwarna per kedalaman bersarang, sadar string/komentar
 - **Code Formatter** (v0.10.0 — semua bahasa utama + smart contract, 100% offline):
   JSON (angka verbatim, error berposisi), XML/SVG (proteksi XXE berlapis), CSS
   (string & data-URI aman), **C-family + smart contract** (Solidity, Move, Cairo,

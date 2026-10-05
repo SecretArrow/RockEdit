@@ -96,6 +96,11 @@ class SettingsRepository(
         get() = kv.getBoolean(KEY_ONLINE_EXECUTION, false)
         set(value) = kv.putBoolean(KEY_ONLINE_EXECUTION, value)
 
+    /** v0.15.0: colorize matching bracket pairs by nesting depth. */
+    var bracketPairColors: Boolean
+        get() = kv.getBoolean(KEY_BRACKET_PAIR_COLORS, true)
+        set(value) = kv.putBoolean(KEY_BRACKET_PAIR_COLORS, value)
+
     /** v0.11.0: run the Code Formatter automatically before every save. */
     var formatOnSave: Boolean
         get() = kv.getBoolean(KEY_FORMAT_ON_SAVE, false)
@@ -116,6 +121,7 @@ class SettingsRepository(
         const val KEY_LAST_FOLDER_URI = "last_folder_uri"
         const val KEY_ONLINE_EXECUTION = "online_execution"
         const val KEY_FORMAT_ON_SAVE = "format_on_save"
+        const val KEY_BRACKET_PAIR_COLORS = "bracket_pair_colors"
 
         const val DEFAULT_FONT_SIZE = "14"
 

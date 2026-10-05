@@ -106,4 +106,21 @@
     <string name="format_error_parse_line">Invalid syntax at line %1$d</string>
     <string name="format_error_timeout">Formatting took too long</string>
     <string name="format_error_generic">Formatting failed</string>
+    <string name="pref_bracket_colors">Warnai pasangan kurung</string>
+    <string name="pref_bracket_colors_summary">Kurung ( ) [ ] { } diberi warna berdasarkan kedalaman bersarang</string>
+    <string name="storage_client_id">OAuth client ID</string>
+    <string name="storage_client_secret">OAuth client secret (Dropbox)</string>
+    <string name="storage_oauth_help">Buat OAuth client Anda sendiri di console provider (redirect: http://127.0.0.1 untuk Drive/Dropbox, http://localhost untuk OneDrive), lalu salin URL otorisasi di bawah, buka di browser, dan tempel kodenya.</string>
+    <string name="storage_oauth_copy_url">Salin URL otorisasi</string>
+    <string name="storage_oauth_code_hint">Kode otorisasi atau refresh token</string>
+    <string name="storage_oauth_need_client_id">Isi client ID terlebih dahulu</string>
+    <string name="storage_oauth_copied">URL otorisasi disalin ke papan klip</string>
+    <string name="storage_oauth_connecting">Menukar kode dengan token…</string>
+    <string name="storage_oauth_saved">Terhubung ke %s</string>
+    <string name="storage_oauth_failed">Otorisasi gagal: </string>
+    <string name="storage_cloud_path_hint">Folder awal (mis. /Documents)</string>
+    <string name="storage_usb_section">USB OTG: %s — ketuk untuk membuka</string>
+    <string name="storage_usb_fallback">perangkat USB</string>
+    <string name="storage_usb_permission_denied">Izin USB tidak diberikan</string>
+    <string name="storage_usb_open_failed">Gagal membuka USB: </string>
 </resources>

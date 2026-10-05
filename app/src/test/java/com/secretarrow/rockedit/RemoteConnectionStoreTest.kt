@@ -6,6 +6,7 @@ import com.secretarrow.rockedit.core.RemoteConnection
 import com.secretarrow.rockedit.core.RemoteConnectionStore
 import com.secretarrow.rockedit.core.RemotePath
 import com.secretarrow.rockedit.core.RemoteType
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -139,5 +140,41 @@ class RemoteConnectionStoreTest {
         val kv = InMemoryKeyValueStore()
         kv.putString(RemoteConnectionStore.KEY, "{{{not json")
         assertTrue(RemoteConnectionStore(kv, PlainEncryptor).list().isEmpty())
+    }
+
+    @Test
+    fun cloudFieldsRoundTripWithEncryptedSecret() {
+        val kv = InMemoryKeyValueStore()
+        val store = RemoteConnectionStore(kv, PlainEncryptor)
+        val cloud =
+            RemoteConnection(5L, "drive", RemoteType.GOOGLE_DRIVE, "", 443, "me@x", "", clientId = "cid-1", clientSecret = "SECRET-9")
+        store.save(cloud)
+        val loaded = store.find(5L)!!
+        assertEquals("cid-1", loaded.clientId)
+        assertEquals("SECRET-9", loaded.clientSecret)
+        val raw = kv.getString(RemoteConnectionStore.KEY, null).orEmpty()
+        assertTrue(raw.contains("plain:SECRET-9"))
+        assertFalse(raw.contains("\"client_secret\":\"SECRET-9\""))
+    }
+
+    @Test
+    fun legacyJsonWithoutCloudFieldsStillParses() {
+        val kv = InMemoryKeyValueStore()
+        kv.putString(
+            RemoteConnectionStore.KEY,
+            """[{"id":9,"name":"old","type":"FTP","host":"h","port":21,"user":"u","password":"","path":"/"}]""",
+        )
+        val store = RemoteConnectionStore(kv, PlainEncryptor)
+        val c = store.find(9L)!!
+        assertEquals("", c.clientId)
+        assertEquals("", c.clientSecret)
+        assertEquals(RemoteType.FTP, c.type)
+    }
+
+    @Test
+    fun cloudTypesResolveDefaultPort443() {
+        assertEquals(443, RemotePath.resolvePort(RemoteType.GOOGLE_DRIVE, 0))
+        assertEquals(443, RemotePath.resolvePort(RemoteType.DROPBOX, 0))
+        assertEquals(443, RemotePath.resolvePort(RemoteType.ONEDRIVE, 0))
     }
 }

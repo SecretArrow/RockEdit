@@ -14,12 +14,19 @@ enum class RemoteType(
     WEBDAV(80, "WebDAV"),
     GITHUB(443, "GitHub (PAT)"),
     GITLAB(443, "GitLab (PAT)"),
+    GOOGLE_DRIVE(443, "Google Drive (OAuth)"),
+    DROPBOX(443, "Dropbox (OAuth)"),
+    ONEDRIVE(443, "OneDrive (OAuth)"),
+    USB_OTG(0, "USB OTG"),
 }
 
 /**
  * One saved remote connection. The password is stored as an encrypted blob
  * (see [RemoteConnectionStore]); this class always carries it decrypted.
- * Pure JVM class.
+ *
+ * v0.15.0 cloud connections reuse this model: [host] is unused for OAuth
+ * types, [clientId] holds the user's OAuth client id and [clientSecret] the
+ * (optional) provider secret — stored encrypted like [password]. Pure JVM.
  */
 data class RemoteConnection(
     val id: Long,
@@ -30,6 +37,8 @@ data class RemoteConnection(
     val user: String,
     val password: String,
     val initialPath: String = "/",
+    val clientId: String = "",
+    val clientSecret: String = "",
 ) {
     companion object {
         fun newId(): Long = System.currentTimeMillis()
@@ -133,6 +142,7 @@ class RemoteConnectionStore(
         val encrypted =
             normalized.copy(
                 password = if (normalized.password.isEmpty()) "" else encryptor.encrypt(normalized.password),
+                clientSecret = if (normalized.clientSecret.isEmpty()) "" else encryptor.encrypt(normalized.clientSecret),
             )
         val current = list().toMutableList()
         val idx = current.indexOfFirst { it.id == connection.id }
@@ -149,14 +159,14 @@ class RemoteConnectionStore(
     }
 
     /** Returns the decrypted connection or null. */
-    fun find(id: Long): RemoteConnection? = list().firstOrNull { it.id == id }?.let { it.copy(password = decryptPassword(it)) }
+    fun find(id: Long): RemoteConnection? = list().firstOrNull { it.id == id }?.let { it.copy(password = decryptPassword(it.password), clientSecret = decryptPassword(it.clientSecret)) }
 
-    private fun decryptPassword(encryptedConnection: RemoteConnection): String =
-        if (encryptedConnection.password.isEmpty()) {
+    private fun decryptPassword(cipher: String): String =
+        if (cipher.isEmpty()) {
             ""
         } else {
             try {
-                encryptor.decrypt(encryptedConnection.password)
+                encryptor.decrypt(cipher)
             } catch (_: Exception) {
                 ""
             }
@@ -174,6 +184,8 @@ class RemoteConnectionStore(
                     .put(F_PORT, c.port)
                     .put(F_USER, c.user)
                     .put(F_PASSWORD, c.password)
+                    .put(F_CLIENT_ID, c.clientId)
+                    .put(F_CLIENT_SECRET, c.clientSecret)
                     .put(F_PATH, c.initialPath),
             )
         }
@@ -197,6 +209,8 @@ class RemoteConnectionStore(
                     user = o.optString(F_USER),
                     password = o.optString(F_PASSWORD),
                     initialPath = RemotePath.normalize(o.optString(F_PATH, "/")),
+                    clientId = o.optString(F_CLIENT_ID, ""),
+                    clientSecret = o.optString(F_CLIENT_SECRET, ""),
                 )
             }
         } catch (_: Exception) {
@@ -214,6 +228,8 @@ class RemoteConnectionStore(
         private const val F_USER = "user"
         private const val F_PASSWORD = "password"
         private const val F_PATH = "path"
+        private const val F_CLIENT_ID = "client_id"
+        private const val F_CLIENT_SECRET = "client_secret"
     }
 }
 

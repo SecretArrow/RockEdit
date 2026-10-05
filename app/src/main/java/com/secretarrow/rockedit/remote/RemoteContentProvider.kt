@@ -7,7 +7,6 @@ import android.database.MatrixCursor
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
-import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.FileNames
 import java.io.File
 
@@ -57,8 +56,7 @@ class RemoteContentProvider : ContentProvider() {
         mode: String,
     ): ParcelFileDescriptor? {
         val context = context ?: return null
-        val connection = App.remoteConnections(context).find(connectionId(uri)) ?: return null
-        val client = RemoteClientFactory.create(connection)
+        val client = RemoteClients.open(context, connectionId(uri)) ?: return null
         val target = remotePath(uri)
         val writeMode = mode.contains('w')
 

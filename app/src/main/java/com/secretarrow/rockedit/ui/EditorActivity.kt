@@ -211,6 +211,7 @@ class EditorActivity : AppCompatActivity() {
         }
         syntaxOn = settings.syntaxHighlight
         highlighter.setEnabled(syntaxOn)
+        highlighter.setBracketColors(settings.bracketPairColors)
         applyWordWrap(settings.wordWrap)
         val fontSp = settings.fontSizeSp
         binding.editor.textSize = fontSp.toFloat()

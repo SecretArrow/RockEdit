@@ -12,6 +12,18 @@
         android:background="?attr/colorSurface"
         app:title="@string/storage_manager" />
 
+    <TextView
+        android:id="@+id/usb_section"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurfaceVariant"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="14dp"
+        android:text="@string/storage_usb_section"
+        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:visibility="gone" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/connections"
         android:layout_width="match_parent"

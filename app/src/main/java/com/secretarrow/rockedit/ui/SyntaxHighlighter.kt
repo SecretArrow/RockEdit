@@ -7,6 +7,7 @@ import android.text.style.ForegroundColorSpan
 import android.widget.EditText
 import androidx.core.content.ContextCompat
 import com.secretarrow.rockedit.R
+import com.secretarrow.rockedit.core.BracketPairColorizer
 import com.secretarrow.rockedit.core.SyntaxLanguage
 import com.secretarrow.rockedit.core.SyntaxTokenType
 import com.secretarrow.rockedit.core.SyntaxTokenizer
@@ -25,6 +26,15 @@ class SyntaxHighlighter(
     private val applyRunnable = Runnable { applyNow() }
     private var language: SyntaxLanguage? = null
     private var enabled = true
+
+    /** v0.15.0: bracket pair colorization toggle (default on). */
+    private var bracketColors = true
+
+    fun setBracketColors(value: Boolean) {
+        if (bracketColors == value) return
+        bracketColors = value
+        if (enabled) rehighlightNow()
+    }
 
     fun setLanguage(value: SyntaxLanguage?) {
         language = value
@@ -71,6 +81,24 @@ class SyntaxHighlighter(
                 Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
         }
+        if (bracketColors) applyBracketColors(editable, text)
+    }
+
+    /** v0.15.0: paints bracket characters by nesting depth (fail-safe). */
+    private fun applyBracketColors(
+        editable: android.text.Editable,
+        text: String,
+    ) {
+        for (bracket in BracketPairColorizer.colorize(text)) {
+            val index = BracketPairColorizer.colorIndexFor(bracket.depth)
+            if (index !in BRACKET_COLORS.indices) continue
+            editable.setSpan(
+                ForegroundColorSpan(ContextCompat.getColor(editor.context, BRACKET_COLORS[index])),
+                bracket.offset,
+                bracket.offset + 1,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
+            )
+        }
     }
 
     private fun clearSpans() {
@@ -91,5 +119,13 @@ class SyntaxHighlighter(
     companion object {
         private const val DEBOUNCE_MS = 250L
         private const val MAX_HIGHLIGHT_CHARS = 150_000
+
+        private val BRACKET_COLORS =
+            intArrayOf(
+                R.color.syntax_bracket_0,
+                R.color.syntax_bracket_1,
+                R.color.syntax_bracket_2,
+                R.color.syntax_bracket_3,
+            )
     }
 }

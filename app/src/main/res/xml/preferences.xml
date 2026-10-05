@@ -41,6 +41,12 @@
             android:key="syntax_highlight"
             android:title="@string/pref_syntax" />
 
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="bracket_pair_colors"
+            android:summary="@string/pref_bracket_colors_summary"
+            android:title="@string/pref_bracket_colors" />
+
         <ListPreference
             android:defaultValue="14"
             android:entries="@array/font_size_entries"
