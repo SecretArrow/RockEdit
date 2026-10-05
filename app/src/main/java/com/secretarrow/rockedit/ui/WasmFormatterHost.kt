@@ -187,8 +187,10 @@ object WasmFormatterHost {
                     ) {
                         // Subresource hiccups are not fatal; a broken main
                         // frame means host.html itself is unreadable.
+                        // Only the description is used: code is redundant and
+                        // its getter is not resolvable on every SDK stub.
                         if (!request.isForMainFrame) return
-                        markPageFailed("asset load failed: ${error.description} (code ${error.code})")
+                        markPageFailed("asset load failed: ${error.description}")
                     }
 
                     override fun onRenderProcessGone(
