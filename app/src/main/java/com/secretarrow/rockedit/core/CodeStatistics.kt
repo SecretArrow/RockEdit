@@ -18,7 +18,8 @@ package com.secretarrow.rockedit.core
  *    triple-quoted strings DO span lines because their syntax is multi-line)
  *  - unclosed block comment -> rest of document is comment content (fail-safe)
  *  - block comment opener/closer chars -> counted as comment characters, so a
- *    one-line `/* x *&#47;` classifies as comment-only
+ *    one-line C block comment (opener, content, closer) classifies as
+ *    comment-only
  *  - TODO tokens -> counted only inside comment regions, uppercase, on word
  *    boundaries (TODOS does not count, TODO: does; strings/code never count)
  *  - line ending semantics -> [CodeStats.lineCount] equals

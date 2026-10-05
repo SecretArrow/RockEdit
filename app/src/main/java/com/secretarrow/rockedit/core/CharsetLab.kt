@@ -500,7 +500,7 @@ object CharsetLab {
         charCount: Int,
         charset: Charset,
     ): Int {
-        val perChar = ceil(charset.maxBytesPerChar.toDouble()).toInt().coerceAtLeast(1)
+        val perChar = ceil(charset.newEncoder().maxBytesPerChar().toDouble()).toInt().coerceAtLeast(1)
         return charCount * perChar + 16
     }
 }
