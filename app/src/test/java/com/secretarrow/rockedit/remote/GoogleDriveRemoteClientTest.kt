@@ -54,7 +54,7 @@ class GoogleDriveRemoteClientTest {
         assertEquals("/Docs", files[0].path)
         assertTrue(!files[1].isFolder)
         assertEquals(123L, files[1].size)
-        assertEquals(1767325445000L, files[1].lastModified)
+        assertEquals(1767323045000L, files[1].lastModified)
         assertEquals("Bearer test-token", fake.calls[0].headers["Authorization"])
     }
 
@@ -80,7 +80,7 @@ class GoogleDriveRemoteClientTest {
     fun `list of a subfolder resolves the folder id first`() {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
-                if (url.contains("name")) {
+                if (url.contains("q=name")) {
                     json(200, filesResponse("""[{"id":"PARENT-1","name":"Docs","mimeType":"application/vnd.google-apps.folder"}]"""))
                 } else {
                     json(200, filesResponse("""[]"""))
@@ -113,7 +113,13 @@ class GoogleDriveRemoteClientTest {
     @Test
     fun `read uses alt media and returns bytes`() {
         val fake =
-            FakeCloudHttp { _, _, _, _ -> CloudResponse(200, emptyMap(), "file-bytes".toByteArray()) }
+            FakeCloudHttp { _, url, _, _ ->
+                if (url.contains("q=name")) {
+                    json(200, filesResponse(""" + '"' + """[{"id":"A1","name":"a.txt"}]""" + '"' + """))
+                } else {
+                    CloudResponse(200, emptyMap(), "file-bytes".toByteArray())
+                }
+            }
         val bytes = client(fake).read("/a.txt")
         assertEquals("file-bytes", bytes.toString(Charsets.UTF_8))
         assertTrue(
@@ -127,9 +133,16 @@ class GoogleDriveRemoteClientTest {
     @Test
     fun `write creates a new file via multipart upload`() {
         val fake =
-            FakeCloudHttp { _, _, _, _ -> json(200, """{"id":"NEW-1"}""") }
+            FakeCloudHttp { _, url, _, _ ->
+                if (url.contains("q=name")) {
+                    json(200, filesResponse(""" + '"' + """[]""" + '"' + """))
+                } else {
+                    json(200, """{"id":"NEW-1"}""")
+                }
+            }
         client(fake).write("/new.txt", "hello".toByteArray())
-        val call = fake.calls.single()
+        assertEquals(2, fake.calls.size) // child lookup + multipart upload
+        val call = fake.calls.last()
         assertEquals("POST", call.method)
         assertTrue(call.url.startsWith("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"))
         val body = call.bodyText()
@@ -142,7 +155,7 @@ class GoogleDriveRemoteClientTest {
     fun `write over an existing file patches content only`() {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
-                if (url.contains("name=")) {
+                if (url.contains("q=name")) {
                     json(200, filesResponse("""[{"id":"EXIST-1","name":"old.txt"}]"""))
                 } else {
                     json(200, """{}""")
@@ -177,7 +190,7 @@ class GoogleDriveRemoteClientTest {
     fun `mkdir of an existing folder is a no-op`() {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
-                if (url.contains("name=")) {
+                if (url.contains("q=name")) {
                     json(200, filesResponse("""[{"id":"FOLDER-1","name":"Docs","mimeType":"application/vnd.google-apps.folder"}]"""))
                 } else {
                     throw IllegalStateException("create should not be called")
@@ -191,7 +204,7 @@ class GoogleDriveRemoteClientTest {
     fun `mkdir of a new folder posts folder metadata`() {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
-                if (url.contains("name=")) {
+                if (url.contains("q=name")) {
                     json(200, filesResponse("""[]"""))
                 } else {
                     json(200, """{"id":"NEW-F"}""")
@@ -215,7 +228,7 @@ class GoogleDriveRemoteClientTest {
     fun `delete hits the file id and tolerates 404`() {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
-                if (url.contains("name=")) {
+                if (url.contains("q=name")) {
                     json(200, filesResponse("""[{"id":"GONE-1","name":"x"}]"""))
                 } else {
                     json(404, """{"error":"not_found"}""")
@@ -231,7 +244,7 @@ class GoogleDriveRemoteClientTest {
     fun `single-quoted names are escaped in queries`() {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
-                if (url.contains("name=")) {
+                if (url.contains("q=name")) {
                     json(200, filesResponse("""[{"id":"Q1","name":"o'brien"}]"""))
                 } else {
                     json(200, filesResponse("""[]"""))

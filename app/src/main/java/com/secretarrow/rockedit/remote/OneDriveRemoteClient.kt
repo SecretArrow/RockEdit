@@ -121,11 +121,11 @@ class OneDriveRemoteClient(
         throw IllegalStateException("$operation failed: too many redirects")
     }
 
-    private fun childrenUrl(dir: String): String = if (dir == "/") "$BASE/root/children" else "$BASE/root:${encodedPath(dir)}:/children"
+    private fun childrenUrl(dir: String): String = if (dir == "/") "$BASE/root/children" else "$BASE/root:/${encodedPath(dir)}:/children"
 
-    private fun contentUrl(path: String): String = "$BASE/root:${encodedPath(RemotePath.normalize(path))}:/content"
+    private fun contentUrl(path: String): String = "$BASE/root:/${encodedPath(RemotePath.normalize(path))}:/content"
 
-    private fun itemUrl(path: String): String = "$BASE/root:${encodedPath(RemotePath.normalize(path))}:"
+    private fun itemUrl(path: String): String = "$BASE/root:/${encodedPath(RemotePath.normalize(path))}:"
 
     /** Encodes every segment, keeping `/` separators intact. */
     private fun encodedPath(path: String): String {

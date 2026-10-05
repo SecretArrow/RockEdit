@@ -115,9 +115,9 @@ class RemoteConnectionStoreTest {
     @Test
     fun removeDeletesEntry() {
         val store = RemoteConnectionStore(InMemoryKeyValueStore(), PlainEncryptor)
-        val c = connection("home")
+        val c = connection("home").copy(id = 101L)
         store.save(c)
-        store.save(connection("work"))
+        store.save(connection("work").copy(id = 102L))
         store.remove(c.id)
         assertEquals(1, store.list().size)
         assertNull(store.find(c.id))
