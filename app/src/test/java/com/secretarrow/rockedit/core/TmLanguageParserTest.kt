@@ -13,16 +13,12 @@ import org.junit.Test
  * string delimiter defaults, extension normalization and identity rules.
  */
 class TmLanguageParserTest {
-    private fun successOf(
-        result: TmLanguageParser.ParseResult,
-    ): TmLanguageParser.ParseResult.Success {
+    private fun successOf(result: TmLanguageParser.ParseResult): TmLanguageParser.ParseResult.Success {
         assertTrue("expected Success, was $result", result is TmLanguageParser.ParseResult.Success)
         return result as TmLanguageParser.ParseResult.Success
     }
 
-    private fun failureOf(
-        result: TmLanguageParser.ParseResult,
-    ): TmLanguageParser.ParseResult.Failure {
+    private fun failureOf(result: TmLanguageParser.ParseResult): TmLanguageParser.ParseResult.Failure {
         assertTrue("expected Failure, was $result", result is TmLanguageParser.ParseResult.Failure)
         return result as TmLanguageParser.ParseResult.Failure
     }
@@ -49,7 +45,10 @@ class TmLanguageParserTest {
         }
         """.trimIndent()
 
-    private fun grammarWithPatterns(patternsJson: String, repositoryJson: String = ""): String =
+    private fun grammarWithPatterns(
+        patternsJson: String,
+        repositoryJson: String = "",
+    ): String =
         """
         {
           "scopeName": "source.test",
@@ -102,11 +101,12 @@ class TmLanguageParserTest {
 
     @Test
     fun includeResolvesRepositoryRule() {
-        val json = grammarWithPatterns(
-            """{"include": "#kw"}, """ + keywordPattern("keyword.other.x", "\\b(for)\\b"),
-            "\"kw\": {\"patterns\": [" +
-                keywordPattern("keyword.control.y", "\\b(while)\\b") + "]}",
-        )
+        val json =
+            grammarWithPatterns(
+                """{"include": "#kw"}, """ + keywordPattern("keyword.other.x", "\\b(for)\\b"),
+                "\"kw\": {\"patterns\": [" +
+                    keywordPattern("keyword.control.y", "\\b(while)\\b") + "]}",
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertEquals(setOf("for", "while"), language.keywords)
     }
@@ -172,10 +172,11 @@ class TmLanguageParserTest {
 
     @Test
     fun selfReferencingIncludeTerminatesSuccessfully() {
-        val json = grammarWithPatterns(
-            """{"include": "#loop"}""",
-            "\"loop\": {\"include\": \"#loop\"}",
-        )
+        val json =
+            grammarWithPatterns(
+                """{"include": "#loop"}""",
+                "\"loop\": {\"include\": \"#loop\"}",
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertTrue(language.keywords.isEmpty())
     }
@@ -192,18 +193,20 @@ class TmLanguageParserTest {
 
     @Test
     fun externalIncludeIsIgnoredButOwnPatternsStillWalk() {
-        val json = grammarWithPatterns(
-            """{"include": "source.js"}, """ + keywordPattern("keyword.control.x", "\\bfor\\b"),
-        )
+        val json =
+            grammarWithPatterns(
+                """{"include": "source.js"}, """ + keywordPattern("keyword.control.x", "\\bfor\\b"),
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertEquals(setOf("for"), language.keywords)
     }
 
     @Test
     fun dollarBaseIncludeExpandsTopPatternsOnce() {
-        val json = grammarWithPatterns(
-            """{"include": "${'$'}base"}, """ + keywordPattern("keyword.control.x", "\\bif\\b"),
-        )
+        val json =
+            grammarWithPatterns(
+                """{"include": "${'$'}base"}, """ + keywordPattern("keyword.control.x", "\\bif\\b"),
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertEquals(setOf("if"), language.keywords)
     }
@@ -220,20 +223,22 @@ class TmLanguageParserTest {
 
     @Test
     fun keywordExtractionAnchoredGroupAndSingleWord() {
-        val json = grammarWithPatterns(
-            keywordPattern("keyword.control.import", "^\\s*(import|from)\\b") + ", " +
-                keywordPattern("keyword.other.single", "\\bif\\b"),
-        )
+        val json =
+            grammarWithPatterns(
+                keywordPattern("keyword.control.import", "^\\s*(import|from)\\b") + ", " +
+                    keywordPattern("keyword.other.single", "\\bif\\b"),
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertEquals(setOf("import", "from", "if"), language.keywords)
     }
 
     @Test
     fun keywordExtractionRejectsOperatorsClassesAndPhrases() {
-        val json = grammarWithPatterns(
-            keywordPattern("keyword.operator.x", "\\+|\\d{2}") + ", " +
-                keywordPattern("keyword.other.phrase", "else if"),
-        )
+        val json =
+            grammarWithPatterns(
+                keywordPattern("keyword.operator.x", "\\+|\\d{2}") + ", " +
+                    keywordPattern("keyword.other.phrase", "else if"),
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertTrue(language.keywords.isEmpty())
     }
@@ -260,12 +265,13 @@ class TmLanguageParserTest {
 
     @Test
     fun lineCommentExtractionVariantsAndPadding() {
-        val json = grammarWithPatterns(
-            keywordPattern("comment.line.double-slash", "//.*$") + ", " +
-                keywordPattern("comment.line.number-sign", "#.*") + ", " +
-                keywordPattern("comment.line.double-dash", "--[^\\n]*$") + ", " +
-                keywordPattern("comment.line.padded", "^[ \\t]*//.*"),
-        )
+        val json =
+            grammarWithPatterns(
+                keywordPattern("comment.line.double-slash", "//.*$") + ", " +
+                    keywordPattern("comment.line.number-sign", "#.*") + ", " +
+                    keywordPattern("comment.line.double-dash", "--[^\\n]*$") + ", " +
+                    keywordPattern("comment.line.padded", "^[ \\t]*//.*"),
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertEquals(listOf("//", "#", "--"), language.lineComments)
     }
@@ -279,11 +285,12 @@ class TmLanguageParserTest {
 
     @Test
     fun blockCommentExtractionAndRejection() {
-        val json = grammarWithPatterns(
-            "{\"name\": \"comment.block.c\", \"begin\": \"/\\\\*\", \"end\": \"\\\\*/\"}, " +
-                "{\"name\": \"comment.block.html\", \"begin\": \"<!--\", \"end\": \"-->\"}, " +
-                "{\"name\": \"comment.block.bad\", \"begin\": \"/\\\\*\", \"end\": \"[^*]\"}",
-        )
+        val json =
+            grammarWithPatterns(
+                "{\"name\": \"comment.block.c\", \"begin\": \"/\\\\*\", \"end\": \"\\\\*/\"}, " +
+                    "{\"name\": \"comment.block.html\", \"begin\": \"<!--\", \"end\": \"-->\"}, " +
+                    "{\"name\": \"comment.block.bad\", \"begin\": \"/\\\\*\", \"end\": \"[^*]\"}",
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertEquals(listOf("/*" to "*/", "<!--" to "-->"), language.blockComments)
     }
@@ -307,17 +314,19 @@ class TmLanguageParserTest {
 
     @Test
     fun stringDelimiterExtractionAndDefaults() {
-        val both = grammarWithPatterns(
-            "{\"name\": \"string.quoted.double.x\", \"begin\": \"\\\"\", \"end\": \"\\\"\"}, " +
-                "{\"name\": \"string.quoted.single.x\", \"begin\": \"'\", \"end\": \"'\"}",
-        )
+        val both =
+            grammarWithPatterns(
+                "{\"name\": \"string.quoted.double.x\", \"begin\": \"\\\"\", \"end\": \"\\\"\"}, " +
+                    "{\"name\": \"string.quoted.single.x\", \"begin\": \"'\", \"end\": \"'\"}",
+            )
         assertEquals(
             listOf('"', '\''),
             successOf(TmLanguageParser.parse(both, "t", emptyList())).language.stringDelims,
         )
-        val failExtract = grammarWithPatterns(
-            "{\"name\": \"string.quoted.other.x\", \"begin\": \"[[\", \"end\": \"]]\"}",
-        )
+        val failExtract =
+            grammarWithPatterns(
+                "{\"name\": \"string.quoted.other.x\", \"begin\": \"[[\", \"end\": \"]]\"}",
+            )
         assertEquals(
             listOf('"'),
             successOf(TmLanguageParser.parse(failExtract, "t", emptyList())).language.stringDelims,
@@ -343,12 +352,13 @@ class TmLanguageParserTest {
 
     @Test
     fun caseInsensitiveScopePrefixMatching() {
-        val json = grammarWithPatterns(
-            keywordPattern("Keyword.Control.x", "\\bif\\b") + ", " +
-                keywordPattern("COMMENT.LINE.REM", "%.*") + ", " +
-                "{\"name\": \"Comment.Block.x\", \"begin\": \"/\\\\*\", \"end\": \"\\\\*/\"}, " +
-                "{\"name\": \"String.Quoted.Single.x\", \"begin\": \"'\", \"end\": \"'\"}",
-        )
+        val json =
+            grammarWithPatterns(
+                keywordPattern("Keyword.Control.x", "\\bif\\b") + ", " +
+                    keywordPattern("COMMENT.LINE.REM", "%.*") + ", " +
+                    "{\"name\": \"Comment.Block.x\", \"begin\": \"/\\\\*\", \"end\": \"\\\\*/\"}, " +
+                    "{\"name\": \"String.Quoted.Single.x\", \"begin\": \"'\", \"end\": \"'\"}",
+            )
         val language = successOf(TmLanguageParser.parse(json, "t", emptyList())).language
         assertEquals(setOf("if"), language.keywords)
         assertEquals(listOf("%"), language.lineComments)

@@ -203,8 +203,7 @@ class CustomGrammarStoreTest {
                         .put("name", "Alpha")
                         .put("extensions", JSONArray().put("py"))
                         .put("grammarJson", grammarJson("alpha")),
-                )
-                .put(
+                ).put(
                     JSONObject()
                         .put("id", "custom_b")
                         .put("name", "Beta")

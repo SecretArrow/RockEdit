@@ -614,8 +614,10 @@ class SplitEditorActivity : AppCompatActivity() {
         a: SplitPaneState,
         b: SplitPaneState,
     ): Boolean =
-        a.savedText.isNotEmpty() || b.savedText.isNotEmpty() ||
-            a.uri != null || b.uri != null
+        a.savedText.isNotEmpty() ||
+            b.savedText.isNotEmpty() ||
+            a.uri != null ||
+            b.uri != null
 
     private fun paneStateA(): SplitPaneState =
         SplitPaneState(
@@ -687,8 +689,7 @@ class SplitEditorActivity : AppCompatActivity() {
     private fun paneText(pane: EditText): String = pane.text?.toString().orEmpty()
 
     /** Friendly file name; DisplayNames falls back to the last URI segment. */
-    private fun resolveName(uri: Uri): String =
-        DisplayNames.resolve(this, uri).ifBlank { getString(R.string.split_untitled_pane) }
+    private fun resolveName(uri: Uri): String = DisplayNames.resolve(this, uri).ifBlank { getString(R.string.split_untitled_pane) }
 
     /** Outcome of reading a pane's file: unreadable (null) / too large / text. */
     private class PaneRead(

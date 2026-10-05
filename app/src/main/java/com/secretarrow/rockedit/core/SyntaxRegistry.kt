@@ -3479,9 +3479,10 @@ object SyntaxRegistry {
         if (name.isNullOrEmpty()) return null
         val fileExt = FileNames.split(name).second
         if (fileExt.isNotEmpty()) {
-            customs.firstOrNull { language ->
-                language.extensions.any { it.equals(fileExt, ignoreCase = true) }
-            }?.let { return it }
+            customs
+                .firstOrNull { language ->
+                    language.extensions.any { it.equals(fileExt, ignoreCase = true) }
+                }?.let { return it }
         }
         byName[name.lowercase()]?.let { return it }
         val ext = FileNames.split(name).second.lowercase()

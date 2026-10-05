@@ -127,7 +127,8 @@ class CustomGrammarStore(
                     if (id.isEmpty() || grammarJson.isEmpty()) continue
                     val name = obj.opt(F_NAME) as? String ?: ""
                     val extensions =
-                        obj.optJSONArray(F_EXTENSIONS)
+                        obj
+                            .optJSONArray(F_EXTENSIONS)
                             ?.let { a -> (0 until a.length()).mapNotNull { a.opt(it) as? String } }
                             ?: emptyList()
                     add(Entry(id, name, extensions, grammarJson))

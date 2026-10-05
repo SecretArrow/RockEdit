@@ -138,9 +138,9 @@ object TmLanguageParser {
                     }
                 return if (isArray) {
                     ParseResult.Failure(
-                    ErrorCode.NOT_GRAMMAR,
-                    "root: JSON array, expected a grammar object",
-                )
+                        ErrorCode.NOT_GRAMMAR,
+                        "root: JSON array, expected a grammar object",
+                    )
                 } else {
                     ParseResult.Failure(ErrorCode.NOT_JSON, "root: input is not valid JSON")
                 }
@@ -567,8 +567,18 @@ object TmLanguageParser {
                 i += 2
                 continue
             }
-            if (c == '^' || c == '$' || c == '.' || c == '*' || c == '+' || c == '?' ||
-                c == '|' || c == '(' || c == ')' || c == '[' || c == ']' || c == '{' ||
+            if (c == '^' ||
+                c == '$' ||
+                c == '.' ||
+                c == '*' ||
+                c == '+' ||
+                c == '?' ||
+                c == '|' ||
+                c == '(' ||
+                c == ')' ||
+                c == '[' ||
+                c == ']' ||
+                c == '{' ||
                 c == '}'
             ) {
                 break
@@ -623,6 +633,7 @@ object TmLanguageParser {
         token: String,
         maxChars: Int,
     ): Boolean =
-        token.isNotEmpty() && token.length <= maxChars &&
+        token.isNotEmpty() &&
+            token.length <= maxChars &&
             token.all { !it.isLetterOrDigit() && !it.isWhitespace() }
 }

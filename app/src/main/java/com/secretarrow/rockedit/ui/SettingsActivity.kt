@@ -20,10 +20,10 @@ import com.secretarrow.rockedit.core.CustomGrammarStore
 import com.secretarrow.rockedit.core.SyntaxRegistry
 import com.secretarrow.rockedit.core.TmLanguageParser
 import com.secretarrow.rockedit.databinding.ActivitySettingsBinding
-import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 /** Settings screen backed by androidx.preference. */
 class SettingsActivity : AppCompatActivity() {
