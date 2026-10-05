@@ -1,6 +1,6 @@
 package com.secretarrow.rockedit
 
-import android.view.View
+import android.view.ViewGroup
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.secretarrow.rockedit.ui.EditorActivity
@@ -22,8 +22,11 @@ class InsetsE2eTest {
         val deadline = System.currentTimeMillis() + 5000
         while (System.currentTimeMillis() < deadline && (top <= 0 || bottom <= 0)) {
             scenario.onActivity { activity ->
-                val root =
-                    activity.findViewById<View>(android.R.id.content)?.getChildAt(0)
+                // android.R.id.content is a FrameLayout (a ViewGroup); its
+                // child 0 is the view-binding root installed by setContentView.
+                val content =
+                    activity.findViewById<ViewGroup>(android.R.id.content)
+                val root = content?.getChildAt(0)
                 if (root != null) {
                     top = root.paddingTop
                     bottom = root.paddingBottom
