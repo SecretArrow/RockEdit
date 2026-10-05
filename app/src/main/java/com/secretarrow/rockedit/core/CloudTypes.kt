@@ -84,7 +84,7 @@ data class OAuthTokens(
 }
 
 /** Supplies valid access tokens to cloud transport clients. */
-interface CloudAuth {
+fun interface CloudAuth {
     /** Returns a valid access token, refreshing it when necessary. */
     fun accessToken(): String
 }
