@@ -115,7 +115,7 @@ class GoogleDriveRemoteClientTest {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
                 if (url.contains("q=name")) {
-                    json(200, filesResponse(""" + '"' + """[{"id":"A1","name":"a.txt"}]""" + '"' + """))
+                    json(200, filesResponse("""[{"id":"A1","name":"a.txt"}]"""))
                 } else {
                     CloudResponse(200, emptyMap(), "file-bytes".toByteArray())
                 }
@@ -135,7 +135,7 @@ class GoogleDriveRemoteClientTest {
         val fake =
             FakeCloudHttp { _, url, _, _ ->
                 if (url.contains("q=name")) {
-                    json(200, filesResponse(""" + '"' + """[]""" + '"' + """))
+                    json(200, filesResponse("""[]"""))
                 } else {
                     json(200, """{"id":"NEW-1"}""")
                 }
