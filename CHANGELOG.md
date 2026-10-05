@@ -8,6 +8,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.18.1] - 2026-10-05
+
+### Fixed
+- **E2E insets menjadi device-agnostic**: asersi `paddingBottom > 0` salah untuk kelas perangkat yang melaporkan inset nav-bar nol (emulator headless `google_apis` API 30, perangkat hardware-key) — CI menangkapnya. Sekarang asersi status bar (selalu ada) + pemeriksaan **idempotensi padding** di seluruh dispatch insets (guard regresi akumulasi, properti inti dari SystemBars) yang valid di semua perangkat. Dokumentasi keputusan ada di KDoc test.
+
 ## [0.18.0] - 2026-10-05
 
 ### Fixed

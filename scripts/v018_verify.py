@@ -144,9 +144,10 @@ for key in en_map:
 
 # --- 8. version + docs --------------------------------------------------------
 gradle = read(ROOT / "app/build.gradle.kts")
-check('"0.18.0"' in gradle, "versionName 0.18.0")
+check('"0.18.1"' in gradle, "versionName 0.18.1")
 changelog = read(ROOT / "CHANGELOG.md")
 check("## [0.18.0] - 2026-10-05" in changelog, "CHANGELOG has 0.18.0 entry")
+check("## [0.18.1] - 2026-10-05" in changelog, "CHANGELOG has 0.18.1 entry")
 readme = read(ROOT / "README.md")
 check("v0.18.0" in readme and "Open Recent" in readme, "README documents v0.18.0")
 docs = read(ROOT / "docs/rockedit.md")
