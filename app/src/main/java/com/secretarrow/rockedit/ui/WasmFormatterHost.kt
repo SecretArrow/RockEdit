@@ -234,6 +234,10 @@ object WasmFormatterHost {
                 }
                 (lock as java.lang.Object).wait(remainingMs)
             }
+            // Unreachable: the loop above only exits through return/throw.
+            // This terminal expression keeps the lambda's type as WebView.
+            @Suppress("UNREACHABLE_CODE")
+            throw IllegalStateException("awaitReady loop exited unexpectedly")
         }
 
     /**
