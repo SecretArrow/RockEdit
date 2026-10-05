@@ -103,8 +103,8 @@ object SplitSessionCodec {
     ): String? {
         if (a.savedText.length + b.savedText.length > MAX_SESSION_CHARS) return null
         val arr = JSONArray()
-        arr.put(paneToJson(a))
-        arr.put(paneToJson(b))
+        arr.put(encodePane(a))
+        arr.put(encodePane(b))
         return arr.toString()
     }
 
