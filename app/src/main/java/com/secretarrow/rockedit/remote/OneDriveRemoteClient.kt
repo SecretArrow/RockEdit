@@ -138,6 +138,7 @@ class OneDriveRemoteClient(
         const val BASE = "https://graph.microsoft.com/v1.0/me/drive"
         const val MAX_REDIRECTS = 3
     }
+
     override fun close() {
         // Stateless transport: nothing to release per connection instance.
     }
