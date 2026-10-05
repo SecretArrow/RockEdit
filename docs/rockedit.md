@@ -439,9 +439,27 @@ Tes: `InsetsE2eTest` (emulator API 30) memastikan paddingTop > 0 dan paddingBott
 
 **Operasi berkas editor (v0.18.0)**: menu editor kini memiliki **Open File** (SAF `OpenDocument` → `ACTION_EDIT` intent → `addTabFromIntent`; memakai ulang seluruh cabang defensif: dedup URI, batas tab, persistable permission, pemuatan lazy; picker dibatalkan → no-op), **Open Recent** (dialog dari `RecentFilesStore`; baca store gagal → kosong + toast; entri basi → jalur muat normal dengan error terlokalisasi; indeks di luar jangkauan → diabaikan via `getOrNull`), **Save All** (`dirtyFileTabs()`; kosong → toast "tidak ada yang perlu disimpan"; `writeTo` defensif per tab sehingga satu kegagalan I/O tidak menghentikan tab lain). Save/Save As yang sudah ada sebelumnya tetap.
 
+### 4.18 Dialog About dengan Kredit Kreator (v0.19.0 — selesai)
+
+**Permintaan pengguna**: tambahkan About; kreator aplikasi adalah **Maragung**.
+
+**Solusi** — dialog About ditingkatkan dari teks sederhana menjadi komponen kelas satu:
+
+| Skenario | Penanganan |
+|---|---|
+| Versi null/blank | `AboutInfo.displayVersion()` → placeholder "unknown" (dialog tidak pernah menampilkan "null") |
+| Versi dengan spasi/marker `v` | Trim + strip satu marker `v`/`V` terdepan (`vv0.19.0` → `v0.19.0`; tanpa loop) |
+| Versi ekstrem panjang | Dipotong ke 32 karakter — layout satu baris aman |
+| Label terlokalisasi blank | Fallback label EN ("Created by") — kredit tetap tampil |
+| Inflasi layout gagal | Dialog teks minimal (nama + kredit) tetap muncul — About tidak pernah gagal senyap |
+| Tombol Lisensi gagal membuka activity | Ditangkap; dialog tetap terbuka (Lisensi juga terjangkau dari menu utama) |
+| Context finishing/destroyed | `show()` keluar tanpa melakukan apa pun (anti window-leak) |
+
+**Penggunaan ganda**: satu komponen `ui/AboutDialog.kt` dipakai menu layar utama **dan** menu editor (entri `action_about` baru). Logika murni-JVM `core/AboutInfo.kt` diuji penuh (18 @Test, semua cabang); `AboutE2eTest` membuka overflow menu → About → memverifikasi kredit "Maragung" tampil (nama kreator tidak dilokalkan — asersi aman lintas perangkat).
+
 ---
 
-Total unit test kini 1.130+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
+Total unit test kini 1.150+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
 
 ---
 

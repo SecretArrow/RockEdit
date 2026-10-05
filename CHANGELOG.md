@@ -8,6 +8,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.19.0] - 2026-10-06
+
+### Added
+- **Dialog About baru dengan kredit kreator**: dialog "Tentang Rock Edit" kini ber-layout lengkap — ikon aplikasi, nama + versi, tagline, kredit kreator **Maragung** (ditonjolkan dengan warna aksen), catatan FOSS/GPL-3.0 + privasi, dan tautan kode sumber. Logikanya dipisah ke `core/AboutInfo.kt` murni-JVM (sanitasi versi null/blank/"v" ganda/potongan panjang; fallback label terlokalisasi) dengan cakupan cabang penuh (18 kasus uji).
+- **About dapat diakses dari editor**: entri menu About ditambahkan ke menu editor (sebelumnya hanya ada di menu layar utama); keduanya memakai satu komponen bersama `ui/AboutDialog.kt`.
+- **Jalur darurat dialog About**: bila inflasi layout gagal (perangkat/langka tema abnormal), dialog teks minimal tetap tampil — About tidak pernah gagal senyap.
+
+### Tests
+- `AboutInfoTest` (18 @Test): semua cabang sanitasi versi, judul, dan kredit.
+- `AboutE2eTest`: buka menu overflow → About → asersi kredit "Maragung" tampil (nama kreator bersifat locale-independent — asersi aman di semua perangkat).
+
 ## [0.18.1] - 2026-10-05
 
 ### Fixed

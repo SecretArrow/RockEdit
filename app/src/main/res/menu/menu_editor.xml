@@ -215,4 +215,8 @@
         android:checkable="true"
         android:title="@string/zen_mode"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_about"
+        android:title="@string/about"
+        app:showAsAction="never" />
 </menu>

@@ -153,17 +153,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAbout() {
-        val body = getString(R.string.about_body, BuildConfig.VERSION_NAME)
-        androidx.appcompat.app.AlertDialog
-            .Builder(this)
-            .setTitle(R.string.about_title)
-            .setMessage(body)
-            .setPositiveButton(android.R.string.ok, null)
-            .setNeutralButton(R.string.licenses_title) { _, _ ->
-                startActivity(
-                    Intent(this, com.secretarrow.rockedit.ui.LicensesActivity::class.java),
-                )
-            }.show()
+        com.secretarrow.rockedit.ui.AboutDialog.show(this)
     }
 
     private fun refreshRecents() {

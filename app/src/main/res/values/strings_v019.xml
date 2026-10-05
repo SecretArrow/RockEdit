@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.19.0: About dialog with creator credit. -->
+    <string name="about_creator_label">Created by</string>
+    <string name="about_creator_full">Created by Maragung</string>
+    <string name="about_tagline">A fast, stable, privacy-first text editor for Android.</string>
+    <string name="about_foss_note">100%% free software under GPL-3.0 — no ads, no tracking, no dangerous permissions. Your files never leave your device.</string>
+    <string name="about_source">Source code: github.com/SecretArrow/RockEdit</string>
+</resources>

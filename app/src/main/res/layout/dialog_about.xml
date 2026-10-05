@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- About dialog body (v0.19.0): icon, name+version, tagline, creator credit, FOSS note. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="8dp">
+
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center_horizontal"
+        android:contentDescription="@string/about_title"
+        android:src="@mipmap/ic_launcher" />
+
+    <TextView
+        android:id="@+id/about_name_version"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="?android:attr/textColorPrimary"
+        android:text="@string/about_title" />
+
+    <TextView
+        android:id="@+id/about_tagline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:gravity="center"
+        android:textSize="14sp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:text="@string/about_tagline" />
+
+    <TextView
+        android:id="@+id/about_creator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/brand_accent"
+        android:text="@string/about_creator_full" />
+
+    <TextView
+        android:id="@+id/about_foss_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:textSize="13sp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:text="@string/about_foss_note" />
+
+    <TextView
+        android:id="@+id/about_source"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:gravity="center"
+        android:textSize="13sp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:text="@string/about_source" />
+</LinearLayout>

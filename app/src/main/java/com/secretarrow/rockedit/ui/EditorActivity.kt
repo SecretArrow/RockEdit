@@ -1597,6 +1597,7 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_export_pdf -> exportPdf()
             R.id.action_export_image -> exportImage()
             R.id.action_zen_mode -> toggleZenMode(item)
+            R.id.action_about -> AboutDialog.show(this)
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
                 return true
