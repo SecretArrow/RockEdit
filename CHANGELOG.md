@@ -7,7 +7,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
-- Sesi OAuth via browser in-app (loopback server) sebagai alternatif alur tempel-kode
+- Grammar TextMate kustom (impor `.tmLanguage` untuk bahasa yang belum didukung)
+- Panel ganda full-app untuk tablet (dua dokumen aktif penuh)
+
+## [0.16.0] - 2026-10-05
+
+### Added
+- **Statistik kode lanjutan** (`core/CodeStatistics.kt`, murni Kotlin): dialog Statistik kini menampilkan baris kode/kosong/komentar (deteksi komentar sadar string per-bahasa), baris terpanjang & rata-rata panjang, komposisi akhir baris (CRLF/LF/CR), profil indentasi (tab vs spasi + lebar umum), baris berekstensi-spasi, dan penghitung TODO/FIXME/HACK/XXX (hanya di komentar, word-boundary). 58 tes; `lineCount`/`wordCount` dijamin konsisten dengan TextStats lama.
+- **Lab charset** (`core/CharsetLab.kt`, menu editor): tabel encoding untuk seluruh charset umum — ukuran byte, jumlah karakter tak terpetakan, status round-trip (eksak vs kehilangan data), plus deteksi BOM (UTF-8/16/32) dan delegasi juniversalchardet. 52 tes.
+- **Ekspor gambar PNG** (`core/ImageExportPlanner.kt` + `ui/ImageExporter.kt`, menu editor): cuplikan kode sebagai gambar berwarna dengan palet terang/gelap (mengikuti mode malam sistem), nomor baris, judul dari nama file, wrap 20–200 kolom, token sintaks diwarnai; batas bitmap 8192 px dan 5000 baris dengan pesan informatif; penulisan SAF. 55 tes planner.
+- **OAuth loopback browser in-app** (`core/LoopbackRedirectServer.kt` + `ui/InAppAuthActivity.kt`): alternatif alur tempel-kode — server redirect 127.0.0.1 (port 8642 disarankan; Google menerima port loopback variabel, Dropbox/OneDrive perlu URI terdaftar persis), state CSRF acak yang divalidasi constant-time, halaman sukses/kadaluarsa yang tenang, timeout 5 menit, tombol "Buka di aplikasi" di dialog Storage Manager. 29 tes socket nyata. Alur tempel-kode v0.15.0 tetap tersedia.
+
+### Documentation
+- docs/CLOUD_USB_BRACKETS.md diperluas: panduan registrasi redirect URI per penyedia + tabel skenario loopback.
 
 ## [0.15.0] - 2026-10-05
 

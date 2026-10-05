@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.16.0: statistik kode lanjutan, lab charset, ekspor gambar,
+         OAuth loopback browser in-app. -->
+
+    <!-- Statistik kode lanjutan (peningkatan dialog Statistik) -->
+    <string name="stats_code_lines">Baris kode: %1$d</string>
+    <string name="stats_blank_lines">Baris kosong: %1$d</string>
+    <string name="stats_comment_lines">Baris komentar: %1$d</string>
+    <string name="stats_longest_line">Baris terpanjang: %1$d</string>
+    <string name="stats_avg_line">Rata-rata panjang baris: %1$.1f</string>
+    <string name="stats_endings">Akhir baris: CRLF %1$d · LF %2$d · CR %3$d</string>
+    <string name="stats_indent">Indentasi: tab %1$d · spasi %2$d · lebar %3$s</string>
+    <string name="stats_indent_width_none">–</string>
+    <string name="stats_todos">Penanda TODO/FIXME: %1$d</string>
+
+    <!-- Lab charset -->
+    <string name="charset_lab">Lab charset</string>
+    <string name="charsetlab_title">Lab charset</string>
+    <string name="charsetlab_empty">Tidak ada yang bisa dianalisis: dokumen kosong.</string>
+    <string name="charsetlab_header">Encoding untuk %1$d karakter (byte · tak terpetakan · round-trip):</string>
+    <string name="charsetlab_line">%1$s: %2$d B · %3$d tak terpetakan · %4$s</string>
+    <string name="charsetlab_unsupported">%1$s: tidak didukung di perangkat ini</string>
+    <string name="charsetlab_ok">eksak</string>
+    <string name="charsetlab_lossy">kehilangan data</string>
+
+    <!-- Ekspor gambar -->
+    <string name="export_image">Ekspor sebagai gambar</string>
+    <string name="image_empty">Tidak ada yang bisa diekspor: dokumen kosong.</string>
+    <string name="image_running">Merender gambar…</string>
+    <string name="image_done">Gambar tersimpan</string>
+    <string name="image_too_large">Dokumen terlalu besar: %1$d baris melebihi batas ekspor.</string>
+    <string name="image_too_large_pixels">Gambar terlalu besar untuk satu bitmap. Ekspor lebih sedikit baris atau font lebih kecil.</string>
+    <string name="image_failed">Ekspor gambar gagal: %1$s</string>
+
+    <!-- OAuth loopback browser in-app -->
+    <string name="storage_oauth_open_in_app">Buka di aplikasi</string>
+    <string name="storage_oauth_stale_result">hasil otorisasi sudah basi, silakan coba lagi</string>
+    <string name="inapp_auth_title">Otorisasi %1$s</string>
+    <string name="inapp_auth_status">Kembali ke Rock Edit setelah mengotorisasi…</string>
+    <string name="inapp_auth_error_state">Pemeriksaan keamanan gagal — tekan Kembali dan mulai ulang otorisasi.</string>
+    <string name="inapp_auth_error_load">Gagal memuat halaman: %1$s</string>
+</resources>

@@ -91,3 +91,47 @@ release step (documented in CHANGELOG).
 - `OneDriveRemoteClientTest` — 12 tests
 - `UsbOtgLogicTest` + `UsbOtgRemoteClientTest` — 13 tests
 - `RemoteConnectionStoreTest` — +3 tests (cloud fields, legacy JSON, ports)
+
+## Loopback in-app OAuth (v0.16.0)
+
+Alternative to the paste-code flow: the Storage Manager dialog offers an
+**"Open in app"** button that launches `InAppAuthActivity` (in-app WebView)
+with a `LoopbackRedirectServer` bound to `127.0.0.1:8642`
+(`LoopbackRedirectServer.PREFERRED_PORT`).
+
+Provider-specific redirect registration (user's own OAuth client console):
+
+| Provider | Register this redirect URI | Why |
+|---|---|---|
+| Google Drive | `http://127.0.0.1` (any port, installed-app client) or `http://127.0.0.1:8642/` | RFC 8252 §7.1 allows variable loopback ports |
+| Dropbox | `http://127.0.0.1:8642/` (exact) | Dropbox requires the exact registered URI |
+| OneDrive (MS Graph) | `http://localhost:8642/` (exact) | Graph requires exact match; `localhost` is the permitted form |
+
+Scenario → handling table (loopback):
+
+| Scenario | Handling | Test |
+|---|---|---|
+| First callback `?code=..&state=..` | parsed once, success page served | `real socket` tests |
+| Callback `?error=..` | recorded as error result (no code) | `error param` tests |
+| URL-encoded values / `+` | decoded (first occurrence wins) | decode tests |
+| Empty `code=` value | normalized to null (treated as absent) | `empty code` test |
+| POST / malformed request line | 405/400, callback NOT recorded | method/malformed tests |
+| Second (duplicate/reload) request | 200 "already used" page, callback unchanged | consumed test |
+| State mismatch | inline error in-app, callback REJECTED (never accepted) | `state mismatch` decision |
+| Bind failure (port taken) | activity finishes with `bind_failed` error extra | documented |
+| 5-minute timeout | finishes with `timeout` error extra | documented |
+| WebView crash | finishes with `webview_gone` error extra | `onRenderProcessGone` |
+| Process death while authorizing | stale result dropped with toast (no mis-attributed save) | `pendingInAppAuth` guard |
+
+Security notes: the server binds loopback ONLY (never `0.0.0.0`); the code is
+never reflected into the served HTML; state is 128-bit SecureRandom and
+compared constant-time (`MessageDigest.isEqual`); plain HTTP is acceptable for
+installed-app loopback redirects per RFC 8252 §7.1. The code exchange reuses
+the same redirect URI used at authorization time (OAuth2 requirement).
+
+## Test inventory (new, v0.16.0)
+
+- `CodeStatisticsTest` — 58 tests
+- `CharsetLabTest` — 52 tests
+- `ImageExportPlannerTest` — 55 tests
+- `LoopbackRedirectServerTest` — 29 tests (real 127.0.0.1 sockets)

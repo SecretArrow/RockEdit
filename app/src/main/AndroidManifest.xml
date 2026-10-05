@@ -92,6 +92,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".ui.InAppAuthActivity"
+            android:exported="false"
+            android:launchMode="singleTask" />
+
         <provider
             android:name=".remote.RemoteContentProvider"
             android:authorities="${applicationId}.remote"

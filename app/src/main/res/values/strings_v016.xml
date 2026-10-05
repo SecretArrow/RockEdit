@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.16.0: extended code statistics, charset lab, image export,
+         OAuth loopback in-app browser. -->
+
+    <!-- Extended code statistics (Statistics dialog upgrade) -->
+    <string name="stats_code_lines">Code lines: %1$d</string>
+    <string name="stats_blank_lines">Blank lines: %1$d</string>
+    <string name="stats_comment_lines">Comment lines: %1$d</string>
+    <string name="stats_longest_line">Longest line: %1$d</string>
+    <string name="stats_avg_line">Average line length: %1$.1f</string>
+    <string name="stats_endings">Line endings: CRLF %1$d · LF %2$d · CR %3$d</string>
+    <string name="stats_indent">Indentation: tabs %1$d · spaces %2$d · width %3$s</string>
+    <string name="stats_indent_width_none">–</string>
+    <string name="stats_todos">TODO/FIXME markers: %1$d</string>
+
+    <!-- Charset lab -->
+    <string name="charset_lab">Charset lab</string>
+    <string name="charsetlab_title">Charset lab</string>
+    <string name="charsetlab_empty">Nothing to analyze: the document is empty.</string>
+    <string name="charsetlab_header">Encodings for %1$d characters (bytes · unmappable · round-trip):</string>
+    <string name="charsetlab_line">%1$s: %2$d B · %3$d unmappable · %4$s</string>
+    <string name="charsetlab_unsupported">%1$s: not supported on this device</string>
+    <string name="charsetlab_ok">exact</string>
+    <string name="charsetlab_lossy">lossy</string>
+
+    <!-- Image export -->
+    <string name="export_image">Export as image</string>
+    <string name="image_empty">Nothing to export: the document is empty.</string>
+    <string name="image_running">Rendering image…</string>
+    <string name="image_done">Image saved</string>
+    <string name="image_too_large">Document too large: %1$d lines exceed the export cap.</string>
+    <string name="image_too_large_pixels">Image too large for one bitmap. Export fewer lines or a smaller font.</string>
+    <string name="image_failed">Image export failed: %1$s</string>
+
+    <!-- OAuth loopback in-app browser -->
+    <string name="storage_oauth_open_in_app">Open in app</string>
+    <string name="storage_oauth_stale_result">authorization result is stale, please retry</string>
+    <string name="inapp_auth_title">Authorize %1$s</string>
+    <string name="inapp_auth_status">Return to Rock Edit after authorizing…</string>
+    <string name="inapp_auth_error_state">Security check failed — press Back and restart authorization.</string>
+    <string name="inapp_auth_error_load">Page failed to load: %1$s</string>
+</resources>

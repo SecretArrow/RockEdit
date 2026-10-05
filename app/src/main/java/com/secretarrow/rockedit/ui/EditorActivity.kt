@@ -2,6 +2,7 @@ package com.secretarrow.rockedit.ui
 
 import android.content.ClipboardManager
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -30,9 +31,12 @@ import androidx.lifecycle.lifecycleScope
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.BraceMatcher
+import com.secretarrow.rockedit.core.CharsetLab
 import com.secretarrow.rockedit.core.ClipboardHistoryStore
 import com.secretarrow.rockedit.core.CodeFolding
+import com.secretarrow.rockedit.core.CodeStatistics
 import com.secretarrow.rockedit.core.ColorExtractor
+import com.secretarrow.rockedit.core.CommentProfiles
 import com.secretarrow.rockedit.core.CursorNav
 import com.secretarrow.rockedit.core.EditorConfigParser
 import com.secretarrow.rockedit.core.EditorTab
@@ -47,6 +51,10 @@ import com.secretarrow.rockedit.core.FormatOptions
 import com.secretarrow.rockedit.core.FormatRequest
 import com.secretarrow.rockedit.core.FormatResult
 import com.secretarrow.rockedit.core.FormatterRegistry
+import com.secretarrow.rockedit.core.ImageExportErrorCode
+import com.secretarrow.rockedit.core.ImageExportOptions
+import com.secretarrow.rockedit.core.ImageExportPlanner
+import com.secretarrow.rockedit.core.ImagePlanResult
 import com.secretarrow.rockedit.core.LineBreak
 import com.secretarrow.rockedit.core.LineOps
 import com.secretarrow.rockedit.core.PdfExportErrorCode
@@ -158,6 +166,16 @@ class EditorActivity : AppCompatActivity() {
         ) { uri ->
             if (uri != null) {
                 writePdfTo(uri)
+            }
+        }
+
+    /** v0.16.0: code screenshot PNG export target picker. */
+    private val imageExportLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.CreateDocument("image/png"),
+        ) { uri ->
+            if (uri != null) {
+                writeImageTo(uri)
             }
         }
 
@@ -907,19 +925,103 @@ class EditorActivity : AppCompatActivity() {
             binding.editor.text
                 ?.toString()
                 .orEmpty()
-        val message =
-            listOf(
-                getString(R.string.stats_chars, TextStats.charCount(text)),
-                getString(R.string.stats_words, TextStats.wordCount(text)),
-                getString(R.string.stats_lines, TextStats.lineCount(text)),
-                getString(R.string.stats_encoding, tabManager.activeTab()?.charsetName ?: EncodingDetector.DEFAULT_CHARSET),
-            ).joinToString("\n")
-        AlertDialog
-            .Builder(this)
-            .setTitle(R.string.stats_title)
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok, null)
-            .show()
+        val tab = tabManager.activeTab()
+        val profile = CommentProfiles.forFileName(tab?.name)
+        lifecycleScope.launch {
+            val stats =
+                withContext(Dispatchers.Default) {
+                    CodeStatistics.analyze(text, profile)
+                }
+            val indentWidth =
+                if (stats.indentation.commonSpaceWidth < 0) {
+                    getString(R.string.stats_indent_width_none)
+                } else {
+                    stats.indentation.commonSpaceWidth.toString()
+                }
+            val message =
+                listOf(
+                    getString(R.string.stats_chars, stats.charCount),
+                    getString(R.string.stats_words, stats.wordCount),
+                    getString(R.string.stats_lines, stats.lineCount),
+                    getString(R.string.stats_code_lines, stats.codeLines),
+                    getString(R.string.stats_blank_lines, stats.blankLines),
+                    getString(R.string.stats_comment_lines, stats.commentOnlyLines),
+                    getString(R.string.stats_longest_line, stats.longestLineLength),
+                    getString(R.string.stats_avg_line, stats.averageLineLength),
+                    getString(
+                        R.string.stats_endings,
+                        stats.lineEndings.crlf,
+                        stats.lineEndings.lf,
+                        stats.lineEndings.cr,
+                    ),
+                    getString(
+                        R.string.stats_indent,
+                        stats.indentation.tabIndentedLines,
+                        stats.indentation.spaceIndentedLines,
+                        indentWidth,
+                    ),
+                    getString(R.string.stats_todos, stats.todos.total()),
+                    getString(R.string.stats_encoding, tab?.charsetName ?: EncodingDetector.DEFAULT_CHARSET),
+                ).joinToString("\n")
+            AlertDialog
+                .Builder(this@EditorActivity)
+                .setTitle(R.string.stats_title)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
+    }
+
+    /**
+     * v0.16.0 charset lab: byte size, unmappable characters and round-trip
+     * status for every common charset, computed from the CURRENT text (the
+     * editor never keeps the original raw bytes — documented v1 assumption).
+     */
+    private fun showCharsetLabDialog() {
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
+        if (text.isEmpty()) {
+            toast(getString(R.string.charsetlab_empty))
+            return
+        }
+        lifecycleScope.launch {
+            val reports =
+                withContext(Dispatchers.Default) {
+                    CharsetLab.encodeReports(text, EncodingDetector.COMMON_CHARSETS)
+                }
+            val message =
+                buildString {
+                    append(getString(R.string.charsetlab_header, text.length))
+                    for (report in reports) {
+                        append("\n")
+                        if (!report.supported) {
+                            append(getString(R.string.charsetlab_unsupported, report.charsetName))
+                        } else {
+                            val roundTrip =
+                                getString(
+                                    if (report.roundTripOk) R.string.charsetlab_ok else R.string.charsetlab_lossy,
+                                )
+                            append(
+                                getString(
+                                    R.string.charsetlab_line,
+                                    report.charsetName,
+                                    report.byteCount,
+                                    report.unmappableCount,
+                                    roundTrip,
+                                ),
+                            )
+                        }
+                    }
+                }
+            AlertDialog
+                .Builder(this@EditorActivity)
+                .setTitle(R.string.charsetlab_title)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
     }
 
     // -------------------------------------------------------- line operations
@@ -1397,6 +1499,7 @@ class EditorActivity : AppCompatActivity() {
             }
             R.id.action_bookmarks -> showBookmarksDialog()
             R.id.action_stats -> showStatsDialog()
+            R.id.action_charset_lab -> showCharsetLabDialog()
             R.id.action_print -> printDocument()
             R.id.action_preview -> showPreview()
             R.id.action_run -> runCode()
@@ -1430,6 +1533,7 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_unfold_all -> unfoldAll()
             R.id.action_fold_toggle -> foldToggleAtCursor()
             R.id.action_export_pdf -> exportPdf()
+            R.id.action_export_image -> exportImage()
             R.id.action_zen_mode -> toggleZenMode(item)
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
@@ -1771,6 +1875,126 @@ class EditorActivity : AppCompatActivity() {
             }
         }
     }
+
+    // ------------------------------------------------- v0.16.0 image export
+
+    /** Opens the SAF picker for a PNG code screenshot. */
+    private fun exportImage() {
+        val tab = tabManager.activeTab() ?: return
+        val text =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
+        if (text.isBlank()) {
+            toast(getString(R.string.image_empty))
+            return
+        }
+        val base = FileNames.sanitize(tab.name.ifBlank { "document" })
+        val suggested = base.substringBeforeLast('.', base) + ".png"
+        imageExportLauncher.launch(suggested)
+    }
+
+    /**
+     * Plans, renders and writes the PNG for a chosen target (SAF callback).
+     * Palette follows the current UI night mode; the planner failure codes
+     * map to localized, actionable toasts exactly like the PDF path.
+     */
+    private fun writeImageTo(target: Uri) {
+        val tab = tabManager.activeTab() ?: return
+        val editable = binding.editor.text ?: return
+        val text = editable.toString()
+        if (text.isBlank()) {
+            toast(getString(R.string.image_empty))
+            return
+        }
+        toast(getString(R.string.image_running))
+        val jobName = tab.name.ifBlank { getString(R.string.untitled) }
+        val language = SyntaxRegistry.languageForFileName(tab.name)
+        val darkTheme =
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
+        lifecycleScope.launch {
+            val planResult =
+                withContext(Dispatchers.Default) {
+                    val pre = ImageExportPlanner.preprocess(text)
+                    val tokens =
+                        if (language != null) {
+                            SyntaxTokenizer.tokenize(pre, language)
+                        } else {
+                            emptyList()
+                        }
+                    ImageExportPlanner.plan(
+                        pre,
+                        tokens,
+                        ImageExportOptions(darkTheme = darkTheme, title = jobName),
+                    )
+                }
+            when (planResult) {
+                is ImagePlanResult.Failure -> {
+                    val message =
+                        when (planResult.code) {
+                            ImageExportErrorCode.TOO_LARGE ->
+                                getString(R.string.image_too_large, planResult.actualLines)
+                            // Already refused by exportImage; kept for the
+                            // SAF-callback path where text could have changed.
+                            ImageExportErrorCode.EMPTY -> getString(R.string.image_empty)
+                            // Cannot happen when planner and tokenizer see the
+                            // same text; still reported instead of crashing.
+                            ImageExportErrorCode.TOKEN_MISMATCH ->
+                                getString(R.string.image_failed, planResult.message)
+                        }
+                    toast(message)
+                }
+                is ImagePlanResult.Success -> {
+                    val bytes =
+                        withContext(Dispatchers.Default) {
+                            val density = resources.displayMetrics.density
+                            val bitmap = ImageExporter.render(planResult.plan, density)
+                            if (bitmap != null) ImageExporter.toPngBytes(bitmap) else null
+                        }
+                    when {
+                        bytes == null -> toast(getString(R.string.image_too_large_pixels))
+                        bytes.isEmpty() ->
+                            toast(getString(R.string.image_failed, "PNG encoding"))
+                        else -> {
+                            val written =
+                                withContext(Dispatchers.IO) {
+                                    writeBytesTo(target, bytes)
+                                }
+                            if (written) {
+                                toast(getString(R.string.image_done))
+                            } else {
+                                toast(getString(R.string.image_failed, "writing the file"))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes PNG bytes through SAF. Returns false on ANY failure (missing
+     * stream, IO error) so the caller can show one informative message; the
+     * exception is swallowed deliberately because the user-facing outcome is
+     * the same regardless of the low-level cause and Rock Edit is log-free.
+     */
+    private fun writeBytesTo(
+        target: Uri,
+        bytes: ByteArray,
+    ): Boolean =
+        try {
+            contentResolver
+                .openOutputStream(target)
+                ?.use { stream ->
+                    stream.write(bytes)
+                    stream.flush()
+                } != null
+        } catch (t: Throwable) {
+            // SAF write failure (provider gone, disk full, revoked grant):
+            // reported to the user as a generic write failure, never a crash.
+            false
+        }
 
     // ------------------------------------------------------ v0.14.0 zen mode
 

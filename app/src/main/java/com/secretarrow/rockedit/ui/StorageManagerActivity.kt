@@ -19,6 +19,7 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -31,8 +32,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.CloudAuthUrls
+import com.secretarrow.rockedit.core.CloudProvider
 import com.secretarrow.rockedit.core.KeystoreEncryptor
+import com.secretarrow.rockedit.core.LoopbackRedirectServer
 import com.secretarrow.rockedit.core.OAuthExchangeResult
+import com.secretarrow.rockedit.core.OAuthState
 import com.secretarrow.rockedit.core.OAuthTokenExchanger
 import com.secretarrow.rockedit.core.OAuthTokenStore
 import com.secretarrow.rockedit.core.RemoteConnection
@@ -65,6 +69,53 @@ class StorageManagerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStorageManagerBinding
     private lateinit var adapter: RemoteConnectionAdapter
     private var pendingUsbDevice: UsbDevice? = null
+
+    /**
+     * v0.16.0: dialog + draft connection waiting for the in-app OAuth result.
+     * Cleared as soon as the result arrives; a null pending on result delivery
+     * (process death/rotation during authorization) drops the result with an
+     * informative toast — never a stale or mis-attributed save.
+     */
+    private var pendingInAppAuth: Pair<AlertDialog, RemoteConnection>? = null
+
+    /** v0.16.0: in-app OAuth authorization screen (loopback redirect). */
+    private val inAppAuthLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val pending = pendingInAppAuth
+            pendingInAppAuth = null
+            if (pending == null) {
+                toast(getString(R.string.storage_oauth_failed) + getString(R.string.storage_oauth_stale_result))
+                return@registerForActivityResult
+            }
+            val (dialog, connection) = pending
+            val data = result.data
+            if (result.resultCode != RESULT_OK || data == null) {
+                val error = data?.getStringExtra(InAppAuthActivity.EXTRA_OUT_ERROR)
+                toast(
+                    getString(R.string.storage_oauth_failed) +
+                        (error ?: getString(R.string.cancel)),
+                )
+                return@registerForActivityResult
+            }
+            val error = data.getStringExtra(InAppAuthActivity.EXTRA_OUT_ERROR)
+            if (error != null) {
+                val description = data.getStringExtra(InAppAuthActivity.EXTRA_OUT_ERROR_DESCRIPTION)
+                val detail = error + if (description.isNullOrEmpty()) "" else ": $description"
+                toast(getString(R.string.storage_oauth_failed) + detail)
+                return@registerForActivityResult
+            }
+            val code = data.getStringExtra(InAppAuthActivity.EXTRA_OUT_CODE)
+            if (code.isNullOrEmpty()) {
+                toast(getString(R.string.storage_oauth_failed) + InAppAuthActivity.ERROR_INVALID_CALLBACK)
+                return@registerForActivityResult
+            }
+            val provider = connection.type.cloudProvider()
+            if (provider == null) {
+                toast(getString(R.string.storage_oauth_failed) + "not a cloud connection type")
+                return@registerForActivityResult
+            }
+            authorizeAndSave(dialog, connection, code, loopbackRedirectUri(provider))
+        }
 
     private val usbPermissionReceiver =
         object : BroadcastReceiver() {
@@ -244,6 +295,10 @@ class StorageManagerActivity : AppCompatActivity() {
             Button(this).apply {
                 text = getString(R.string.storage_oauth_copy_url)
             }
+        val oauthInAppButton =
+            Button(this).apply {
+                text = getString(R.string.storage_oauth_open_in_app)
+            }
         val oauthCodeInput =
             EditText(this).apply {
                 hint = getString(R.string.storage_oauth_code_hint)
@@ -251,6 +306,7 @@ class StorageManagerActivity : AppCompatActivity() {
             }
         oauthBox.addView(oauthHelp)
         oauthBox.addView(oauthCopyButton)
+        oauthBox.addView(oauthInAppButton)
         oauthBox.addView(oauthCodeInput)
 
         val types = RemoteType.entries
@@ -333,6 +389,46 @@ class StorageManagerActivity : AppCompatActivity() {
             selectType(c.type)
         } ?: selectType(RemoteType.FTP)
 
+        // Builds the connection from the CURRENT dialog inputs; used by both
+        // the save button and the in-app authorization button so the two
+        // paths can never diverge (single source of truth for the draft).
+        fun buildDraftConnection(): RemoteConnection {
+            val isCloud = selectedType.isCloud
+            val hostOrClientId = hostInput.text.toString().trim()
+            val secret = passwordInput.text.toString()
+            return RemoteConnection(
+                id = existing?.id ?: RemoteConnection.newId(),
+                name =
+                    nameInput.text
+                        .toString()
+                        .trim()
+                        .ifEmpty { hostOrClientId },
+                type = selectedType,
+                host = if (isCloud) "" else hostOrClientId,
+                port = portInput.text.toString().toIntOrNull() ?: 0,
+                user = userInput.text.toString(),
+                password = if (isCloud) "" else secret,
+                initialPath = RemotePath.normalize(pathInput.text.toString()),
+                clientId = if (isCloud) hostOrClientId else existing?.clientId.orEmpty(),
+                clientSecret = if (isCloud) secret else existing?.clientSecret.orEmpty(),
+            )
+        }
+
+        /** Shared validation; shows the toast and returns false on failure. */
+        fun validateHostOrClientId(): Boolean {
+            val isCloud = selectedType.isCloud
+            val hostOrClientId = hostInput.text.toString().trim()
+            if (!isCloud && hostOrClientId.isEmpty()) {
+                toast(getString(R.string.storage_host_required))
+                return false
+            }
+            if (isCloud && hostOrClientId.isEmpty()) {
+                toast(getString(R.string.storage_oauth_need_client_id))
+                return false
+            }
+            return true
+        }
+
         val dialog =
             AlertDialog
                 .Builder(this)
@@ -347,41 +443,45 @@ class StorageManagerActivity : AppCompatActivity() {
         // dialog open (no input is ever lost on an error path).
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val isCloud = selectedType.isCloud
-                val hostOrClientId = hostInput.text.toString().trim()
-                if (!isCloud && hostOrClientId.isEmpty()) {
-                    toast(getString(R.string.storage_host_required))
-                    return@setOnClickListener
-                }
-                if (isCloud && hostOrClientId.isEmpty()) {
-                    toast(getString(R.string.storage_oauth_need_client_id))
-                    return@setOnClickListener
-                }
-                val secret = passwordInput.text.toString()
-                val connection =
-                    RemoteConnection(
-                        id = existing?.id ?: RemoteConnection.newId(),
-                        name =
-                            nameInput.text
-                                .toString()
-                                .trim()
-                                .ifEmpty { hostOrClientId },
-                        type = selectedType,
-                        host = if (isCloud) "" else hostOrClientId,
-                        port = portInput.text.toString().toIntOrNull() ?: 0,
-                        user = userInput.text.toString(),
-                        password = if (isCloud) "" else secret,
-                        initialPath = RemotePath.normalize(pathInput.text.toString()),
-                        clientId = if (isCloud) hostOrClientId else existing?.clientId.orEmpty(),
-                        clientSecret = if (isCloud) secret else existing?.clientSecret.orEmpty(),
-                    )
+                if (!validateHostOrClientId()) return@setOnClickListener
+                val connection = buildDraftConnection()
                 val pastedCode = oauthCodeInput.text.toString().trim()
-                if (isCloud && pastedCode.isNotEmpty()) {
+                if (selectedType.isCloud && pastedCode.isNotEmpty()) {
                     authorizeAndSave(dialog, connection, pastedCode)
                 } else {
                     saveConnection(dialog, connection)
                 }
             }
+        }
+
+        // v0.16.0: alternative flow — authorize in the in-app browser with a
+        // loopback redirect server. Wired after dialog creation because the
+        // handler needs the dialog reference for the pending-result pairing.
+        oauthInAppButton.setOnClickListener {
+            val provider = selectedType.cloudProvider()
+            if (provider == null) {
+                toast(getString(R.string.storage_oauth_failed) + "not a cloud connection type")
+                return@setOnClickListener
+            }
+            if (!validateHostOrClientId()) return@setOnClickListener
+            val redirect = loopbackRedirectUri(provider)
+            val state = OAuthState.generate()
+            val url =
+                try {
+                    CloudAuthUrls.build(provider, hostInput.text.toString().trim(), redirect, state)
+                } catch (e: IllegalArgumentException) {
+                    // CloudAuthUrls.build rejects a blank client id up-front.
+                    toast(getString(R.string.storage_oauth_need_client_id))
+                    return@setOnClickListener
+                }
+            pendingInAppAuth = dialog to buildDraftConnection()
+            val intent =
+                Intent(this, InAppAuthActivity::class.java)
+                    .putExtra(InAppAuthActivity.EXTRA_URL, url)
+                    .putExtra(InAppAuthActivity.EXTRA_PORT, LoopbackRedirectServer.PREFERRED_PORT)
+                    .putExtra(InAppAuthActivity.EXTRA_STATE, state)
+                    .putExtra(InAppAuthActivity.EXTRA_PROVIDER, provider.displayName)
+            inAppAuthLauncher.launch(intent)
         }
         dialog.show()
     }
@@ -405,11 +505,16 @@ class StorageManagerActivity : AppCompatActivity() {
      * Exchanges the pasted value (authorization code first, refresh token as
      * fallback) into tokens, saves both connection and tokens; keeps the
      * dialog open with an informative message on any failure branch.
+     *
+     * [redirectUri] overrides the provider default on the code exchange —
+     * the in-app loopback flow MUST pass the exact redirect it authorized
+     * with (OAuth2 requirement); the paste flow keeps the default.
      */
     private fun authorizeAndSave(
         dialog: AlertDialog,
         connection: RemoteConnection,
         pastedCode: String,
+        redirectUri: String? = null,
     ) {
         val provider = connection.type.cloudProvider() ?: return
         toast(getString(R.string.storage_oauth_connecting))
@@ -423,7 +528,7 @@ class StorageManagerActivity : AppCompatActivity() {
                             connection.clientId,
                             connection.clientSecret,
                             pastedCode,
-                            provider.defaultRedirectUri,
+                            redirectUri ?: provider.defaultRedirectUri,
                         )
                     if (direct is OAuthExchangeResult.Success) {
                         direct
@@ -452,6 +557,24 @@ class StorageManagerActivity : AppCompatActivity() {
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    /**
+     * Loopback redirect URI for the in-app OAuth flow. Google accepts any
+     * loopback port for installed-app clients (RFC 8252); Dropbox and
+     * OneDrive require the EXACT pre-registered URI, so users register
+     * `http://127.0.0.1:8642/` (Dropbox) or `http://localhost:8642/`
+     * (OneDrive) in their OAuth client console — documented in
+     * docs/CLOUD_USB_BRACKETS.md. The port matches
+     * [LoopbackRedirectServer.PREFERRED_PORT].
+     */
+    private fun loopbackRedirectUri(provider: CloudProvider): String {
+        val base =
+            when (provider) {
+                CloudProvider.ONEDRIVE -> "http://localhost"
+                else -> "http://127.0.0.1"
+            }
+        return "$base:${LoopbackRedirectServer.PREFERRED_PORT}/"
+    }
 
     private fun toast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

@@ -400,6 +400,17 @@ Kontrak tetap: tanpa izin baru, tanpa jaringan (prettier dibundel; WebView memua
 
 Semua fitur mengikuti template defensive programming (pemetaan kasus → kode tanpa jalur mati → tabel kasus → tes per cabang → asumsi eksplisit) dan tanpa izin baru yang berbahaya (USB memakai alur izin runtime bawaan Android).
 
+### 4.15 Statistik Kode, Lab Charset, Ekspor Gambar & OAuth Loopback (v0.16.0 — selesai)
+
+Empat fitur backlog berikutnya, dengan templat defensive programming yang sama:
+
+1. **Statistik kode lanjutan** (`core/CodeStatistics.kt`, murni Kotlin) — dialog Statistik ditingkatkan: baris kode/kosong/komentar (deteksi komentar sadar string dengan profil per-bahasa melalui `CommentProfiles.forFileName`), baris terpanjang & rata-rata, komposisi akhir baris (CRLF/LF/CR), profil indentasi (tab vs spasi + lebar umum {1,2,3,4,6,8}), baris berekstensi-spasi, penghitung TODO/FIXME/HACK/XXX (hanya di wilayah komentar, word-boundary). Keputusan terdokumentasi: string tak tertutup dikonfinasi ke barisnya sendiri (apostrof prosa tak lagi melumpuhkan deteksi komentar), triple-string Python spanning baris, komentar blok tak tertutup memakan sisa dokumen (fail-safe), `lineCount`/`wordCount` konsisten penuh dengan TextStats. 58 tes.
+2. **Lab charset** (`core/CharsetLab.kt`, murni JVM, menu editor) — tabel per charset umum: ukuran byte, jumlah karakter tak terpetakan (encoder REPORT manual, dihitung per sekuens), status round-trip eksak/kehilangan data, hex 32 byte pertama; deteksi BOM UTF-8/16LE/16BE/32LE/32BE (urutan prefiks yang tumpang tindih ditangani) + delegasi juniversalchardet; nama charset tidak dikenal dilaporkan informatif (tidak pernah melempar). Asumsi: lab menganalisis TEKS saat ini (editor tidak menyimpan byte mentah asli). 52 tes.
+3. **Ekspor gambar PNG** (`core/ImageExportPlanner.kt` + `ui/ImageExporter.kt`, menu editor) — cuplikan kode sebagai gambar berwarna: palet terang/gelap mengikuti mode malam sistem, nomor baris (nomor sumber diulang pada baris wrap — keputusan v1), judul dari nama file, wrap 20–200 kolom (clamp bukan gagal), warna per token sintaks; arsitektur planner-pure/renderer sepert PDF export (duplikasi algoritma wrap disengaja agar modul independen); batas bitmap 8192 px & 5000 baris dengan pesan informatif; penulisan SAF dengan jalur gagal berlapis. 55 tes planner.
+4. **OAuth loopback browser in-app** (`core/LoopbackRedirectServer.kt` + `ui/InAppAuthActivity.kt`) — alternatif alur tempel-kode: server redirect di `127.0.0.1:8642` (satu-satu: callback pertama menang, permintaan berikutnya halaman "sudah terpakai"; non-GET 405; request rusak 400 tanpa callback), state CSRF 128-bit SecureRandom divalidasi constant-time, WebView in-app dengan timeout 5 menit, tombol "Buka di aplikasi" di dialog Storage Manager; Google menerima port loopback variabel, Dropbox/OneDrive butuh URI terdaftar persis (panduan di `docs/CLOUD_USB_BRACKETS.md`); penukaran kode memakai redirect yang sama persis dengan otorisasi. Alur tempel-kode tetap utuh. 29 tes socket 127.0.0.1 nyata.
+
+Total unit test kini 1.060+; sisa backlog: grammar TextMate kustom, panel ganda full-app tablet; verifikasi fisik USB OTG tetap langkah manual pra-rilis.
+
 ---
 
 ## 5. Daftar Lengkap Bahasa Sintaks (170+)
