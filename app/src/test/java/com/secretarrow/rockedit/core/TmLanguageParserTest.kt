@@ -60,7 +60,14 @@ class TmLanguageParserTest {
     private fun keywordPattern(
         name: String,
         regex: String,
-    ): String = "{\"name\": \"$name\", \"match\": \"$regex\"}"
+    ): String {
+        // The regex arrives as a Kotlin string ("\b" = backslash + b). In
+        // JSON text a bare "\b" is the BACKSPACE escape, which org.json
+        // silently converts - corrupting the regex. Escape backslashes
+        // (and quotes defensively) so JSON decodes back to the regex.
+        val safe = regex.replace("\\", "\\\\").replace("\"", "\\\"")
+        return "{\"name\": \"$name\", \"match\": \"$safe\"}"
+    }
 
     /** Include chain of [rules] repository rules ending in one keyword rule. */
     private fun chainGrammar(rules: Int): String {

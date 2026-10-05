@@ -103,7 +103,12 @@ class CustomGrammarStore(
                 TmLanguageParser.parse(entry.grammarJson, requestedId, entry.extensions)
             when (result) {
                 is TmLanguageParser.ParseResult.Success ->
-                    SyntaxRegistry.registerCustomLanguage(result.language)
+                    // The USER's entry name wins over the grammar's internal
+                    // "name"/scopeName: the UI (manage list, status bar) shows
+                    // the name the user typed at import time.
+                    SyntaxRegistry.registerCustomLanguage(
+                        result.language.copy(displayName = entry.name),
+                    )
                 is TmLanguageParser.ParseResult.Failure ->
                     failures.add("${entry.name}: ${result.code} - ${result.message}")
             }
