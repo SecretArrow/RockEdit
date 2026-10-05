@@ -113,7 +113,7 @@ object WasmFormatterHost {
         } catch (t: Throwable) {
             synchronized(lock) {
                 destroyEngineLocked()
-                lock.notifyAll()
+                (lock as java.lang.Object).notifyAll()
             }
             throw WasmHostUnavailableException(
                 "prettier host failed: ${t.message ?: t::class.java.simpleName}",
@@ -176,7 +176,7 @@ object WasmFormatterHost {
                     ) {
                         synchronized(lock) {
                             ready = true
-                            lock.notifyAll()
+                            (lock as java.lang.Object).notifyAll()
                         }
                     }
 
@@ -225,12 +225,12 @@ object WasmFormatterHost {
                 if (remainingMs <= 0) {
                     // Rule 4 — never leave a half-loaded engine behind.
                     destroyEngineLocked()
-                    lock.notifyAll()
+                    (lock as java.lang.Object).notifyAll()
                     throw WasmHostUnavailableException(
                         "timeout after ${budgetMs}ms waiting for the prettier WebView",
                     )
                 }
-                lock.wait(remainingMs)
+                (lock as java.lang.Object).wait(remainingMs)
             }
         }
 
@@ -270,7 +270,7 @@ object WasmFormatterHost {
         if (!finished) {
             synchronized(lock) {
                 destroyEngineLocked()
-                lock.notifyAll()
+                (lock as java.lang.Object).notifyAll()
             }
             throw WasmHostUnavailableException("timeout after ${budgetMs}ms during $step")
         }
@@ -311,7 +311,7 @@ object WasmFormatterHost {
             // pageFailed stays set until the next engine build resets it,
             // so every current waiter fails fast with the same reason.
             destroyEngineLocked()
-            lock.notifyAll()
+            (lock as java.lang.Object).notifyAll()
         }
     }
 
