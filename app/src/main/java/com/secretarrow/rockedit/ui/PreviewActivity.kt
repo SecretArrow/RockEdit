@@ -24,6 +24,7 @@ class PreviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { finish() }

@@ -53,6 +53,7 @@ class DiffActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDiffBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
 
         setSupportActionBar(binding.diffToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

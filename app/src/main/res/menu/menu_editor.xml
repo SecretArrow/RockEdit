@@ -42,6 +42,18 @@
         android:title="@string/save_as"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_save_all"
+        android:title="@string/save_all"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_open_file"
+        android:title="@string/open_file"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_open_recent"
+        android:title="@string/open_recent"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_new_tab"
         android:title="@string/new_tab"
         app:showAsAction="never" />

@@ -8,6 +8,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.18.0] - 2026-10-05
+
+### Fixed
+- **UI tidak lagi menabrak bar sistem Android di semua activity** (`ui/SystemBars.kt` baru): aplikasi menarget SDK 36 sehingga Android 15+ memaksa edge-to-edge dan konten menggambar di bawah status bar (atas) maupun navigation bar / area gestur (bawah). Satu installer bersama kini dipasang di seluruh 14 activity — padding root mengikuti `systemBars + displayCutout + ime` (union per sisi), toolbar tidak lagi tertutup status bar, FAB/daftar tidak lagi tertutup menu bawah (Recent/Back/Home), dan keyboard tidak lagi menutupi editor. Ikon status/nav bar otomatis gelap di tema terang dan terang di tema gelap/AMOLED. Zen mode & full screen tetap menyembunyikan bar; keluar dari mode tersebut memulihkan padding secara otomatis (dispatch insets berulang bersifat idempoten — padding selalu dihitung dari baseline yang diambil saat install, tidak pernah terakumulasi).
+
+### Added
+- **Open File di editor** (menu editor): pemilih SAF yang membuka dokumen sebagai tab baru (atau fokus ke tab yang sudah membukanya) tanpa kembali ke layar utama; memakai jalur intent yang sama sehingga seluruh cabang defensif (batas tab, deduplikasi, persistable permission, pemuatan lazy) berlaku.
+- **Open Recent di editor**: dialog daftar file yang baru dibuka (RecentFilesStore); entri basi ditangani jalur muat normal (error terlokalisasi), store gagal dibaca diperlakukan kosong (toast, tanpa crash).
+- **Save All di editor**: menyimpan semua tab ber-file yang berubah sekaligus; satu tab gagal tidak menghentikan tab lain (writeTo defensif per tab); tanpa perubahan → toast informatif.
+
+### Documentation
+- docs/rockedit.md §4.17: tabel skenario insets per-API + keputusan baseline edge-to-edge.
+
 ## [0.17.0] - 2026-10-05
 
 ### Added

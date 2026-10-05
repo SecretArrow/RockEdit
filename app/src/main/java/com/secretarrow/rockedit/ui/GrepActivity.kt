@@ -56,6 +56,7 @@ class GrepActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityGrepBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
 
         setSupportActionBar(binding.grepToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

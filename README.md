@@ -8,9 +8,10 @@
 terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
 menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.17.0)
+## Fitur (v0.18.0)
 
-- Buka & simpan file teks apa pun lewat Storage Access Framework (tanpa izin storage!)
+- Buka & simpan file teks apa pun lewat Storage Access Framework (tanpa izin storage!) — Open File / Open Recent / Save / Save As / Save All tersedia langsung di menu editor (v0.18.0)
+- **Tata letak sadar bar sistem (v0.18.0)**: tidak ada layar yang menabrak status bar (atas) atau menu navigasi Android — Recent/Back/Home (bawah), termasuk saat keyboard terbuka; ikon bar menyesuaikan tema
 - **Editor multi-tab** (maks 10): indikator perubahan, tutup per tab / tutup lainnya,
   pemulihan set tab terbuka antar-sesi (muat isi secara lazy), undo/bookmark/encoding per-tab
 - **Penyorotan sintaks 59 bahasa** (Kotlin, Java, C/C++, C#, Go, Rust, JS/TS, Python, Ruby,

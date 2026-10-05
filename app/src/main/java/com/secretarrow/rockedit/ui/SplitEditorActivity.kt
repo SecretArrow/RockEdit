@@ -153,6 +153,7 @@ class SplitEditorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySplitEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
 
         setSupportActionBar(binding.splitToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

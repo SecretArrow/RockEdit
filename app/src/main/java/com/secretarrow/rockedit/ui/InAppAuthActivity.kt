@@ -155,6 +155,9 @@ class InAppAuthActivity : AppCompatActivity() {
         layout.addView(webView)
         layout.addView(statusView)
         setContentView(layout)
+        // Keep the 16 dp content padding and add the system-bar insets on top
+        // so the OAuth screen also clears the status/navigation bars.
+        SystemBars.install(this, layout)
         webView.loadUrl(url)
     }
 

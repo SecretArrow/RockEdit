@@ -64,6 +64,7 @@ class HexViewerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityHexViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
 
         setSupportActionBar(binding.hexToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

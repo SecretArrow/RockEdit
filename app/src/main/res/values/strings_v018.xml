@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.18.0: system-bar insets + editor file operations. -->
+    <string name="open_file">Open file…</string>
+    <string name="open_recent">Open recent</string>
+    <string name="save_all">Save all</string>
+    <string name="nothing_to_save">Nothing to save</string>
+</resources>

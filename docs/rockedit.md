@@ -418,6 +418,29 @@ Dua item backlog terakhir dari §4.12/§4.14, templat defensive programming yang
 1. **Grammar TextMate kustom** (`core/TmLanguageParser.kt` + `core/CustomGrammarStore.kt`) — impor `.tmLanguage` berformat JSON: heuristik ekstraksi 8 langkah terdokumentasi (validitas scopeName+patterns; traversal iteratif dengan budget 5.000 pattern — siklus `#include` terminasi via expanded-set, rantai panjang → PATTERN_BUDGET_EXCEEDED informatif; kata kunci dari alternasi regex literal — escape huruf/digit di-drop, grup pembungkus `\b(?:…)\b` dibedah; komentar baris/blok dari literal prefix dengan batas 3/6 karakter tanda baca; delimiter string dari `string.quoted` begin dengan fallback berlapis; normalisasi ekstensi `.PY`/`*.py` → `py`; caseInsensitive tetap false v1; include eksternal diabaikan TAPI pattern miliknya sendiri tetap dijalan). Registry: `SyntaxRegistry.registerCustomLanguage/clearCustomLanguages/customLanguages()` — bahasa kustom diperiksa SEBELUM tabel bawaan. Store: satu kunci KeyValueStore (`custom_grammars_v1`), JSON korup → kosong fail-safe, satu extension = satu grammar (impor baru menggantikan pemilik lama), `loadIntoRegistry()` melewati entri gagal dengan laporan. UI Settings: impor via SAF (baca dibatasi budget+1 byte), dialog nama+ekstensi, daftar/hapus. 24+15 tes; mirror Python 54 vektor menemukan 2 bug ekspektasi hand-computed sebelum CI.
 2. **Panel ganda full-app** (`ui/SplitEditorActivity` + `core/SplitSessionState.kt`) — panel A kini membuka file sendiri via SAF (sebelumnya hanya handoff proses-lokal), konfirmasi replace saat kotor, simpan panel B dengan pilihan charset dari COMMON_CHARSETS (encoder strict menolak teks tak terpetakan SEBELUM menulis — tanpa kehilangan senyap); sesi bertahan proses-mat via `SplitSessionCodec` (snapshot onStop; urutan pemulihan terdokumentasi: savedInstanceState > handoff > sesi tersimpan > kosong; gabungan teks > 2 juta karakter → persist dilewati dengan toast; charset tak dikenal → UTF-8; teks > 1 juta karakter per panel → pemotongan fail-safe terdokumentasi). 33 tes codec; mirror Python 57 vektor.
 
+### 4.17 Sadar Bar Sistem + Operasi Berkas Editor (v0.18.0 — selesai)
+
+**Masalah**: aplikasi menarget SDK 36; Android 15+ (API 35+) memaksa edge-to-edge sehingga konten semua activity menggambar di bawah status bar (atas) dan navigation bar / area gestur Recent-Back-Home (bawah). Sebelum v0.18.0 hanya zen mode yang menyentuh insets.
+
+**Solusi** (`ui/SystemBars.kt`, dipasang di seluruh 14 activity):
+
+| Skenario | Penanganan |
+|---|---|
+| API 29+ normal | `enableEdgeToEdge()` + `setDecorFitsSystemWindows(false)`; padding root = union per sisi dari `systemBars + displayCutout + ime` |
+| API 26-28 | DecorView tetap memfit konten; listener menerima insets yang sudah dikonsumsi (nol) → tanpa padding ganda |
+| Bar disembunyikan (zen/full screen) | Insets melapor 0 → padding jatuh ke baseline; keluar mode memulihkan padding lewat dispatch berikutnya |
+| Keyboard terbuka | `ime()` digabung ke tipe insets → padding bawah mengikuti keyboard (perilaku adjustResize yang wajib ditangani sendiri sejak Android 11 saat tidak memfit) |
+| Cutout landscape | `displayCutout()` digabung → padding kiri/kanan menjauh dari notch |
+| Dispatch berulang | Padding selalu baseline (padding root saat install) + insets saat ini → idempoten, tidak terakumulasi |
+| Root ber-padding sendiri (InAppAuthActivity) | Baseline menangkap padding 16 dp yang ada, insets ditambahkan di atasnya |
+| Ikon bar | `isAppearanceLightStatusBars/NavigationBars` mengikuti mode malam efektif (gelap di tema terang, terang di gelap/AMOLED) |
+
+Tes: `InsetsE2eTest` (emulator API 30) memastikan paddingTop > 0 dan paddingBottom > 0 untuk MainActivity dan EditorActivity — regresi tabrakan bar terdeteksi CI.
+
+**Operasi berkas editor (v0.18.0)**: menu editor kini memiliki **Open File** (SAF `OpenDocument` → `ACTION_EDIT` intent → `addTabFromIntent`; memakai ulang seluruh cabang defensif: dedup URI, batas tab, persistable permission, pemuatan lazy; picker dibatalkan → no-op), **Open Recent** (dialog dari `RecentFilesStore`; baca store gagal → kosong + toast; entri basi → jalur muat normal dengan error terlokalisasi; indeks di luar jangkauan → diabaikan via `getOrNull`), **Save All** (`dirtyFileTabs()`; kosong → toast "tidak ada yang perlu disimpan"; `writeTo` defensif per tab sehingga satu kegagalan I/O tidak menghentikan tab lain). Save/Save As yang sudah ada sebelumnya tetap.
+
+---
+
 Total unit test kini 1.130+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
 
 ---

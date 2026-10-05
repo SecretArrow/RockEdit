@@ -144,6 +144,7 @@ class StorageManagerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityStorageManagerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)

@@ -159,6 +159,20 @@ class EditorActivity : AppCompatActivity() {
             }
         }
 
+    /**
+     * v0.18.0 "Open file": SAF picker that adds the picked document as a new
+     * tab (or focuses the tab that already has it). Reuses the intent path so
+     * every defensive branch of [addTabFromIntent] (tab limit, duplicate
+     * detection, persistable-permission fallback, deferred load) applies
+     * unchanged; a cancelled picker (null uri) simply does nothing.
+     */
+    private val openFileLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                addTabFromIntent(Intent(Intent.ACTION_EDIT).setData(uri))
+            }
+        }
+
     /** v0.14.0: colored PDF export target picker. */
     private val pdfExportLauncher =
         registerForActivityResult(
@@ -203,6 +217,7 @@ class EditorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
         tabPersistence = TabPersistence(App.keyValueStore(this))
         // v0.14.0: warm up the prettier WebView engine for the formatter.
         WasmFormatterHost.init(applicationContext)
@@ -710,6 +725,47 @@ class EditorActivity : AppCompatActivity() {
             saveAsLauncher.launch(suggested)
         } else {
             writeTo(tab, afterSave)
+        }
+    }
+
+    private fun saveAllDirtyTabs() {
+        val dirty = tabManager.dirtyFileTabs()
+        if (dirty.isEmpty()) {
+            toast(getString(R.string.nothing_to_save))
+            return
+        }
+        // writeTo is defensive per tab (null uri guard, IO failure toast),
+        // so one failing tab never blocks the others.
+        for (tab in dirty) writeTo(tab)
+    }
+
+    /**
+     * v0.18.0 "Open recent": picks a recently opened document into a new
+     * tab. Failure paths: store read error -> treated as an empty list
+     * (toast, no crash); stale entry whose provider is gone -> the normal
+     * tab load path surfaces a localized open-failed error; empty pick ->
+     * ignored. The list dialog needs names only; duplicates are impossible
+     * because the store de-duplicates by uri on add.
+     */
+    private fun showOpenRecentDialog() {
+        lifecycleScope.launch {
+            val items =
+                withContext(Dispatchers.Default) {
+                    runCatching { App.recents(this@EditorActivity).list() }
+                        .getOrElse { emptyList() }
+                }
+            if (items.isEmpty()) {
+                toast(getString(R.string.no_recent_files))
+                return@launch
+            }
+            AlertDialog
+                .Builder(this@EditorActivity)
+                .setTitle(R.string.open_recent)
+                .setItems(items.map { it.name }.toTypedArray()) { _, which ->
+                    val picked = items.getOrNull(which) ?: return@setItems
+                    addTabFromIntent(Intent(Intent.ACTION_EDIT).setData(Uri.parse(picked.uri)))
+                }.setNegativeButton(R.string.cancel, null)
+                .show()
         }
     }
 
@@ -1468,6 +1524,9 @@ class EditorActivity : AppCompatActivity() {
                     )
                 saveAsLauncher.launch(suggested)
             }
+            R.id.action_open_file -> openFileLauncher.launch(arrayOf("*/*"))
+            R.id.action_open_recent -> showOpenRecentDialog()
+            R.id.action_save_all -> saveAllDirtyTabs()
             R.id.action_new_tab -> newTab()
             R.id.action_next_tab -> {
                 val next = tabManager.next()
@@ -2061,7 +2120,10 @@ class EditorActivity : AppCompatActivity() {
         if (settings.fullScreen) {
             applyFullScreen()
         } else {
-            WindowCompat.setDecorFitsSystemWindows(window, true)
+            // v0.18.0: stay on the edge-to-edge baseline installed by
+            // SystemBars; showing the bars is enough for the insets to be
+            // re-dispatched and the root padding restored.
+            WindowCompat.setDecorFitsSystemWindows(window, false)
             WindowInsetsControllerCompat(window, binding.root)
                 .show(WindowInsetsCompat.Type.systemBars())
         }

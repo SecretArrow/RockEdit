@@ -16,6 +16,7 @@ import com.secretarrow.rockedit.databinding.ActivityMainBinding
 import com.secretarrow.rockedit.ui.EditorActivity
 import com.secretarrow.rockedit.ui.RecentFilesAdapter
 import com.secretarrow.rockedit.ui.SettingsActivity
+import com.secretarrow.rockedit.ui.SystemBars
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
 
         setSupportActionBar(binding.toolbar)
 

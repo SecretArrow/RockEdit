@@ -19,6 +19,7 @@ class LicensesActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        SystemBars.install(this, binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.licenses_title)
