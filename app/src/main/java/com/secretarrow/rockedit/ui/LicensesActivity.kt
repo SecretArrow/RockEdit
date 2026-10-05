@@ -76,6 +76,11 @@ class LicensesActivity : AppCompatActivity() {
                 ),
                 Triple("Kotlin & Coroutines", "Apache License 2.0", "https://github.com/JetBrains/kotlin"),
                 Triple("juniversalchardet", "MPL 1.1 / GPL (ALv2 compatible)", "https://github.com/albfernandez/juniversalchardet"),
+                Triple(
+                    "Prettier 2.8.8 (bundled formatter engine, assets/formatter/)",
+                    "MIT License",
+                    "https://github.com/prettier/prettier",
+                ),
             )
     }
 }

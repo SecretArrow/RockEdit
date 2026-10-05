@@ -267,5 +267,36 @@ class FormatterRegistry(
                     WhitespaceFormatter(nowMs),
                 ),
             )
+
+        /**
+         * Registry variant with the prettier WASM/WebView engine
+         * ([WasmCodeFormatter], backlog item 10) taking over the tier-2
+         * languages: JavaScript/JSX, TypeScript/TSX, HTML, Markdown and
+         * GraphQL (see [WasmFormatterCatalog]). [launchHost] runs the
+         * request envelope in the headless WebView host — usually
+         * `WasmFormatterHost::launch` — and must be invoked from a non-UI
+         * thread (the editor formats on Dispatchers.Default). The native
+         * structural formatters stay registered; [BraceFormatter] acts as
+         * the degraded-mode fallback of the WASM engine, and
+         * [default] remains the WASM-free registry for callers that
+         * cannot provide a host.
+         */
+        fun withWasm(
+            nowMs: () -> Long = System::currentTimeMillis,
+            launchHost: (payload: String, budgetMs: Long) -> String,
+        ): FormatterRegistry =
+            FormatterRegistry(
+                listOf(
+                    JsonFormatter(nowMs),
+                    XmlFormatter(nowMs),
+                    CssFormatter(nowMs),
+                    BraceFormatter(nowMs),
+                    IndentFormatter(nowMs),
+                    LispFormatter(nowMs),
+                    YamlFormatter(nowMs),
+                    WhitespaceFormatter(nowMs),
+                    WasmCodeFormatter(nowMs, launchHost, nativeFallback = BraceFormatter(nowMs)),
+                ),
+            )
     }
 }

@@ -8,6 +8,7 @@ import android.provider.DocumentsContract
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.KeyListener
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -30,6 +31,7 @@ import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.BraceMatcher
 import com.secretarrow.rockedit.core.ClipboardHistoryStore
+import com.secretarrow.rockedit.core.CodeFolding
 import com.secretarrow.rockedit.core.ColorExtractor
 import com.secretarrow.rockedit.core.CursorNav
 import com.secretarrow.rockedit.core.EditorConfigParser
@@ -37,6 +39,8 @@ import com.secretarrow.rockedit.core.EditorTab
 import com.secretarrow.rockedit.core.EncodingDetector
 import com.secretarrow.rockedit.core.FileNames
 import com.secretarrow.rockedit.core.FolderGrep
+import com.secretarrow.rockedit.core.FoldErrorCode
+import com.secretarrow.rockedit.core.FoldResult
 import com.secretarrow.rockedit.core.FormatError
 import com.secretarrow.rockedit.core.FormatErrorCode
 import com.secretarrow.rockedit.core.FormatOptions
@@ -45,17 +49,25 @@ import com.secretarrow.rockedit.core.FormatResult
 import com.secretarrow.rockedit.core.FormatterRegistry
 import com.secretarrow.rockedit.core.LineBreak
 import com.secretarrow.rockedit.core.LineOps
+import com.secretarrow.rockedit.core.PdfExportErrorCode
+import com.secretarrow.rockedit.core.PdfExportOptions
+import com.secretarrow.rockedit.core.PdfExportPlanner
+import com.secretarrow.rockedit.core.PdfPlanResult
 import com.secretarrow.rockedit.core.PistonClient
 import com.secretarrow.rockedit.core.RegexTester
 import com.secretarrow.rockedit.core.SearchEngine
 import com.secretarrow.rockedit.core.SettingsRepository
 import com.secretarrow.rockedit.core.SnippetStore
 import com.secretarrow.rockedit.core.SyntaxRegistry
+import com.secretarrow.rockedit.core.SyntaxTokenizer
 import com.secretarrow.rockedit.core.TabManager
 import com.secretarrow.rockedit.core.TabPersistence
 import com.secretarrow.rockedit.core.TextStats
 import com.secretarrow.rockedit.core.TextUtilities
 import com.secretarrow.rockedit.core.TodoScanner
+import com.secretarrow.rockedit.core.ZenMode
+import com.secretarrow.rockedit.core.ZenResult
+import com.secretarrow.rockedit.core.ZenSnapshot
 import com.secretarrow.rockedit.databinding.ActivityEditorBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -89,6 +101,19 @@ class EditorActivity : AppCompatActivity() {
 
     /** Clipboard history (v0.13.0): captured on resume, inserted on demand. */
     private val clipboardHistory by lazy { ClipboardHistoryStore(App.keyValueStore(this)) }
+
+    /**
+     * v0.14.0 code folding engine. Stateful (remembers folded bodies for
+     * unfolding), so it is kept per language id; switching the active tab to
+     * a different language rebuilds it (documented v1 limitation: archives
+     * of the previous language are dropped, stale placeholders then surface
+     * as a localized fold error instead of corrupting the document).
+     */
+    private var foldEngine: CodeFolding? = null
+    private var foldEngineLanguage: String? = null
+
+    /** v0.14.0 zen mode session; survives rotation, not app restarts. */
+    private var zenActive: ZenActive? = null
 
     private val tabManager = TabManager()
     private var editorBoundTabId = -1
@@ -125,9 +150,25 @@ class EditorActivity : AppCompatActivity() {
             }
         }
 
+    /** v0.14.0: colored PDF export target picker. */
+    private val pdfExportLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.CreateDocument("application/pdf"),
+        ) { uri ->
+            if (uri != null) {
+                writePdfTo(uri)
+            }
+        }
+
     private val backCallback =
         object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (zenActive != null) {
+                    // Zen mode owns Back first: one press leaves zen, only a
+                    // second press (or dirty dialog) leaves the activity.
+                    exitZenMode()
+                    return
+                }
                 if (hasDirtyTabs()) {
                     showUnsavedDialog()
                 } else {
@@ -144,6 +185,8 @@ class EditorActivity : AppCompatActivity() {
         binding = ActivityEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
         tabPersistence = TabPersistence(App.keyValueStore(this))
+        // v0.14.0: warm up the prettier WebView engine for the formatter.
+        WasmFormatterHost.init(applicationContext)
         applyFullScreen()
 
         setSupportActionBar(binding.toolbar)
@@ -178,6 +221,9 @@ class EditorActivity : AppCompatActivity() {
         }
         loading = false
         updateUiState()
+        if (savedInstanceState?.getBoolean(STATE_ZEN_ACTIVE, false) == true) {
+            enterZenMode()
+        }
     }
 
     // Public so instrumentation tests can deliver intents the way the
@@ -190,6 +236,7 @@ class EditorActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_ZEN_ACTIVE, zenActive != null)
         captureActiveState()
         val arr = JSONArray()
         var budget = SNAPSHOT_TOTAL_BUDGET
@@ -1294,6 +1341,7 @@ class EditorActivity : AppCompatActivity() {
         menu.findItem(R.id.action_line_numbers)?.isChecked = binding.gutter.visibility == View.VISIBLE
         menu.findItem(R.id.action_read_only)?.isChecked = tab?.readOnly == true
         menu.findItem(R.id.action_syntax)?.isChecked = syntaxOn
+        menu.findItem(R.id.action_zen_mode)?.isChecked = zenActive != null
         menu.findItem(R.id.action_next_tab)?.isEnabled = tabManager.size() > 1
         menu.findItem(R.id.action_close_others)?.isEnabled = tabManager.size() > 1
         tab?.uri?.let { uri ->
@@ -1376,6 +1424,11 @@ class EditorActivity : AppCompatActivity() {
             R.id.action_todo_scan -> scanTodos()
             R.id.action_clipboard_history -> showClipboardHistoryDialog()
             R.id.action_split_view -> openSplitView()
+            R.id.action_fold_all -> foldAll()
+            R.id.action_unfold_all -> unfoldAll()
+            R.id.action_fold_toggle -> foldToggleAtCursor()
+            R.id.action_export_pdf -> exportPdf()
+            R.id.action_zen_mode -> toggleZenMode(item)
             android.R.id.home -> {
                 onBackPressedDispatcher.onBackPressed()
                 return true
@@ -1502,7 +1555,7 @@ class EditorActivity : AppCompatActivity() {
             val options = FormatOptions(lineBreak = LineBreak.detect(text, fallback = LineBreak.LF))
             val result =
                 withContext(Dispatchers.Default) {
-                    FormatterRegistry.default().format(FormatRequest(text, languageId, options))
+                    formatterRegistry().format(FormatRequest(text, languageId, options))
                 }
             when (result) {
                 is FormatResult.Success -> {
@@ -1536,7 +1589,254 @@ class EditorActivity : AppCompatActivity() {
                     getString(R.string.format_error_parse_generic)
                 }
             FormatErrorCode.TIMEOUT -> getString(R.string.format_error_timeout)
+            // The core message carries only the reason (documented contract).
+            FormatErrorCode.ENGINE_UNAVAILABLE ->
+                getString(
+                    R.string.wasm_engine_unavailable,
+                    error.message.removePrefix("prettier engine unavailable: "),
+                )
             FormatErrorCode.INTERNAL_ERROR -> getString(R.string.format_error_generic)
+        }
+    }
+
+    /**
+     * Editor registry: the native engines plus the prettier WASM/WebView
+     * engine for the tier-2 languages (JavaScript/TypeScript/HTML/Markdown/
+     * GraphQL). The WASM formatter degrades to its native fallback by
+     * itself when the WebView engine cannot run (documented contract).
+     */
+    private fun formatterRegistry(): FormatterRegistry =
+        FormatterRegistry.withWasm { payload, budgetMs ->
+            WasmFormatterHost.launch(payload, budgetMs)
+        }
+
+    // ------------------------------------------------- v0.14.0 code folding
+
+    private fun foldEngineFor(languageId: String): CodeFolding {
+        val existing = foldEngine
+        if (existing != null && foldEngineLanguage == languageId) return existing
+        val fresh = CodeFolding(languageId)
+        foldEngine = fresh
+        foldEngineLanguage = languageId
+        return fresh
+    }
+
+    private fun foldAll() {
+        applyFoldOperation { engine, text -> engine.foldAll(text) }
+    }
+
+    private fun unfoldAll() {
+        applyFoldOperation { engine, text -> engine.unfoldAll(text) }
+    }
+
+    /** Folds the region at the cursor line, or unfolds when it sits on a placeholder. */
+    private fun foldToggleAtCursor() {
+        val editable = binding.editor.text ?: return
+        val layout = binding.editor.layout
+        if (layout == null) {
+            // Not laid out yet (transient) — nothing safe to act on.
+            toast(getString(R.string.fold_none))
+            return
+        }
+        val offset = binding.editor.selectionStart.coerceIn(0, editable.length)
+        val line = layout.getLineForOffset(offset)
+        val lineText = editable.toString().split('\n').getOrNull(line) ?: ""
+        if (CodeFolding.isPlaceholderLine(lineText)) {
+            applyFoldOperation { engine, text -> engine.unfoldAtLine(text, line) }
+        } else {
+            applyFoldOperation { engine, text -> engine.foldAtLine(text, line) }
+        }
+    }
+
+    /**
+     * Shared folding pipeline: read-only/blank guards, engine selection by
+     * active language, compute off the main thread, apply through the same
+     * replace path as Format (so undo, dirty flag, gutter and highlighter
+     * stay consistent), and a localized toast for every outcome.
+     */
+    private fun applyFoldOperation(
+        op: (CodeFolding, String) -> FoldResult,
+    ) {
+        val tab = tabManager.activeTab() ?: return
+        val editable = binding.editor.text ?: return
+        if (tab.readOnly) {
+            toast(getString(R.string.read_only_toast))
+            return
+        }
+        val text = editable.toString()
+        if (text.isBlank()) {
+            toast(getString(R.string.fold_none))
+            return
+        }
+        val engine = foldEngineFor(SyntaxRegistry.languageForFileName(tab.name)?.id ?: "txt")
+        lifecycleScope.launch {
+            val result =
+                withContext(Dispatchers.Default) { op(engine, text) }
+            when (result) {
+                is FoldResult.Done -> {
+                    if (result.text == text) {
+                        // Nothing folded/unfolded (e.g. unfold on plain text).
+                        toast(getString(R.string.fold_none))
+                    } else {
+                        applyingUndoRedo = false
+                        editable.replace(0, text.length, result.text)
+                        binding.editor.setSelection(0)
+                        updateGutter()
+                        dirtyChanged()
+                        toast(getString(R.string.fold_done, result.hiddenLines))
+                    }
+                }
+                is FoldResult.Failure -> toast(foldErrorMessage(result.code))
+            }
+        }
+    }
+
+    private fun foldErrorMessage(code: FoldErrorCode): String =
+        when (code) {
+            FoldErrorCode.INPUT_TOO_LARGE -> getString(R.string.fold_too_large)
+            FoldErrorCode.NO_FOLD_RANGE -> getString(R.string.fold_none)
+            FoldErrorCode.REGION_CONTAINS_PLACEHOLDER -> getString(R.string.fold_nested)
+            FoldErrorCode.NOT_A_PLACEHOLDER -> getString(R.string.fold_not_placeholder)
+            FoldErrorCode.TOO_MANY_FOLDS -> getString(R.string.fold_too_many)
+            FoldErrorCode.PLACEHOLDER_AMBIGUOUS -> getString(R.string.fold_ambiguous)
+            FoldErrorCode.REGION_GONE -> getString(R.string.fold_region_gone)
+        }
+
+    // ------------------------------------------------------ v0.14.0 PDF export
+
+    /** Asks for a target file, then renders the document as a colored PDF. */
+    private fun exportPdf() {
+        val tab = tabManager.activeTab() ?: return
+        val text = binding.editor.text?.toString() ?: return
+        if (text.isBlank()) {
+            toast(getString(R.string.pdf_empty))
+            return
+        }
+        val base = FileNames.sanitize(tab.name.ifBlank { "document" })
+        val suggested = base.substringBeforeLast('.', base) + ".pdf"
+        pdfExportLauncher.launch(suggested)
+    }
+
+    /** Renders and writes the PDF for a chosen target (SAF callback). */
+    private fun writePdfTo(target: Uri) {
+        val tab = tabManager.activeTab() ?: return
+        val editable = binding.editor.text ?: return
+        val text = editable.toString()
+        if (text.isBlank()) {
+            toast(getString(R.string.pdf_empty))
+            return
+        }
+        toast(getString(R.string.pdf_running))
+        val jobName = tab.name.ifBlank { getString(R.string.untitled) }
+        val language = SyntaxRegistry.languageForFileName(tab.name)
+        lifecycleScope.launch {
+            val planResult =
+                withContext(Dispatchers.Default) {
+                    val pre = PdfExportPlanner.preprocess(text)
+                    val tokens =
+                        if (language != null) {
+                            SyntaxTokenizer.tokenize(pre, language)
+                        } else {
+                            emptyList()
+                        }
+                    PdfExportPlanner.plan(pre, tokens, PdfExportOptions())
+                }
+            when (planResult) {
+                is PdfPlanResult.Failure -> {
+                    val message =
+                        when (planResult.code) {
+                            PdfExportErrorCode.TOO_LARGE ->
+                                getString(
+                                    R.string.pdf_too_large,
+                                    planResult.actualLines ?: 0,
+                                    PdfExportPlanner.MAX_EXPORT_LINES,
+                                )
+                            // Cannot happen when planner and tokenizer see the
+                            // same text; still reported instead of crashing.
+                            PdfExportErrorCode.TOKEN_MISMATCH ->
+                                getString(R.string.pdf_failed, planResult.message)
+                        }
+                    toast(message)
+                }
+                is PdfPlanResult.Success -> {
+                    val outcome =
+                        withContext(Dispatchers.IO) {
+                            PdfExporter.export(this@EditorActivity, planResult.plan, jobName, target)
+                        }
+                    when (outcome) {
+                        is PdfExportResult.Success -> toast(getString(R.string.pdf_done, outcome.pages))
+                        is PdfExportResult.Failure -> toast(getString(R.string.pdf_failed, outcome.message))
+                    }
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------ v0.14.0 zen mode
+
+    private fun toggleZenMode(item: MenuItem) {
+        if (zenActive == null) {
+            enterZenMode()
+        } else {
+            exitZenMode()
+        }
+        item.isChecked = zenActive != null
+    }
+
+    /** Enters zen (idempotent); the pre-zen UI state is captured for exit. */
+    private fun enterZenMode() {
+        val snapshot =
+            ZenMode.sanitizeSnapshot(
+                binding.toolbar.visibility == View.VISIBLE,
+                binding.tabScroll.visibility == View.VISIBLE,
+                settings.fontSizeSp.toFloat(),
+            )
+        when (val result = ZenMode.enter(snapshot, zenActive)) {
+            is ZenResult.Entered -> {
+                zenActive = result.state
+                applyZenUi(result.state)
+            }
+            // Rotation re-entry: the state already exists, re-assert the UI.
+            ZenResult.AlreadyActive -> zenActive?.let { applyZenUi(it) }
+            else -> Unit // NotActive cannot occur on enter; nothing to do.
+        }
+    }
+
+    private fun applyZenUi(state: ZenActive) {
+        binding.toolbar.visibility = View.GONE
+        binding.tabScroll.visibility = View.GONE
+        // Editor and gutter must scale together to keep line numbers aligned.
+        binding.editor.setTextSize(TypedValue.COMPLEX_UNIT_SP, state.zenFontSizeSp)
+        binding.gutter.setTextSize(TypedValue.COMPLEX_UNIT_SP, state.zenFontSizeSp)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, binding.root)
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    }
+
+    private fun exitZenMode() {
+        val active = zenActive ?: return
+        when (ZenMode.exit(active)) {
+            ZenResult.Exited -> {
+                zenActive = null
+                restoreFromZen(active.snapshot)
+            }
+            else -> zenActive = null // NotActive: nothing was active; clear defensively.
+        }
+    }
+
+    private fun restoreFromZen(snapshot: ZenSnapshot) {
+        binding.toolbar.visibility = if (snapshot.toolbarVisible) View.VISIBLE else View.GONE
+        binding.tabScroll.visibility = if (snapshot.tabsVisible) View.VISIBLE else View.GONE
+        binding.editor.setTextSize(TypedValue.COMPLEX_UNIT_SP, snapshot.fontSizeSp)
+        binding.gutter.setTextSize(TypedValue.COMPLEX_UNIT_SP, snapshot.fontSizeSp)
+        if (settings.fullScreen) {
+            applyFullScreen()
+        } else {
+            WindowCompat.setDecorFitsSystemWindows(window, true)
+            WindowInsetsControllerCompat(window, binding.root)
+                .show(WindowInsetsCompat.Type.systemBars())
         }
     }
 
@@ -1585,7 +1885,7 @@ class EditorActivity : AppCompatActivity() {
                     .copy(lenient = true, insertFinalNewline = false)
             val result =
                 withContext(Dispatchers.Default) {
-                    FormatterRegistry.default().format(FormatRequest(fragment, languageId, options))
+                    formatterRegistry().format(FormatRequest(fragment, languageId, options))
                 }
             when (result) {
                 is FormatResult.Success -> {
@@ -2257,7 +2557,7 @@ class EditorActivity : AppCompatActivity() {
             val options = editorConfigOptionsFor(tab, baseOptions)
             val result =
                 withContext(Dispatchers.Default) {
-                    FormatterRegistry.default().format(FormatRequest(text, languageId, options))
+                    formatterRegistry().format(FormatRequest(text, languageId, options))
                 }
             if (result is FormatResult.Success && result.changed) {
                 val editable = binding.editor.text
@@ -2405,6 +2705,7 @@ class EditorActivity : AppCompatActivity() {
 
         /** Split pane A handoff cap; SplitEditorActivity enforces the same. */
         private const val SPLIT_HANDOFF_MAX_CHARS = 1_000_000
+        private const val STATE_ZEN_ACTIVE = "state.zen_active"
         private const val MAX_DIFF_BYTES = 4_000_000
 
         /** Convenience starter used by MainActivity and tests. */

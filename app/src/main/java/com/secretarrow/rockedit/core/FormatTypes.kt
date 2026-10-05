@@ -79,6 +79,15 @@ enum class FormatErrorCode {
     PARSE_ERROR,
     TIMEOUT,
     INTERNAL_ERROR,
+
+    /**
+     * The JS/WASM formatting engine (prettier 2.8.8 inside a headless
+     * WebView) could not be STARTED at all — missing assets, WebView
+     * creation failure or page timeout. This is not a syntax error: the
+     * document was never processed. [WasmCodeFormatter] may degrade to a
+     * native heuristic formatter when one is available for the language.
+     */
+    ENGINE_UNAVAILABLE,
 }
 
 /**

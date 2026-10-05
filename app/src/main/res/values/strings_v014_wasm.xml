@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.14.0: prettier WASM/WebView formatter engine (backlog item 10).
+         Self-contained file; values-in/strings_v014_wasm.xml is the Indonesian twin. -->
+    <string name="wasm_engine_unavailable">Prettier engine unavailable: %1$s</string>
+</resources>

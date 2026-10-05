@@ -8,6 +8,8 @@ import com.secretarrow.rockedit.core.FormatRequest
 import com.secretarrow.rockedit.core.FormatResult
 import com.secretarrow.rockedit.core.FormatterRegistry
 import com.secretarrow.rockedit.core.JsonFormatter
+import com.secretarrow.rockedit.core.WasmFormatterCatalog
+import com.secretarrow.rockedit.core.WasmFormatterContract
 import com.secretarrow.rockedit.core.WhitespaceFormatter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -71,7 +73,7 @@ class CodeFormatterTest {
             FormatterRegistry(listOf(f1, f2))
             throw AssertionError("expected IllegalStateException for duplicate claim")
         } catch (expected: IllegalStateException) {
-            assertTrue(expected.message!!.contains("json"))
+            assertTrue((expected.message ?: "").contains("json"))
         }
     }
 
@@ -190,5 +192,50 @@ class CodeFormatterTest {
     fun defaultRegistryExposesExpectedLanguages() {
         val ids = FormatterRegistry.default().supportedLanguageIds()
         assertTrue(ids.containsAll(setOf("json", "xml", "svg", "plist", "css")))
+    }
+
+    // ------------------------------------------------------- WASM registry
+
+    @Test
+    fun defaultRegistryDropsJavascriptToWhitespaceFallback() {
+        // Since v0.14.0 the WASM engine owns JavaScript; default() (no WASM)
+        // routes it to the universal whitespace fallback, never to brace.
+        val registry = FormatterRegistry.default()
+        assertEquals("whitespace", registry.formatterFor("javascript")?.id)
+        assertEquals("whitespace", registry.formatterFor("typescript")?.id)
+        assertEquals("whitespace", registry.formatterFor("graphql")?.id)
+        assertEquals("whitespace", registry.formatterFor("markdown")?.id)
+        // The whitespace fallback keeps the text intact (whitespace-only).
+        val result = registry.format(FormatRequest("let x={a:1};", "javascript"))
+        assertTrue(result is FormatResult.Success)
+    }
+
+    @Test
+    fun withWasmRoutesJavascriptToTheLauncher() {
+        val registry =
+            FormatterRegistry.withWasm { _, _ ->
+                WasmFormatterContract.buildOkResponse("wasm-prettier", "let x = { a: 1, b: 2 };\n")
+            }
+        assertEquals("wasm-prettier", registry.formatterFor("javascript")?.id)
+        val result = registry.format(FormatRequest("let x={a:1};", "javascript"))
+        assertTrue(result is FormatResult.Success)
+        assertEquals("let x = { a: 1, b: 2 };\n", (result as FormatResult.Success).formattedText)
+    }
+
+    @Test
+    fun withWasmClaimsExactlyTheCatalogLanguages() {
+        val registry = FormatterRegistry.withWasm { _, _ -> "unused" }
+        val ids = registry.supportedLanguageIds()
+        assertTrue(ids.containsAll(WasmFormatterCatalog.languages))
+        assertEquals("wasm-prettier", registry.formatterFor("markdown")?.id)
+        assertEquals("wasm-prettier", registry.formatterFor("graphql")?.id)
+    }
+
+    @Test
+    fun withWasmHasNoDuplicateLanguageClaims() {
+        // Registry init fail-fasts on duplicate claims; constructing both
+        // registries proves BraceFormatter and WasmCodeFormatter agree.
+        FormatterRegistry.default()
+        FormatterRegistry.withWasm { _, _ -> "unused" }
     }
 }

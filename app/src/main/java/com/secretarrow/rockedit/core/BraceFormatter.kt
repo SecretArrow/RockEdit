@@ -3,10 +3,15 @@ package com.secretarrow.rockedit.core
 /**
  * Structural formatter for brace languages (C-family and smart contracts).
  *
- * Covers: Kotlin, Java, C, C++, C#, Objective-C, Swift, Dart, JavaScript,
- * TypeScript, Go, Rust (also ink!/CosmWasm/Soroban via aliases), PHP,
- * Scala, Groovy, Zig, R, PowerShell, Protobuf, GraphQL, Solidity, Move,
- * Cairo, Cadence, Motoko, Aiken, Leo, Fe.
+ * Covers: Kotlin, Java, C, C++, C#, Objective-C, Swift, Dart, Go, Rust
+ * (also ink!/CosmWasm/Soroban via aliases), PHP, Scala, Groovy, Zig, R,
+ * PowerShell, Protobuf, Solidity, Move, Cairo, Cadence, Motoko, Aiken,
+ * Leo, Fe.
+ *
+ * Since v0.14.0 JavaScript/TypeScript/GraphQL are NOT claimed here: they
+ * moved to [WasmCodeFormatter] (prettier 2.8.8 in a headless WebView).
+ * This formatter remains their native fallback in degraded mode, so the
+ * per-language configs in [FormatterLanguages] are kept.
  *
  * Algorithm (single pass, O(n)):
  * - [LineScanner] skips strings/char literals/comments, so braces inside
@@ -41,8 +46,6 @@ class BraceFormatter(
             "objc",
             "swift",
             "dart",
-            "javascript",
-            "typescript",
             "go",
             "rust",
             "php",
@@ -52,7 +55,6 @@ class BraceFormatter(
             "r",
             "powershell",
             "protobuf",
-            "graphql",
             "solidity",
             "move",
             "cairo",

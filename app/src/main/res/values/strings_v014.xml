@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.14.0: code folding, colored PDF export and zen mode (backlog
+         items 4, 12 and 13). Self-contained file; values-in/strings_v014.xml
+         is the Indonesian twin. The prettier engine strings live in
+         strings_v014_wasm.xml. -->
+    <string name="fold_all">Fold all</string>
+    <string name="unfold_all">Unfold all</string>
+    <string name="fold_toggle">Fold/unfold here</string>
+    <string name="fold_done">Folded %1$d lines</string>
+    <string name="fold_none">No foldable region found</string>
+    <string name="fold_too_large">Document too large to fold (limit 1M characters)</string>
+    <string name="fold_nested">Unfold the region first (nested folding is not supported)</string>
+    <string name="fold_not_placeholder">The cursor is not on a folded placeholder</string>
+    <string name="fold_too_many">Too many active folds (limit 256)</string>
+    <string name="fold_ambiguous">The document already contains lines that look like fold placeholders</string>
+    <string name="fold_region_gone">The folded region no longer exists</string>
+    <string name="export_pdf">Export PDF</string>
+    <string name="pdf_running">Rendering PDF…</string>
+    <string name="pdf_done">PDF saved (%1$d pages)</string>
+    <string name="pdf_empty">Nothing to export</string>
+    <string name="pdf_too_large">Document too large to export (%1$d lines, limit %2$d)</string>
+    <string name="pdf_failed">PDF export failed: %1$s</string>
+    <string name="zen_mode">Zen mode</string>
+</resources>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!-- Rock Edit formatter host (v0.14.0, backlog item 10).
+     Loads prettier 2.8.8 standalone + the five parser plugins from the
+     sibling asset files (relative paths, same directory) and exposes the
+     synchronous bridge window.rockeditFormat(payloadJson) used by
+     ui/WasmFormatterHost.kt over evaluateJavascript.
+
+     Security note: the request payload enters via JSON.parse(payloadJson),
+     never via string interpolation, so document text can never break out
+     into executable script context (no XSS/injection surface). -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Rock Edit formatter host</title>
+<script src="standalone.js"></script>
+<script src="parser-babel.js"></script>
+<script src="parser-typescript.js"></script>
+<script src="parser-html.js"></script>
+<script src="parser-markdown.js"></script>
+<script src="parser-graphql.js"></script>
+</head>
+<body>
+<script>
+'use strict';
+
+/**
+ * Formats one document synchronously and returns a JSON envelope string.
+ *
+ * Request  : {"id":"<id>","parser":"<prettier parser>","text":"<source>",
+ *             "options":{"tabWidth":4,"useTabs":false,"endOfLine":"lf"}}
+ * Success  : {"id":"<id>","ok":true,"text":"<formatted>"}
+ * Failure  : {"id":"<id>","ok":false,"code":"PARSE_ERROR","message":"<why>"}
+ *            (plus line/column/locStart/locEnd when prettier pinpointed the
+ *            problem; extra keys are ignored by the Kotlin contract parser)
+ *
+ * Failure codes: PARSE_ERROR (prettier could not parse/format the text) and
+ * ENGINE_ERROR (host itself is broken: malformed request payload or the
+ * prettier global did not load).
+ */
+function rockeditFormat(payloadJson) {
+  var id = null;
+  var payload = null;
+  try {
+    payload = JSON.parse(payloadJson);
+    if (payload && typeof payload.id === 'string') {
+      id = payload.id;
+    }
+  } catch (e) {
+    return JSON.stringify({
+      ok: false,
+      code: 'ENGINE_ERROR',
+      message: 'invalid request payload: ' + e
+    });
+  }
+  if (typeof payload !== 'object' || payload === null ||
+      typeof payload.text !== 'string' || typeof payload.parser !== 'string') {
+    return JSON.stringify({
+      id: id,
+      ok: false,
+      code: 'ENGINE_ERROR',
+      message: 'request payload must contain string fields "parser" and "text"'
+    });
+  }
+  if (typeof prettier === 'undefined' || typeof prettier.format !== 'function') {
+    return JSON.stringify({
+      id: id,
+      ok: false,
+      code: 'ENGINE_ERROR',
+      message: 'prettier global is not loaded (formatter assets missing or a script failed)'
+    });
+  }
+  var options = (typeof payload.options === 'object' && payload.options !== null)
+    ? payload.options : {};
+  var plugins = (typeof prettierPlugins !== 'undefined') ? prettierPlugins : [];
+  try {
+    var formatted = prettier.format(payload.text, {
+      parser: payload.parser,
+      plugins: plugins,
+      tabWidth: (typeof options.tabWidth === 'number') ? options.tabWidth : 4,
+      useTabs: options.useTabs === true,
+      endOfLine: (typeof options.endOfLine === 'string') ? options.endOfLine : 'lf'
+    });
+    return JSON.stringify({ id: id, ok: true, text: formatted });
+  } catch (e) {
+    var err = {
+      id: id,
+      ok: false,
+      code: 'PARSE_ERROR',
+      message: String((e && e.message) || e)
+    };
+    if (e && typeof e.locStart === 'number') {
+      err.locStart = e.locStart;
+    }
+    if (e && typeof e.locEnd === 'number') {
+      err.locEnd = e.locEnd;
+    }
+    if (e && e.loc && e.loc.start && typeof e.loc.start.line === 'number') {
+      err.line = e.loc.start.line;
+      err.column = e.loc.start.column;
+    }
+    if (e && e.loc && e.loc.end && typeof e.loc.end.line === 'number') {
+      err.endLine = e.loc.end.line;
+      err.endColumn = e.loc.end.column;
+    }
+    return JSON.stringify(err);
+  }
+}
+</script>
+</body>
+</html>

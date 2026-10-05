@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.14.0: code folding, colored PDF export and zen mode (backlog
+         items 4, 12 and 13). Self-contained file; the Indonesian twin of
+         values/strings_v014.xml. The prettier engine strings live in
+         strings_v014_wasm.xml. -->
+    <string name="fold_all">Lipat semua</string>
+    <string name="unfold_all">Bentangkan semua</string>
+    <string name="fold_toggle">Lipat/bentangkan di sini</string>
+    <string name="fold_done">%1$d baris dilipat</string>
+    <string name="fold_none">Tidak ada wilayah yang bisa dilipat</string>
+    <string name="fold_too_large">Dokumen terlalu besar untuk dilipat (batas 1 juta karakter)</string>
+    <string name="fold_nested">Bentangkan wilayahnya dulu (lipatan bertingkat belum didukung)</string>
+    <string name="fold_not_placeholder">Kursor tidak berada di placeholder lipatan</string>
+    <string name="fold_too_many">Terlalu banyak lipatan aktif (batas 256)</string>
+    <string name="fold_ambiguous">Dokumen sudah memuat baris yang mirip placeholder lipatan</string>
+    <string name="fold_region_gone">Wilayah terlipat sudah tidak ada</string>
+    <string name="export_pdf">Ekspor PDF</string>
+    <string name="pdf_running">Merender PDF…</string>
+    <string name="pdf_done">PDF tersimpan (%1$d halaman)</string>
+    <string name="pdf_empty">Tidak ada yang bisa diekspor</string>
+    <string name="pdf_too_large">Dokumen terlalu besar untuk diekspor (%1$d baris, batas %2$d)</string>
+    <string name="pdf_failed">Ekspor PDF gagal: %1$s</string>
+    <string name="zen_mode">Mode zen</string>
+</resources>

@@ -8,6 +8,51 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Cloud OAuth: Google Drive, Dropbox, OneDrive (perlu registrasi klien OAuth eksternal oleh pengembang/pengguna)
 - USB OTG (libaums) dan mode root: butuh pengujian perangkat fisik
+- Bracket pair colorization: butuh perombakan tampilan editor (sisa backlog item 4)
+
+## [0.14.0] - 2026-10-05
+
+### Added
+- **Code folding** (backlog item 4 P0): lipat/bentangkan blok dari menu editor
+  (`core/CodeFolding.kt`, murni Kotlin). Dua profil struktur: kurung `{}` untuk
+  keluarga C/Java/JS/Rust/protobuf dkk. (sadar string, char, multiline string,
+  komentar baris & blok) dan **indentasi** untuk Python/Vyper/Ruby/Lua/Elixir/
+  Julia/LaTeX; lipat semua, bentangkan semua, dan lipat/bentangkan di kursor.
+  Baris tersembunyi digantikan placeholder `⟦⋯ N ⟧` (dengan ordinal `#k` bila
+  jumlah baris sama agar kunci pemulihan selalu unik — tidak ada body yang
+  tertukar), hasil masuk undo stack, batas 1 juta karakter & 256 lipatan aktif,
+  lipatan bertingkat ditolak dengan pesan lokal, placeholder asing terdeteksi
+  (PLACEHOLDER_AMBIGUOUS) sehingga dokumen tak pernah rusak diam-diam.
+- **Formatter engine prettier via WebView (WASM/JS)** (backlog item 10 P1):
+  JavaScript/JSX, TypeScript/TSX, HTML/Vue, Markdown, dan GraphQL kini
+  diformat oleh **prettier 2.8.8** yang dibundel lokal (`assets/formatter/`,
+  lisensi MIT dicantumkan) dan berjalan dalam WebView headless — tetap 100%
+  offline, tanpa jaringan, tanpa telemetri. Ketika engine JS tak bisa jalan,
+  formatter otomatis **terdegradasi** ke engine heuristik asli untuk
+  JS/TS/GraphQL (jalur baru `ENGINE_UNAVAILABLE` untuk bahasa tanpa fallback).
+  Kontrak payload/respone murni Kotlin (`core/WasmFormatterContract.kt`) dengan
+  parser JSON manual tahan-escapes dan tes per cabang.
+- **Ekspor PDF berwarna** (backlog item 12 P1): menu editor → pilih lokasi via
+  SAF → dokumen dirender A4 monospace dengan **syntax highlight** (kata kunci/
+  string/komentar/angka memakai palet cetak terang), nomor baris, header nama
+  file + nomor halaman. Perencanaan halaman murni Kotlin (`core/
+  PdfExportPlanner.kt`): wrap deterministik 88 kolom, pewarnaan lintas-wrap
+  dipecah benar, batas 100 ribu baris (ditolak dengan jumlah aktual), guard
+  TOKEN_MISMATCH. Renderer tipis (`ui/PdfExporter.kt`): PdfDocument, penulisan
+  SAF, galat IO berlapis dengan pesan informatif.
+- **Mode zen** (backlog item 13 P2): sembunyikan toolbar + strip tab, perbesar
+  font +2sp (editor & gutter selaras), layar penuh imersif; Back keluar dari
+  zen lebih dulu; status bertahan rotasi layar (snapshot pra-zen dipulihkan
+  persis); mesin status murni Kotlin (`core/ZenModeState.kt`) — idempoten,
+  anti-NaN, font di-clamp 8–40sp.
+
+### Changed
+- Registry formatter editor kini `withWasm(...)`: prettier mengambil alih
+  klaim javascript/typescript/graphql dari `BraceFormatter` (konfigurasi
+  bahasanya tetap untuk fallback terdegradasi); format dokumen, format
+  seleksi, dan format-on-save memakai registry yang sama.
+- Aset prettier 2.8.8 (standalone + 5 parser) dibundel ~2,4 MB; lisensi
+  MIT ditambahkan ke layar Lisensi.
 
 ## [0.13.0] - 2026-10-05
 
