@@ -245,8 +245,10 @@ def analyze(text, profile_name="default"):
                 space_ind += 1
                 w = len(line) - len(line.lstrip(" "))
                 widths[w] = widths.get(w, 0) + 1
-            if line[-1] in (" ", "\t"):
-                trailing += 1
+        # Trailing whitespace applies to EVERY non-blank line (code and
+        # comment-only alike) per the KDoc definition.
+        if total_non_ws > 0 and line[-1] in (" ", "\t"):
+            trailing += 1
 
     joined = "".join(comment_text)
     code = max(0, len(lines) - blank - comment_only)
@@ -376,6 +378,19 @@ check("ind5.blank", r["blank"], 1)
 # trailing whitespace
 r = analyze("a   \n\t\nb\t\nc\n")
 check("tr.count", r["trailing"], 2)
+# trailing whitespace on comment-only lines too (v016 CI fix)
+r = analyze("   // indented note   \n")
+check("tr.comment", r["trailing"], 1)
+check("tr.commentOnly", r["commentOnly"], 1)
+r = analyze("code   \n// note  \n\t\nlast\n")
+check("tr.both", r["trailing"], 2)
+# code-before-comment lines are CODE lines (not comment-only)
+src = "".join("line %d // note TODO\n" % i for i in range(1000))
+r = analyze(src)
+check("syn.lines", r["lineCount"], 1000)
+check("syn.code", r["code"], 1000)
+check("syn.commentOnly", r["commentOnly"], 0)
+check("syn.todo", r["todo"], 1000)
 
 # longest / average (hand computed: 2,4,3 -> longest 4, avg 3.0)
 r = analyze("ab\nabcd\nabc\n")

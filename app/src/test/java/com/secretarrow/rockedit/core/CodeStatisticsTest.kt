@@ -498,8 +498,17 @@ class CodeStatisticsTest {
         }
         val stats = CodeStatistics.analyze(sb.toString())
         assertEquals(1000, stats.lineCount)
-        assertEquals(1000, stats.commentOnlyLines)
+        // Every line carries code ("line N") before the comment marker, so
+        // these are CODE lines with a trailing comment, not comment-only.
+        assertEquals(0, stats.commentOnlyLines)
+        assertEquals(1000, stats.codeLines)
         assertEquals(1000, stats.todos.todo)
-        assertEquals(0, stats.codeLines)
+    }
+
+    @Test
+    fun trailingWhitespaceCountsOnBothCodeAndCommentLines() {
+        val src = "code   \n// note  \n\t\nlast\n"
+        val stats = CodeStatistics.analyze(src)
+        assertEquals(2, stats.trailingWhitespaceLines)
     }
 }

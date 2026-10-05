@@ -194,10 +194,12 @@ object CodeStatistics {
                         val width = leadingSpaceWidth(line)
                         spaceWidthCounts[width] = (spaceWidthCounts[width] ?: 0) + 1
                     }
-                    val last = line[n - 1]
-                    if (last == ' ' || last == '\t') trailingWhitespaceLines++
                 }
             }
+            // Trailing whitespace applies to EVERY non-blank line (code and
+            // comment-only alike) per the KDoc definition.
+            val last = line[n - 1]
+            if (totalNonWs > 0 && (last == ' ' || last == '\t')) trailingWhitespaceLines++
         }
 
         val lineCount = lines.size
