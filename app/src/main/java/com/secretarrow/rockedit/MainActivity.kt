@@ -153,7 +153,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAbout() {
-        com.secretarrow.rockedit.ui.AboutDialog.show(this)
+        com.secretarrow.rockedit.ui.AboutDialog
+            .show(this)
     }
 
     private fun refreshRecents() {

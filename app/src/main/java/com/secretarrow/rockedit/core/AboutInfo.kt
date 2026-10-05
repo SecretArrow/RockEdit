@@ -54,7 +54,10 @@ object AboutInfo {
      * fallback keeps the version slot present but human-readable ("unknown"),
      * which is clearer for bug reports than hiding the line entirely.
      */
-    fun titleLine(appName: String, version: String?): String {
+    fun titleLine(
+        appName: String,
+        version: String?,
+    ): String {
         val name = appName.trim().ifEmpty { "Rock Edit" }
         return "$name ${displayVersion(version)}"
     }

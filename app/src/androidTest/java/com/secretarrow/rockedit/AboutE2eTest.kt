@@ -5,7 +5,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -31,8 +30,8 @@ class AboutE2eTest {
     }
 
     private fun withTextId(id: Int) =
-        androidx.test.espresso.matcher.ViewMatchers.withText(id)
+        androidx.test.espresso.matcher.ViewMatchers
+            .withText(id)
 
-    private fun withTextContains(text: String) =
-        org.hamcrest.Matchers.containsString(text)
+    private fun withTextContains(text: String) = org.hamcrest.Matchers.containsString(text)
 }
