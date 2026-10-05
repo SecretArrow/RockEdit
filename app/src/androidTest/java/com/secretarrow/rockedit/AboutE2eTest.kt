@@ -31,7 +31,8 @@ class AboutE2eTest {
     @Test
     fun aboutDialogShowsCreator() {
         ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
-            com.secretarrow.rockedit.ui.AboutDialog.show(activity)
+            com.secretarrow.rockedit.ui.AboutDialog
+                .show(activity)
         }
         onView(withId(R.id.about_creator)).check(matches(withText(containsString("Maragung"))))
         onView(
@@ -46,7 +47,8 @@ class AboutE2eTest {
     @Test
     fun aboutDialogShowsAppNameAndVersionLine() {
         ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
-            com.secretarrow.rockedit.ui.AboutDialog.show(activity)
+            com.secretarrow.rockedit.ui.AboutDialog
+                .show(activity)
         }
         // Version comes from BuildConfig at runtime; assert the app-name part
         // (locale-agnostic) plus the version digit pattern of this release.
@@ -65,10 +67,12 @@ class AboutE2eTest {
         // creator. We exercise the pure logic the fallback composes (the
         // fallback itself only triggers if inflation fails, which cannot be
         // forced without breaking the app module).
-        val credit = com.secretarrow.rockedit.core.AboutInfo.creditLine(
-            ApplicationProvider.getApplicationContext<android.content.Context>()
-                .getString(com.secretarrow.rockedit.R.string.about_creator_label),
-        )
+        val credit =
+            com.secretarrow.rockedit.core.AboutInfo.creditLine(
+                ApplicationProvider
+                    .getApplicationContext<android.content.Context>()
+                    .getString(com.secretarrow.rockedit.R.string.about_creator_label),
+            )
         org.junit.Assert.assertTrue(credit.contains("Maragung"))
     }
 }
