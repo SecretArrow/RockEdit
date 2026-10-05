@@ -326,8 +326,10 @@ class LoopbackRedirectServer(
             val len = head.length
             val crlfCrlf =
                 len >= 4 &&
-                    head[len - 4] == '\r' && head[len - 3] == '\n' &&
-                    head[len - 2] == '\r' && head[len - 1] == '\n'
+                    head[len - 4] == '\r' &&
+                    head[len - 3] == '\n' &&
+                    head[len - 2] == '\r' &&
+                    head[len - 1] == '\n'
             val lfLf = len >= 2 && head[len - 2] == '\n' && head[len - 1] == '\n'
             if (crlfCrlf || lfLf) return head.toString()
         }

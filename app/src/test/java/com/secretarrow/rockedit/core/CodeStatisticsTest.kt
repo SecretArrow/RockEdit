@@ -9,7 +9,6 @@ import org.junit.Test
  * asserted on mixed-ending vectors.
  */
 class CodeStatisticsTest {
-
     // ------------------------------------------------- TextStats consistency
 
     @Test

@@ -5,8 +5,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.net.Socket
@@ -269,8 +269,7 @@ class LoopbackRedirectServerTest {
         }
 
     /** A plain request head: [firstLine] plus Host/Connection headers. */
-    private fun head(firstLine: String): String =
-        "$firstLine\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"
+    private fun head(firstLine: String): String = "$firstLine\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"
 
     /** Sends [raw] verbatim, then reads the full response until EOF. */
     private fun get(

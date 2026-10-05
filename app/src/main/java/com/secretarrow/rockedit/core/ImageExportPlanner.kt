@@ -236,8 +236,7 @@ object ImageExportPlanner {
      * `\r\n` and lone `\r` become `\n`, tabs become four spaces. Tokens MUST
      * be computed from the output of this function.
      */
-    fun preprocess(text: String): String =
-        text.replace("\r\n", "\n").replace('\r', '\n').replace("\t", "    ")
+    fun preprocess(text: String): String = text.replace("\r\n", "\n").replace('\r', '\n').replace("\t", "    ")
 
     /**
      * Plans the printed lines for [text] (already preprocessed) using

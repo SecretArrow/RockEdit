@@ -26,8 +26,7 @@ class ImageExportPlannerTest {
             "kotlin must be registered in SyntaxRegistry"
         }
 
-    private fun tokenize(text: String): List<SyntaxToken> =
-        SyntaxTokenizer.tokenize(text, kotlinLanguage)
+    private fun tokenize(text: String): List<SyntaxToken> = SyntaxTokenizer.tokenize(text, kotlinLanguage)
 
     /** Runs the documented pipeline for one call: tokenize(pre) then plan(pre, tokens). */
     private fun planTok(
