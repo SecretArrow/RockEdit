@@ -118,6 +118,15 @@ check("getOrElse { emptyList() }" in editor, "recents read failure -> empty list
 check("getOrNull(which)" in editor, "dialog index guarded with getOrNull")
 
 # --- 6/7. strings parity and usage -------------------------------------------
+# Duplicate resource guard: a key defined in strings_v018.xml must not exist
+# in any other values/ strings file (CI failed on this once: open_file).
+all_keys: dict[str, list[str]] = {}
+for p in sorted((APP / "res/values").glob("strings*.xml")):
+    for e in ET.parse(p).getroot().iter("string"):
+        all_keys.setdefault(e.get("name"), []).append(p.name)
+dups = {k: v for k, v in all_keys.items() if len(v) > 1}
+check(not dups, f"no duplicate string keys across values files ({dups or 'clean'})")
+
 en = ET.parse(APP / "res/values/strings_v018.xml").getroot()
 idn = ET.parse(APP / "res/values-in/strings_v018.xml").getroot()
 en_map = {e.get("name"): (e.text or "") for e in en.iter("string")}
