@@ -65,6 +65,7 @@ import com.secretarrow.rockedit.core.TabPersistence
 import com.secretarrow.rockedit.core.TextStats
 import com.secretarrow.rockedit.core.TextUtilities
 import com.secretarrow.rockedit.core.TodoScanner
+import com.secretarrow.rockedit.core.ZenActive
 import com.secretarrow.rockedit.core.ZenMode
 import com.secretarrow.rockedit.core.ZenResult
 import com.secretarrow.rockedit.core.ZenSnapshot
