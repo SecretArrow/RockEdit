@@ -541,7 +541,9 @@ class CodeFoldingTest {
         assertEquals(0, f.activeFoldCount())
         val first = done(f.foldAtLine(PYTHON_TWO_DEFS, 0))
         assertEquals(1, f.activeFoldCount())
-        done(f.foldAtLine(first.text, 2))
+        // Line 3 of the folded text is the "def b():" opener (openers stay
+        // visible; the blank separator sits at line 2).
+        done(f.foldAtLine(first.text, 3))
         assertEquals(2, f.activeFoldCount())
         done(f.unfoldAll(first.text))
         assertEquals(0, f.activeFoldCount())
