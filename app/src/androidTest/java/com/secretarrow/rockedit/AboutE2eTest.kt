@@ -1,78 +1,82 @@
 package com.secretarrow.rockedit
 
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.pressBack
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.containsString
+import com.secretarrow.rockedit.core.AboutInfo
+import com.secretarrow.rockedit.ui.AboutDialog
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
  * E2E for the About dialog (v0.19.0).
  *
- * The dialog is launched deterministically through AboutDialog.show() on the
- * real MainActivity — this exercises the real layout inflation, the real
- * localized resources and the AboutInfo wiring without depending on overflow
- * menu automation, which proved device-specific on the headless CI emulator
- * (insets-E2E lesson: assert device-agnostic properties only).
+ * The dialog is shown on the real MainActivity and inspected through its own
+ * window, bypassing Espresso's root picker — headless CI emulators report
+ * window focus unreliably for dialog windows (RootViewWithoutFocusException),
+ * the same device-specific class of failure as the insets E2E. The assertions
+ * here are therefore fully deterministic on any device.
  *
- * "Maragung" is locale-independent by design, so the credit assertion is
- * safe in every language.
+ * Coverage: real layout inflation, real localized resources, AboutInfo wiring
+ * (name+version line, creator credit), both action buttons, and dismissal.
+ * "Maragung" is locale-independent by design.
  */
 @RunWith(AndroidJUnit4::class)
 class AboutE2eTest {
     @Test
-    fun aboutDialogShowsCreator() {
+    fun aboutDialogShowsCreatorTitleAndButtons() {
         ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
-            com.secretarrow.rockedit.ui.AboutDialog
-                .show(activity)
+            val dialog = AboutDialog.show(activity)
+            assertNotNull("About dialog should be shown", dialog)
+            val shown = dialog!!
+            try {
+                val decor = shown.window?.decorView
+                assertNotNull("Dialog window must exist", decor)
+
+                val credit = decor!!.findViewById<TextView>(R.id.about_creator)?.text?.toString()
+                assertTrue("Credit must name the creator, got: $credit", credit?.contains("Maragung") == true)
+
+                val titleLine = decor.findViewById<TextView>(R.id.about_name_version)?.text?.toString()
+                assertTrue(
+                    "Name+version line must contain app name, got: $titleLine",
+                    titleLine?.contains("Rock Edit") == true,
+                )
+                assertTrue(
+                    "Name+version line must contain the release version, got: $titleLine",
+                    titleLine?.contains("0.19") == true,
+                )
+
+                assertNotNull("Positive (OK) button must exist", shown.getButton(AlertDialog.BUTTON_POSITIVE))
+                assertNotNull("Neutral (Licenses) button must exist", shown.getButton(AlertDialog.BUTTON_NEUTRAL))
+            } finally {
+                shown.dismiss()
+            }
         }
-        onView(withId(R.id.about_creator)).check(matches(withText(containsString("Maragung"))))
-        onView(
-            allOf(
-                withText(R.string.about_title),
-                isDisplayed(),
-            ),
-        ).check(matches(isDisplayed()))
-        pressBack()
     }
 
     @Test
-    fun aboutDialogShowsAppNameAndVersionLine() {
+    fun aboutDialogRefusesFinishingActivity() {
+        // Defensive branch of the isFinishing/isDestroyed guard in
+        // AboutDialog.show(): finishing the activity first must make show()
+        // a no-op (null) instead of leaking a window.
         ActivityScenario.launch(MainActivity::class.java).onActivity { activity ->
-            com.secretarrow.rockedit.ui.AboutDialog
-                .show(activity)
+            activity.finish()
+            val dialog = AboutDialog.show(activity)
+            assertTrue("show() must return null for a finishing activity", dialog == null)
         }
-        // Version comes from BuildConfig at runtime; assert the app-name part
-        // (locale-agnostic) plus the version digit pattern of this release.
-        onView(withId(R.id.about_name_version)).check(
-            matches(withText(containsString("Rock Edit"))),
-        )
-        onView(withId(R.id.about_name_version)).check(
-            matches(withText(containsString("0.19"))),
-        )
-        pressBack()
     }
 
     @Test
-    fun aboutDialogFallbackPathStillShowsCreator() {
-        // Defensive branch: even the minimal fallback dialog must name the
-        // creator. We exercise the pure logic the fallback composes (the
-        // fallback itself only triggers if inflation fails, which cannot be
-        // forced without breaking the app module).
-        val credit =
-            com.secretarrow.rockedit.core.AboutInfo.creditLine(
-                ApplicationProvider
-                    .getApplicationContext<android.content.Context>()
-                    .getString(com.secretarrow.rockedit.R.string.about_creator_label),
-            )
-        org.junit.Assert.assertTrue(credit.contains("Maragung"))
+    fun creditLineFromRealResourcesNamesCreator() {
+        // The minimal fallback dialog composes its message from this exact
+        // logic; verified here against the real localized resource of the APK.
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val credit = AboutInfo.creditLine(context.getString(R.string.about_creator_label))
+        assertTrue(credit.contains("Maragung"))
+        assertTrue(credit.startsWith(context.getString(R.string.about_creator_label).trim()))
     }
 }

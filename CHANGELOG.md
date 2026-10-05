@@ -17,7 +17,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Tests
 - `AboutInfoTest` (18 @Test): semua cabang sanitasi versi, judul, dan kredit.
-- `AboutE2eTest`: buka menu overflow → About → asersi kredit "Maragung" tampil (nama kreator bersifat locale-independent — asersi aman di semua perangkat).
+- `AboutE2eTest` (3 @Test): dialog ditampilkan pada MainActivity asli dan diperiksa lewat jendelanya sendiri (tanpa root-picker Espresso yang rapuh di emulator headless — pelajaran insets diterapkan); memverifikasi kredit "Maragung", baris nama+versi, kedua tombol, guard activity finishing, dan komposisi fallback dari resource nyata.
 
 ## [0.18.1] - 2026-10-05
 

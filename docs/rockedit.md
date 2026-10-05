@@ -455,7 +455,7 @@ Tes: `InsetsE2eTest` (emulator API 30) memastikan paddingTop > 0 dan paddingBott
 | Tombol Lisensi gagal membuka activity | Ditangkap; dialog tetap terbuka (Lisensi juga terjangkau dari menu utama) |
 | Context finishing/destroyed | `show()` keluar tanpa melakukan apa pun (anti window-leak) |
 
-**Penggunaan ganda**: satu komponen `ui/AboutDialog.kt` dipakai menu layar utama **dan** menu editor (entri `action_about` baru). Logika murni-JVM `core/AboutInfo.kt` diuji penuh (18 @Test, semua cabang); `AboutE2eTest` membuka overflow menu → About → memverifikasi kredit "Maragung" tampil (nama kreator tidak dilokalkan — asersi aman lintas perangkat).
+**Penggunaan ganda**: satu komponen `ui/AboutDialog.kt` dipakai menu layar utama **dan** menu editor (entri `action_about` baru); `show()` mengembalikan dialog yang tampil (null bila context sekarat) untuk keperluan inspeksi/tes. Logika murni-JVM `core/AboutInfo.kt` diuji penuh (18 @Test, semua cabang); `AboutE2eTest` menampilkan dialog pada MainActivity asli dan memeriksa jendela dialognya sendiri — pola deterministik yang menghindari root-picker Espresso, yang terbukti rapuh di emulator headless CI (`RootViewWithoutFocusException`) — memverifikasi kredit "Maragung", baris nama+versi, kedua tombol, dan guard finishing-activity.
 
 ---
 
