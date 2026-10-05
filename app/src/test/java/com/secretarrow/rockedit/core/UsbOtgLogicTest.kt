@@ -2,12 +2,12 @@ package com.secretarrow.rockedit.core
 
 import com.secretarrow.rockedit.remote.UsbOtgRemoteClient
 import com.secretarrow.rockedit.remote.UsbVolumeFs
-import java.io.FileNotFoundException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.FileNotFoundException
 
 /** Per-branch tests for [UsbOtgLogic] (v0.15.0). */
 class UsbOtgLogicTest {
