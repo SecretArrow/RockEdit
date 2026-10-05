@@ -20,4 +20,19 @@
     <string name="split_switched">Loaded into pane B</string>
     <string name="split_swapped">Panes swapped</string>
     <string name="split_orientation">Split orientation switched</string>
+    <!-- v0.17.0: full-app panes (open/save per pane, charset, session).
+         split_load_b is legacy (menu item superseded by action_open_b) and
+         is kept only to avoid breaking older builds. -->
+    <string name="split_open_pane_a">Open in pane A…</string>
+    <string name="split_open_pane_b">Open in pane B…</string>
+    <string name="split_save_a">Save pane A as…</string>
+    <string name="split_saved_a">Pane A saved</string>
+    <string name="split_save_failed_a">Could not save pane A</string>
+    <string name="split_loaded_a">Loaded into pane A</string>
+    <string name="split_charset_title">Save with encoding</string>
+    <string name="split_replace">Replace</string>
+    <string name="split_replace_confirm">Replace the content of this pane with the new file?</string>
+    <string name="split_session_restored">Split session restored</string>
+    <string name="split_session_too_large">Session too large to remember; it will not survive a killed process</string>
+    <string name="split_encode_failed">Text cannot be encoded as %1$s — nothing was written</string>
 </resources>

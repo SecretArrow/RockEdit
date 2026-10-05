@@ -411,6 +411,15 @@ Empat fitur backlog berikutnya, dengan templat defensive programming yang sama:
 
 Total unit test kini 1.060+; sisa backlog: grammar TextMate kustom, panel ganda full-app tablet; verifikasi fisik USB OTG tetap langkah manual pra-rilis.
 
+### 4.16 Grammar TextMate Kustom & Panel Ganda Full-App (v0.17.0 — selesai)
+
+Dua item backlog terakhir dari §4.12/§4.14, templat defensive programming yang sama:
+
+1. **Grammar TextMate kustom** (`core/TmLanguageParser.kt` + `core/CustomGrammarStore.kt`) — impor `.tmLanguage` berformat JSON: heuristik ekstraksi 8 langkah terdokumentasi (validitas scopeName+patterns; traversal iteratif dengan budget 5.000 pattern — siklus `#include` terminasi via expanded-set, rantai panjang → PATTERN_BUDGET_EXCEEDED informatif; kata kunci dari alternasi regex literal — escape huruf/digit di-drop, grup pembungkus `\b(?:…)\b` dibedah; komentar baris/blok dari literal prefix dengan batas 3/6 karakter tanda baca; delimiter string dari `string.quoted` begin dengan fallback berlapis; normalisasi ekstensi `.PY`/`*.py` → `py`; caseInsensitive tetap false v1; include eksternal diabaikan TAPI pattern miliknya sendiri tetap dijalan). Registry: `SyntaxRegistry.registerCustomLanguage/clearCustomLanguages/customLanguages()` — bahasa kustom diperiksa SEBELUM tabel bawaan. Store: satu kunci KeyValueStore (`custom_grammars_v1`), JSON korup → kosong fail-safe, satu extension = satu grammar (impor baru menggantikan pemilik lama), `loadIntoRegistry()` melewati entri gagal dengan laporan. UI Settings: impor via SAF (baca dibatasi budget+1 byte), dialog nama+ekstensi, daftar/hapus. 24+15 tes; mirror Python 54 vektor menemukan 2 bug ekspektasi hand-computed sebelum CI.
+2. **Panel ganda full-app** (`ui/SplitEditorActivity` + `core/SplitSessionState.kt`) — panel A kini membuka file sendiri via SAF (sebelumnya hanya handoff proses-lokal), konfirmasi replace saat kotor, simpan panel B dengan pilihan charset dari COMMON_CHARSETS (encoder strict menolak teks tak terpetakan SEBELUM menulis — tanpa kehilangan senyap); sesi bertahan proses-mat via `SplitSessionCodec` (snapshot onStop; urutan pemulihan terdokumentasi: savedInstanceState > handoff > sesi tersimpan > kosong; gabungan teks > 2 juta karakter → persist dilewati dengan toast; charset tak dikenal → UTF-8; teks > 1 juta karakter per panel → pemotongan fail-safe terdokumentasi). 33 tes codec; mirror Python 57 vektor.
+
+Total unit test kini 1.130+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
+
 ---
 
 ## 5. Daftar Lengkap Bahasa Sintaks (170+)

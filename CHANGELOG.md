@@ -7,8 +7,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
-- Grammar TextMate kustom (impor `.tmLanguage` untuk bahasa yang belum didukung)
-- Panel ganda full-app untuk tablet (dua dokumen aktif penuh)
+
+## [0.17.0] - 2026-10-05
+
+### Added
+- **Grammar TextMate kustom** (`core/TmLanguageParser.kt` + `core/CustomGrammarStore.kt`, Settings): impor grammar TextMate berformat JSON (eksporan VS Code) untuk bahasa yang belum didukung highlighter — ekstraksi best-effort kata kunci (alternasi regex `\b(if|else)\b` dan grup `(?:…)`), komentar baris/blok (literal prefix), delimiter string; budget traversal 5.000 pattern (siklus include terminasi deterministik, rantai panjang ditolak informatif), batas 2 juta karakter, tolak JSON rusak/bukan-grammar dengan kode berlokasi; registry kustom diperiksa SEBELUM tabel bawaan (ekstensi case-insensitive); tersimpan persisten (satu extension = satu grammar), dikelola dari Settings (impor via SAF + daftar/hapus). 39 tes parser+store (24+15) + mirror Python 54 vektor.
+- **Panel ganda full-app** (`ui/SplitEditorActivity` + `core/SplitSessionState.kt`): kedua panel kini dokumen aktif penuh — panel A punya pembuka SAF sendiri (sebelumnya hanya menerima handoff dari editor), konfirmasi replace saat panel kotor, simpan panel B dengan pilihan charset (encoder strict menolak sebelum menulis — tanpa kehilangan senyap), dan seluruh sesi split bertahan terhadap proses mati/rotasi (snapshot onStop, model "snapshot on stop" terdokumentasi: savedInstanceState > handoff > sesi tersimpan > kosong). 33 tes codec + mirror Python 57 vektor.
+
+### Documentation
+- docs/rockedit.md §4.16: keputusan ekstraksi grammar (heuristik 8 langkah), model sesi split, tabel jalur gagal.
 
 ## [0.16.0] - 2026-10-05
 

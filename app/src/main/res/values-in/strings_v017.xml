@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.17.0: grammar TextMate kustom (impor/kelola di Pengaturan). -->
+    <string name="pref_grammars">Grammar kustom</string>
+    <string name="grammar_import">Impor grammar (.tmLanguage JSON)</string>
+    <string name="grammar_import_summary">Tambahkan highlight untuk bahasa yang belum didukung dari file grammar TextMate JSON</string>
+    <string name="grammar_manage">Kelola grammar terimpor</string>
+    <string name="grammar_manage_summary">Daftar dan hapus grammar yang diimpor</string>
+    <string name="grammar_name_hint">Nama grammar</string>
+    <string name="grammar_extension_hint">Ekstensi file (dipisah koma, mis. py, pyi)</string>
+    <string name="grammar_imported">Grammar %1$s diimpor</string>
+    <string name="grammar_import_failed">Impor grammar gagal: </string>
+    <string name="grammar_read_failed">berkas tidak dapat dibaca</string>
+    <string name="grammar_removed">Grammar dihapus</string>
+    <string name="grammar_empty">Belum ada grammar yang diimpor</string>
+    <string name="grammar_remove_title">Hapus grammar?</string>
+    <string name="grammar_remove">Hapus</string>
+    <string name="grammar_save">Impor</string>
+</resources>

@@ -1,11 +1,16 @@
 package com.secretarrow.rockedit.core
 
+import java.util.concurrent.CopyOnWriteArrayList
+
 /**
  * A syntax language definition consumed by [SyntaxTokenizer].
  *
  * Rock Edit ships deliberately small, self-contained language data:
  * keyword sets plus comment/string delimiters are enough for a useful and
  * fast editor-grade highlight without bundling external grammar files.
+ *
+ * [extensions] is only populated for user-imported (custom) grammars so the
+ * registry can map file extensions to them; built-in languages leave it empty.
  */
 class SyntaxLanguage(
     val id: String,
@@ -15,6 +20,7 @@ class SyntaxLanguage(
     val blockComments: List<Pair<String, String>> = emptyList(),
     val stringDelims: List<Char> = listOf('"', '\''),
     val caseInsensitive: Boolean = false,
+    val extensions: List<String> = emptyList(),
 )
 
 /**
@@ -3439,13 +3445,44 @@ object SyntaxRegistry {
     /** Number of built-in languages (useful for tests and About dialogs). */
     val languageCount: Int get() = languages.size
 
+    // ------------------------------------------------- custom grammars (v0.17.0)
+    // User-imported TextMate grammars, checked by languageForFileName BEFORE
+    // the built-in table. Thread safety: copy-on-write snapshot iteration.
+
+    private val customs = CopyOnWriteArrayList<SyntaxLanguage>()
+
+    /** Registers a user-imported language, replacing any entry with the same id. */
+    fun registerCustomLanguage(language: SyntaxLanguage) {
+        synchronized(customs) {
+            customs.removeAll { it.id == language.id }
+            customs.add(language)
+        }
+    }
+
+    /** Drops every registered custom language (store reload and test cleanup). */
+    fun clearCustomLanguages() {
+        synchronized(customs) {
+            customs.clear()
+        }
+    }
+
+    /** Defensive snapshot of the currently registered custom languages. */
+    fun customLanguages(): List<SyntaxLanguage> = customs.toList()
+
     /**
-     * Resolves the language for a file name: exact names first (Makefile,
+     * Resolves the language for a file name: user-imported custom languages
+     * first (case-insensitive extension match), then exact names (Makefile,
      * Dockerfile, ...), then the extension (case-insensitive).
      * Returns null for unknown extensions, extension-less names and dotfiles.
      */
     fun languageForFileName(name: String?): SyntaxLanguage? {
         if (name.isNullOrEmpty()) return null
+        val fileExt = FileNames.split(name).second
+        if (fileExt.isNotEmpty()) {
+            customs.firstOrNull { language ->
+                language.extensions.any { it.equals(fileExt, ignoreCase = true) }
+            }?.let { return it }
+        }
         byName[name.lowercase()]?.let { return it }
         val ext = FileNames.split(name).second.lowercase()
         if (ext.isEmpty()) return null

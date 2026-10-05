@@ -20,4 +20,19 @@
     <string name="split_switched">Dimuat ke panel B</string>
     <string name="split_swapped">Panel ditukar</string>
     <string name="split_orientation">Orientasi tampilan terpisah diubah</string>
+    <!-- v0.17.0: panel aplikasi penuh (buka/simpan per panel, charset,
+         sesi). split_load_b adalah warisan (item menu digantikan oleh
+         action_open_b) dan dipertahankan agar build lama tidak rusak. -->
+    <string name="split_open_pane_a">Buka di panel A…</string>
+    <string name="split_open_pane_b">Buka di panel B…</string>
+    <string name="split_save_a">Simpan panel A sebagai…</string>
+    <string name="split_saved_a">Panel A tersimpan</string>
+    <string name="split_save_failed_a">Tidak dapat menyimpan panel A</string>
+    <string name="split_loaded_a">Dimuat ke panel A</string>
+    <string name="split_charset_title">Simpan dengan enkode</string>
+    <string name="split_replace">Ganti</string>
+    <string name="split_replace_confirm">Ganti isi panel ini dengan file baru?</string>
+    <string name="split_session_restored">Sesi tampilan terpisah dipulihkan</string>
+    <string name="split_session_too_large">Sesi terlalu besar untuk diingat; tidak akan bertahan saat proses dimatikan</string>
+    <string name="split_encode_failed">Teks tidak dapat dienkode sebagai %1$s — tidak ada yang ditulis</string>
 </resources>

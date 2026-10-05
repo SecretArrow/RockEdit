@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.17.0: custom TextMate grammars (import/manage in Settings). -->
+    <string name="pref_grammars">Custom grammars</string>
+    <string name="grammar_import">Import grammar (.tmLanguage JSON)</string>
+    <string name="grammar_import_summary">Add highlighting for an unlisted language from a TextMate JSON grammar file</string>
+    <string name="grammar_manage">Manage imported grammars</string>
+    <string name="grammar_manage_summary">List and remove imported grammars</string>
+    <string name="grammar_name_hint">Grammar name</string>
+    <string name="grammar_extension_hint">File extensions (comma separated, e.g. py, pyi)</string>
+    <string name="grammar_imported">Grammar %1$s imported</string>
+    <string name="grammar_import_failed">Grammar import failed: </string>
+    <string name="grammar_read_failed">file could not be read</string>
+    <string name="grammar_removed">Grammar removed</string>
+    <string name="grammar_empty">No grammars imported yet</string>
+    <string name="grammar_remove_title">Remove grammar?</string>
+    <string name="grammar_remove">Remove</string>
+    <string name="grammar_save">Import</string>
+</resources>

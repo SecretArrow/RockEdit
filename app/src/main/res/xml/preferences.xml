@@ -78,6 +78,18 @@
             android:title="@string/pref_show_hidden" />
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/pref_grammars">
+        <Preference
+            android:key="grammar_import"
+            android:summary="@string/grammar_import_summary"
+            android:title="@string/grammar_import" />
+
+        <Preference
+            android:key="grammar_manage"
+            android:summary="@string/grammar_manage_summary"
+            android:title="@string/grammar_manage" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_backup_restore">
         <Preference
             android:key="backup_data"

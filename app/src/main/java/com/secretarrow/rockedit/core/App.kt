@@ -21,6 +21,9 @@ object App {
 
     fun remoteConnections(context: Context): RemoteConnectionStore = RemoteConnectionStore(keyValueStore(context), KeystoreEncryptor)
 
+    fun customGrammars(context: Context): CustomGrammarStore =
+        CustomGrammarStore(keyValueStore(context))
+
     private fun android.content.SharedPreferences.toKeyValueStore(): KeyValueStore =
         object : KeyValueStore {
             override fun getString(

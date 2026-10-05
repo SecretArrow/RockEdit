@@ -214,6 +214,9 @@ class EditorActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, backCallback)
 
         originalKeyListener = binding.editor.keyListener
+        // v0.17.0: register user-imported TextMate grammars BEFORE any
+        // highlighting; failures are skipped by the store (kept for review).
+        App.customGrammars(this).loadIntoRegistry()
         highlighter = SyntaxHighlighter(binding.editor)
 
         binding.editor.addTextChangedListener(EditorWatcher())

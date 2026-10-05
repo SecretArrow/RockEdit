@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!-- v0.17.0: per-pane open/save. The v0.13.0 action_load_b item was
+         superseded by action_open_b; the legacy split_load_b string key is
+         kept. -->
     <item
-        android:id="@+id/action_load_b"
-        android:title="@string/split_load_b"
+        android:id="@+id/action_open_a"
+        android:title="@string/split_open_pane_a"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_open_b"
+        android:title="@string/split_open_pane_b"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_save_a"
+        android:title="@string/split_save_a"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_save_b"
