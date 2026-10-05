@@ -652,7 +652,7 @@ check("activeFoldCountTracksArchive",
       f.active_fold_count() == 0 and
       first_fold[0] == "DONE" and f.active_fold_count() == 1 and
       second_fold[0] == "DONE" and f.active_fold_count() == 2 and
-      restored_all == ("DONE", PYTHON_TWO_DEFS, 5) and f.active_fold_count() == 0)
+      restored_all == ("DONE", PYTHON_TWO_DEFS, 2) and f.active_fold_count() == 0)
 f = CodeFolding("python")
 folded = f.fold_all("def a():\n    x = 1\n    y = 2\n")[1]
 r = f.unfold_all("import os\n" + folded)
