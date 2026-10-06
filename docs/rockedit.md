@@ -476,6 +476,8 @@ Tes: `InsetsE2eTest` (emulator API 30) memastikan paddingTop > 0 dan paddingBott
 
 Tes: `ZenExitE2eTest` (2 @Test) — masuk zen via menu (pola `tapOverflowItem` yang lulus di editor karena memakai `onCreateOptionsMenu`), asersi FAB tampil + toolbar GONE, ketuk FAB → toolbar VISIBLE; dan tekan Back → keluar zen bukan menutup activity.
 
+**Pelajaran automation overflow (ditemukan CI saat rilis ini)**: popup overflow adalah `MenuDropDownListView` yang hanya me-materialize baris terlihat. Setelah menu diurutkan (item populer pindah grup dalam), pola lama `onView(withText(...))` gagal `NoMatchingViewException` untuk item di bawah lipatan — bahkan pada test yang sebelumnya hijau. Solusinya helper bersama `OverflowMenu` (androidTest): buka popup → coba match view langsung (baris atas) → fallback `Espresso.onData(menuItemWithTitle) .inRoot(isPlatformPopup())` yang memaksa ListView menggulir ke barisnya (persis saran pesan error Espresso); matcher data membandingkan `MenuItemImpl.toString()` (menjadi judul item) dengan judul resource. `TextToolsE2eTest`/`DiffSnippetE2eTest`/`ZenExitE2eTest` dipindah ke helper ini.
+
 ---
 
 Total unit test kini 1.150+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).

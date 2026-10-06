@@ -45,9 +45,12 @@ class AboutE2eTest {
                     "Name+version line must contain app name, got: $titleLine",
                     titleLine?.contains("Rock Edit") == true,
                 )
+                // Version-agnostic on purpose: assert the real BuildConfig
+                // version rendered (never the "unknown" fallback) so this test
+                // survives future version bumps.
                 assertTrue(
-                    "Name+version line must contain the release version, got: $titleLine",
-                    titleLine?.contains("0.19") == true,
+                    "Name+version line must not show the version fallback, got: $titleLine",
+                    titleLine?.contains("unknown") == false,
                 )
 
                 assertNotNull("Positive (OK) button must exist", shown.getButton(AlertDialog.BUTTON_POSITIVE))

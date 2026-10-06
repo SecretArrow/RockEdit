@@ -18,6 +18,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ### Tests
 - `ZenExitE2eTest` (2 @Test): masuk zen via menu (pola overflow yang terbukti pada editor) → FAB tampil & toolbar hilang → ketuk FAB → toolbar pulih; serta satu tekan Back keluar zen (bukan menutup editor).
+- **Helper bersama `OverflowMenu`** untuk automation menu overflow: setelah menu diurutkan ulang, item yang kini berada jauh di bawah tidak lagi termaterialisasi sebagai view (popup overflow = ListView yang mendaur ulang baris) sehingga pola `onView(withText(...))` lama gagal pada beberapa test yang sebelumnya hijau. Helper memakai `Espresso.onData` + `isPlatformPopup` (sesuai saran pesan error Espresso) — `TextToolsE2eTest`, `DiffSnippetE2eTest`, dan `ZenExitE2eTest` kini memakainya.
+- `AboutE2eTest`: asersi versi diubah agnostik (menolak fallback "unknown" alih-alih mengunci "0.19") agar tidak pecah tiap naik versi.
 
 ## [0.19.0] - 2026-10-06
 

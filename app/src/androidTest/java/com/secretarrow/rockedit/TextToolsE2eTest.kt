@@ -42,17 +42,8 @@ class TextToolsE2eTest {
         }
     }
 
-    /** Opens the editor overflow and taps a menu entry regardless of layout. */
-    private fun tapOverflowItem(titleRes: Int) {
-        try {
-            onView(withText(titleRes)).perform(click())
-        } catch (_: Throwable) {
-            Espresso.openActionBarOverflowOrOptionsMenu(
-                ApplicationProvider.getApplicationContext<android.content.Context>(),
-            )
-            onView(withText(titleRes)).perform(click())
-        }
-    }
+    /** Delegates to the shared overflow helper (handles deep, recycled rows). */
+    private fun tapOverflowItem(titleRes: Int) = OverflowMenu.tap(titleRes)
 
     private fun waitUntil(
         block: () -> Boolean,

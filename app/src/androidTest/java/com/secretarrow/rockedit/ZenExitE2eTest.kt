@@ -3,7 +3,6 @@ package com.secretarrow.rockedit
 import android.content.Intent
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -38,21 +37,8 @@ class ZenExitE2eTest {
         return ActivityScenario.launch(intent)
     }
 
-    /** Opens the editor overflow and taps a menu entry regardless of layout. */
-    private fun tapOverflowItem(titleRes: Int) {
-        try {
-            onView(withTextId(titleRes)).perform(click())
-        } catch (_: Throwable) {
-            Espresso.openActionBarOverflowOrOptionsMenu(
-                ApplicationProvider.getApplicationContext<android.content.Context>(),
-            )
-            onView(withTextId(titleRes)).perform(click())
-        }
-    }
-
-    private fun withTextId(id: Int) =
-        androidx.test.espresso.matcher.ViewMatchers
-            .withText(id)
+    /** Delegates to the shared overflow helper (handles deep, recycled rows). */
+    private fun tapOverflowItem(titleRes: Int) = OverflowMenu.tap(titleRes)
 
     @Test
     fun exitFabLeavesZenAndRestoresToolbar() {
