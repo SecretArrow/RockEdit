@@ -38,14 +38,14 @@ object OverflowMenu {
         try {
             onView(allOfDisplayed(withText(title))).perform(click())
         } catch (_: Throwable) {
-            Espresso.onData(menuItemWithTitle(title))
+            Espresso
+                .onData(menuItemWithTitle(title))
                 .inRoot(isPlatformPopup())
                 .perform(click())
         }
     }
 
-    private fun allOfDisplayed(matcher: Matcher<View>): Matcher<View> =
-        org.hamcrest.Matchers.allOf(matcher, isDisplayed())
+    private fun allOfDisplayed(matcher: Matcher<View>): Matcher<View> = org.hamcrest.Matchers.allOf(matcher, isDisplayed())
 
     /** Matches an overflow adapter row whose toString() is the item title. */
     private fun menuItemWithTitle(title: String): Matcher<Any> =
