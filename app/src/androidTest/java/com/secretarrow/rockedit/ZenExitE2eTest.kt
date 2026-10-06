@@ -50,7 +50,9 @@ class ZenExitE2eTest {
         }
     }
 
-    private fun withTextId(id: Int) = androidx.test.espresso.matcher.ViewMatchers.withText(id)
+    private fun withTextId(id: Int) =
+        androidx.test.espresso.matcher.ViewMatchers
+            .withText(id)
 
     @Test
     fun exitFabLeavesZenAndRestoresToolbar() {
