@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- v0.20.0: menu reorganized by real-world usage priority. Overflow items
+     are grouped with <group> so Android renders separators between them:
+     File ops first (most used), then tabs, editing/navigation, tools,
+     view, data/encoding, share/export, and finally About. The two toolbar
+     icons (Save, Format) keep their ifRoom slots at the top. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Toolbar icons (kept in place): Save and Format. -->
     <item
         android:id="@+id/action_save"
         android:icon="@drawable/ic_save"
@@ -13,210 +20,242 @@
         android:title="@string/format"
         app:iconTint="?attr/colorOnSurface"
         app:showAsAction="ifRoom" />
-    <item
-        android:id="@+id/action_format_selection"
-        android:title="@string/format_selection"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_text_tools"
-        android:title="@string/text_tools"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_regex_test"
-        android:title="@string/regex_tester"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_colors"
-        android:title="@string/color_preview"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_snippets"
-        android:title="@string/snippets"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_diff_with_file"
-        android:title="@string/diff_with_file"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_save_as"
-        android:title="@string/save_as"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_save_all"
-        android:title="@string/save_all"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_open_file"
-        android:title="@string/open_file"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_open_recent"
-        android:title="@string/open_recent"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_new_tab"
-        android:title="@string/new_tab"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_next_tab"
-        android:title="@string/next_tab"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_close_tab"
-        android:title="@string/close_tab"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_close_others"
-        android:title="@string/close_others"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_open_folder"
-        android:title="@string/open_folder"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_undo"
-        android:title="@string/undo"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_redo"
-        android:title="@string/redo"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_find"
-        android:title="@string/find"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_goto"
-        android:title="@string/goto_line"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_duplicate_line"
-        android:title="@string/duplicate_line"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_delete_line"
-        android:title="@string/delete_line"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_move_line_up"
-        android:title="@string/move_line_up"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_move_line_down"
-        android:title="@string/move_line_down"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_bookmark_toggle"
-        android:checkable="true"
-        android:title="@string/bookmark_line"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_bookmarks"
-        android:title="@string/bookmarks"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_stats"
-        android:title="@string/statistics"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_charset_lab"
-        android:title="@string/charset_lab"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_print"
-        android:title="@string/print"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_preview"
-        android:title="@string/preview"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_run"
-        android:title="@string/run"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_share"
-        android:title="@string/share"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_wrap"
-        android:checkable="true"
-        android:title="@string/word_wrap"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_line_numbers"
-        android:checkable="true"
-        android:title="@string/line_numbers"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_read_only"
-        android:checkable="true"
-        android:title="@string/read_only"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_syntax"
-        android:checkable="true"
-        android:title="@string/syntax_highlight"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_reopen_encoding"
-        android:title="@string/reopen_encoding"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_save_encoding"
-        android:title="@string/save_encoding"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_insert_datetime"
-        android:title="@string/insert_datetime"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_hex_view"
-        android:title="@string/hex_view"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_match_brace"
-        android:title="@string/match_brace"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_todo_scan"
-        android:title="@string/todo_scan"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_clipboard_history"
-        android:title="@string/clipboard_history"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_split_view"
-        android:title="@string/split_view"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_fold_all"
-        android:title="@string/fold_all"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_unfold_all"
-        android:title="@string/unfold_all"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_fold_toggle"
-        android:title="@string/fold_toggle"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_export_pdf"
-        android:title="@string/export_pdf"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_export_image"
-        android:title="@string/export_image"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_zen_mode"
-        android:checkable="true"
-        android:title="@string/zen_mode"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/action_about"
-        android:title="@string/about"
-        app:showAsAction="never" />
+
+    <!-- 1. Berkas — paling sering dipakai. -->
+    <group android:id="@+id/group_file">
+        <item
+            android:id="@+id/action_open_file"
+            android:title="@string/open_file"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_open_recent"
+            android:title="@string/open_recent"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_save_as"
+            android:title="@string/save_as"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_save_all"
+            android:title="@string/save_all"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_open_folder"
+            android:title="@string/open_folder"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- 2. Tab. -->
+    <group android:id="@+id/group_tabs">
+        <item
+            android:id="@+id/action_new_tab"
+            android:title="@string/new_tab"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_next_tab"
+            android:title="@string/next_tab"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_close_tab"
+            android:title="@string/close_tab"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_close_others"
+            android:title="@string/close_others"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- 3. Sunting & navigasi harian. -->
+    <group android:id="@+id/group_edit">
+        <item
+            android:id="@+id/action_undo"
+            android:title="@string/undo"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_redo"
+            android:title="@string/redo"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_find"
+            android:title="@string/find"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_goto"
+            android:title="@string/goto_line"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_bookmark_toggle"
+            android:checkable="true"
+            android:title="@string/bookmark_line"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_bookmarks"
+            android:title="@string/bookmarks"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_duplicate_line"
+            android:title="@string/duplicate_line"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_delete_line"
+            android:title="@string/delete_line"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_move_line_up"
+            android:title="@string/move_line_up"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_move_line_down"
+            android:title="@string/move_line_down"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_clipboard_history"
+            android:title="@string/clipboard_history"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_insert_datetime"
+            android:title="@string/insert_datetime"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- 4. Alat teks & kode. -->
+    <group android:id="@+id/group_tools">
+        <item
+            android:id="@+id/action_format_selection"
+            android:title="@string/format_selection"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_text_tools"
+            android:title="@string/text_tools"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_regex_test"
+            android:title="@string/regex_tester"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_colors"
+            android:title="@string/color_preview"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_snippets"
+            android:title="@string/snippets"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_diff_with_file"
+            android:title="@string/diff_with_file"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_run"
+            android:title="@string/run"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- 5. Tampilan editor. -->
+    <group android:id="@+id/group_view">
+        <item
+            android:id="@+id/action_wrap"
+            android:checkable="true"
+            android:title="@string/word_wrap"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_line_numbers"
+            android:checkable="true"
+            android:title="@string/line_numbers"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_syntax"
+            android:checkable="true"
+            android:title="@string/syntax_highlight"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_read_only"
+            android:checkable="true"
+            android:title="@string/read_only"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_zen_mode"
+            android:checkable="true"
+            android:title="@string/zen_mode"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_split_view"
+            android:title="@string/split_view"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_hex_view"
+            android:title="@string/hex_view"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_match_brace"
+            android:title="@string/match_brace"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_fold_toggle"
+            android:title="@string/fold_toggle"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_fold_all"
+            android:title="@string/fold_all"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_unfold_all"
+            android:title="@string/unfold_all"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- 6. Data & encoding. -->
+    <group android:id="@+id/group_data">
+        <item
+            android:id="@+id/action_reopen_encoding"
+            android:title="@string/reopen_encoding"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_save_encoding"
+            android:title="@string/save_encoding"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_charset_lab"
+            android:title="@string/charset_lab"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_todo_scan"
+            android:title="@string/todo_scan"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_stats"
+            android:title="@string/statistics"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- 7. Bagikan & ekspor. -->
+    <group android:id="@+id/group_share">
+        <item
+            android:id="@+id/action_share"
+            android:title="@string/share"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_print"
+            android:title="@string/print"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_preview"
+            android:title="@string/preview"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_export_pdf"
+            android:title="@string/export_pdf"
+            app:showAsAction="never" />
+        <item
+            android:id="@+id/action_export_image"
+            android:title="@string/export_image"
+            app:showAsAction="never" />
+    </group>
+
+    <!-- 8. Bantuan. -->
+    <group android:id="@+id/group_help">
+        <item
+            android:id="@+id/action_about"
+            android:title="@string/about"
+            app:showAsAction="never" />
+    </group>
 </menu>

@@ -455,7 +455,26 @@ Tes: `InsetsE2eTest` (emulator API 30) memastikan paddingTop > 0 dan paddingBott
 | Tombol Lisensi gagal membuka activity | Ditangkap; dialog tetap terbuka (Lisensi juga terjangkau dari menu utama) |
 | Context finishing/destroyed | `show()` keluar tanpa melakukan apa pun (anti window-leak) |
 
-**Penggunaan ganda**: satu komponen `ui/AboutDialog.kt` dipakai menu layar utama **dan** menu editor (entri `action_about` baru); `show()` mengembalikan dialog yang tampil (null bila context sekarat) untuk keperluan inspeksi/tes. Logika murni-JVM `core/AboutInfo.kt` diuji penuh (18 @Test, semua cabang); `AboutE2eTest` menampilkan dialog pada MainActivity asli dan memeriksa jendela dialognya sendiri — pola deterministik yang menghindari root-picker Espresso, yang terbukti rapuh di emulator headless CI (`RootViewWithoutFocusException`) — memverifikasi kredit "Maragung", baris nama+versi, kedua tombol, dan guard finishing-activity.
+**Penggunaan ganda**: satu komponen `ui/AboutDialog.kt` dipakai menu layar utama **dan** menu editor (entri `action_about` baru); `show()` mengembalikan dialog yang tampil (null bila context sekarat) untuk keperluan inspeksi/tes. Logika murni-JVM `core/AboutInfo.kt` diuji penuh (18 @Test, semua cabang); `AboutE2eTest` menampilkan dialog pada MainActivity asli dan memeriksa jendela dialognya sendiri — pola deterministik yang menghindari root-picker Espresso, yang terbukti rapuh di emulator headless CI (`RootViewWithoutFocusException`) — memverifikasi kredit "Maragung", baris nama+versi, kedua tombol, dan guard finishing-activity. Kredit memakai frasa **"Created by"** (bukan "Built by"): Maragung adalah pencipta/pemilik aplikasi, bukan sekadar pelaksana pembangunan.
+
+### 4.19 Keluar Zen Mode + Perapian Menu (v0.20.0 — selesai)
+
+**Permintaan pengguna**: (1) sediakan cara keluar zen mode — usulan: hold back / floating button; (2) rapikan menu editor menurut prioritas kebutuhan umum (Open/Save di atas); (3) konsultasi frasa kredit About.
+
+**Zen mode keluar (FAB + Back)** — sebelumnya satu-satunya jalur keluar adalah Back (sudah ditangani `backCallback` sejak v0.14.0) tetapi tidak ada kontrol yang terlihat karena toolbar disembunyikan:
+
+| Skenario | Penanganan |
+|---|---|
+| Zen aktif | FAB mini (`zen_exit`, ikon fullscreen-exit, alpha 0.8) tampil di pojok kanan bawah — `applyZenUi` |
+| Ketuk FAB | `exitZenMode()` — idempoten, no-op bila zen sudah tidak aktif |
+| Keluar (FAB maupun Back) | `restoreFromZen` menyembunyikan FAB lagi (visibilitas dimiliki pasangan apply/restore — tidak ada status ganda) |
+| Rotasi saat zen | `enterZenMode()` dipanggil ulang dari saved state → FAB muncul kembali |
+| Back saat zen | Jalur pertama tetap Back (sudah ada): keluar zen dulu, baru tekan kedua menutup editor / dialog dirty |
+| Layout | Root `activity_editor.xml` dibungkus FrameLayout agar FAB bisa overlay; SystemBars tetap memasang insets di root baru (baseline identik, idempoten) |
+
+**Menu editor (52 item → 8 kelompok berpemisah + ikon toolbar, urutan prioritas pemakaian umum)**: ikon toolbar Save+Format tetap; lalu Berkas (Open File, Open Recent, Save As, Save All, Open Folder) → Tab (New, Next, Close, Close Others) → Sunting & Navigasi (Undo, Redo, Find, Goto, Bookmark, operasi baris, Clipboard History, Insert Datetime) → Alat (Format Selection, Text Tools, Regex, Colors, Snippets, Diff, Run) → Tampilan (Wrap, Line Numbers, Syntax, Read-only, Zen, Split, Hex, Match Brace, Fold×3) → Data & Encoding (Reopen/Save Encoding, Charset Lab, Todo Scan, Statistics) → Bagikan & Ekspor (Share, Print, Preview, Export PDF/Image) → Bantuan (About). Implementasi: `<group>` per kelompok — overflow otomatis memberi pemisah; tanpa perubahan handler (`when` berbasis id tetap valid).
+
+Tes: `ZenExitE2eTest` (2 @Test) — masuk zen via menu (pola `tapOverflowItem` yang lulus di editor karena memakai `onCreateOptionsMenu`), asersi FAB tampil + toolbar GONE, ketuk FAB → toolbar VISIBLE; dan tekan Back → keluar zen bukan menutup activity.
 
 ---
 

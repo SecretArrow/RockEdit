@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.20.0: zen exit button + menu tidy-up (no new menu titles; keys reused). -->
+    <string name="zen_exit">Exit zen mode</string>
+</resources>

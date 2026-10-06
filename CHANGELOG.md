@@ -8,6 +8,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.20.0] - 2026-10-06
+
+### Added
+- **Cara keluar zen mode yang terlihat (permintaan pengguna)**: tombol melayang (FAB mini, ikon fullscreen-exit, opasitas 80%) tampil di pojok kanan bawah **hanya selama zen aktif** — satu ketukan memulihkan toolbar, strip tab, ukuran font, dan bar sistem persis seperti sebelum masuk zen. Navigasi Back juga sudah menjadi jalur keluar pertama sejak v0.14.0 (satu tekan = keluar zen, bukan menutup editor); kini keduanya terdokumentasi dan teruji E2E. FAB otomatis muncul lagi setelah rotasi saat zen dipulihkan, dan tidak pernah tertinggal tampil setelah keluar (visibilitas dimiliki applyZenUi/restoreFromZen).
+
+### Changed
+- **Menu editor dirapikan menurut prioritas pemakaian umum (permintaan pengguna)**: 52 item kini terkelompok dalam 8 kelompok berpemisah (plus ikon toolbar Save+Format di atas) — **Berkas** (Open File, Open Recent, Save As, Save All, Open Folder) → **Tab** (New/Next/Close/Close Others) → **Sunting & Navigasi** (Undo, Redo, Find, Goto, Bookmark, operasi baris, Clipboard History, Insert Datetime) → **Alat** (Format Selection, Text Tools, Regex, Colors, Snippets, Diff, Run) → **Tampilan** (Wrap, Line Numbers, Syntax, Read-only, Zen, Split, Hex, Match Brace, Fold) → **Data & Encoding** → **Bagikan & Ekspor** → **Bantuan** (About). Tanpa perubahan perilaku — hanya urutan dan pemisah.
+
+### Tests
+- `ZenExitE2eTest` (2 @Test): masuk zen via menu (pola overflow yang terbukti pada editor) → FAB tampil & toolbar hilang → ketuk FAB → toolbar pulih; serta satu tekan Back keluar zen (bukan menutup editor).
+
 ## [0.19.0] - 2026-10-06
 
 ### Added

@@ -227,6 +227,11 @@ class EditorActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
         onBackPressedDispatcher.addCallback(this, backCallback)
+        // v0.20.0: visible exit path for zen mode. The FAB only exists as a
+        // click target while zen is active (visibility is owned by
+        // applyZenUi/restoreFromZen); exitZenMode() itself is idempotent and
+        // no-ops when zen is already inactive.
+        binding.zenExit.setOnClickListener { exitZenMode() }
 
         originalKeyListener = binding.editor.keyListener
         // v0.17.0: register user-imported TextMate grammars BEFORE any
@@ -2092,6 +2097,7 @@ class EditorActivity : AppCompatActivity() {
     private fun applyZenUi(state: ZenActive) {
         binding.toolbar.visibility = View.GONE
         binding.tabScroll.visibility = View.GONE
+        binding.zenExit.visibility = View.VISIBLE // v0.20.0: visible way out
         // Editor and gutter must scale together to keep line numbers aligned.
         binding.editor.setTextSize(TypedValue.COMPLEX_UNIT_SP, state.zenFontSizeSp)
         binding.gutter.setTextSize(TypedValue.COMPLEX_UNIT_SP, state.zenFontSizeSp)
@@ -2116,6 +2122,7 @@ class EditorActivity : AppCompatActivity() {
     private fun restoreFromZen(snapshot: ZenSnapshot) {
         binding.toolbar.visibility = if (snapshot.toolbarVisible) View.VISIBLE else View.GONE
         binding.tabScroll.visibility = if (snapshot.tabsVisible) View.VISIBLE else View.GONE
+        binding.zenExit.visibility = View.GONE // v0.20.0: hide the exit FAB
         binding.editor.setTextSize(TypedValue.COMPLEX_UNIT_SP, snapshot.fontSizeSp)
         binding.gutter.setTextSize(TypedValue.COMPLEX_UNIT_SP, snapshot.fontSizeSp)
         if (settings.fullScreen) {

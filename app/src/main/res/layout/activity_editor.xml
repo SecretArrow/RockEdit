@@ -1,68 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- v0.20.0: root wrapped in FrameLayout so the zen-exit FAB can overlay the
+     editor while zen mode is active (toolbar is hidden then). The FAB is
+     gone by default and only shown by EditorActivity while zen is active. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorSurface"
-        app:title="@string/untitled"
-        app:subtitleTextAppearance="@style/TextAppearance.Material3.LabelSmall" />
-
-    <HorizontalScrollView
-        android:id="@+id/tab_scroll"
-        android:layout_width="match_parent"
-        android:layout_height="38dp"
-        android:background="@color/gutter_background"
-        android:fillViewport="true"
-        android:scrollbars="none">
-
-        <LinearLayout
-            android:id="@+id/tab_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="horizontal" />
-    </HorizontalScrollView>
-
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/editor_container"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/gutter"
-            android:layout_width="52dp"
-            android:layout_height="match_parent"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorSurface"
+            app:title="@string/untitled"
+            app:subtitleTextAppearance="@style/TextAppearance.Material3.LabelSmall" />
+
+        <HorizontalScrollView
+            android:id="@+id/tab_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
             android:background="@color/gutter_background"
-            android:fontFamily="monospace"
-            android:gravity="top|end"
-            android:paddingStart="4dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="8dp"
-            android:textColor="@color/gutter_text"
-            android:textSize="14sp"
-            android:typeface="monospace" />
+            android:fillViewport="true"
+            android:scrollbars="none">
 
-        <EditText
-            android:id="@+id/editor"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
+            <LinearLayout
+                android:id="@+id/tab_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+
+        <LinearLayout
+            android:id="@+id/editor_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@null"
-            android:fontFamily="monospace"
-            android:gravity="top|start"
-            android:importantForAutofill="no"
-            android:inputType="textMultiLine|textNoSuggestions"
-            android:padding="8dp"
-            android:textSize="14sp"
-            android:typeface="monospace" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/gutter"
+                android:layout_width="52dp"
+                android:layout_height="match_parent"
+                android:background="@color/gutter_background"
+                android:fontFamily="monospace"
+                android:gravity="top|end"
+                android:paddingStart="4dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="8dp"
+                android:textColor="@color/gutter_text"
+                android:textSize="14sp"
+                android:typeface="monospace" />
+
+            <EditText
+                android:id="@+id/editor"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:fontFamily="monospace"
+                android:gravity="top|start"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine|textNoSuggestions"
+                android:padding="8dp"
+                android:textSize="14sp"
+                android:typeface="monospace" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/zen_exit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:alpha="0.8"
+        android:contentDescription="@string/zen_exit"
+        android:src="@drawable/ic_zen_exit"
+        android:visibility="gone"
+        app:fabSize="mini" />
+</FrameLayout>

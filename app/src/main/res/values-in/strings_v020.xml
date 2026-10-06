@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- v0.20.0: tombol keluar zen + perapian menu (tanpa judul baru; key dipakai ulang). -->
+    <string name="zen_exit">Keluar dari mode zen</string>
+</resources>
