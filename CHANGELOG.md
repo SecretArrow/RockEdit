@@ -8,6 +8,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.22.0] - 2026-10-07
+
+### Added
+- **Find & Replace selengkap editor desktop (permintaan analisis gap)**: selama ini dialog Cari hanya lompat dari kecocokan ke kecocokan tanpa umpan balik visual — sekarang: **semua kecocokan tersorot langsung** di editor selagi mengetik (warna kuning transparan, terang/gelap otomatis), **penghitung hasil hidup** di dialog (`k/N` saat kursor berada di atas kecocokan, `N` total, `0` saat tak ada, `N+` bila terpotong), dan **tombol Sebelumnya** untuk navigasi mundur dengan wrap-around (dari kecocokan pertama melompat ke yang terakhir — konvensi editor desktop; dokumen berisi satu kecocokan memilih ulang dirinya, bukan gagal).
+- **Penyorotan berlanggung-hidup yang selalu jujur**: mengetik, ganti opsi peka-huruf, ganti satu, dan ganti semua semuanya menghitung ulang sorotan + penghitung dalam satu langkah; menutup dialog mengembalikan editor persis seperti semula (nol span tertinggal, posisi pencarian berikutnya di-reset). Sorotan memakai kelas span khusus sehingga pembersihan tidak pernah menyentuh warna span milik fitur lain.
+- **Pencarian baru mulai dari kursor**: mengubah kata kunci me-reset titik lanjut ke posisi kursor — sebelumnya titik lanjut dari kata sebelumnya bertahan sehingga hasil sebelum kursor terasa "hilang" (ditemukan lewat wrap tanpa penjelasan).
+
+### Fixed
+- **Pelipatan huruf kini Locale.ROOT, bukan locale perangkat** (`core/SearchEngine.kt`): locale default dapat MENGUBAH PANJANG string saat dilipat (Turki: `I`.lowercase(tr) = dua unit UTF-16) sehingga setiap offset kecocokan bergeser diam-diam — korupsi offset pada perangkat berlocale tertentu. Semua pencarian/penggantian/penghitungan kini locale-independent; regresi dikunci test dengan locale Turki aktif.
+
+### Tests
+- `SearchEngineTest` +13 @Test (total modul 22): `findAllMatches` (urutan, guard kosong/lebih-panjang/limit-0, non-overlap, rentang pada teks asli, tepat-limit vs terpotong), `matchOrdinalAt` (awal/tengah/akhir, celah, negatif), `counterLabel` (semua bentuk keluaran), `indexOfPrev` (mundur, wrap, no-wrap, clamp di luar teks, peka huruf), dan regresi Locale.ROOT.
+- `FindHighlightE2eTest` (3 @Test, pola dialog-window deterministik — dialog dijangkau via `EditorActivity.activeFindDialog` dan di-poll dari test thread): mengetik query menyorot 3 kecocokan pada posisi 0/11/23 + penghitung "3"; tombol Sebelumnya/Berikutnya navigasi dua arah dengan penghitung `k/N` termasuk wrap dari kecocokan pertama ke terakhir; ganti semua menyegarkan sorotan dan penghitung menunjukkan "0" (bukan total basi); menutup dialog membersihkan seluruh span (di-poll karena dismiss antrean handler).
+
+### Documentation
+- docs/rockedit.md §4.21: tabel skenario Find & Replace (guard → perilaku; sinkronisasi span; keputusan label numerik bebas-locale) dan batas 1.000 sorotan.
+
 ## [0.21.0] - 2026-10-06
 
 ### Added

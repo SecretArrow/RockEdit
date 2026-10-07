@@ -8,8 +8,9 @@
 terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
 menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.21.0)
+## Fitur (v0.22.0)
 
+- **Find & Replace selengkap editor desktop (v0.22.0)**: semua kecocokan tersorot langsung selagi mengetik, penghitung hasil hidup (`k/N`), tombol Sebelumnya/Berikutnya dengan wrap-around, ganti satu/semua tetap sinkron dengan sorotan; pencarian selalu mulai dari kursor dan menutup dialog tidak meninggalkan jejak
 - **Manajemen file di browser folder (v0.21.0)**: buat file/folder baru dari toolbar, tekan-lama entri untuk Buka / Ganti nama / Hapus (dengan konfirmasi) — validasi nama ketat (karakter terlarang, "." / "..", batas 255 byte) dijelaskan dengan pesan, tanpa penulisan ulang diam-diam
 - **Keluar zen mode dengan satu ketukan (v0.20.0)**: tombol melayang khusus tampil hanya selama zen aktif di pojok kanan bawah; tekan Back juga langsung keluar zen (bukan menutup editor)
 - **Menu editor terkelompok per prioritas (v0.20.0)**: Berkas → Tab → Sunting & Navigasi → Alat → Tampilan → Data & Encoding → Bagikan & Ekspor → Bantuan, dengan pemisah antar kelompok

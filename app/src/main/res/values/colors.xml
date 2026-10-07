@@ -18,6 +18,9 @@
     <color name="black_amoled">#000000</color>
     <color name="black_elevated">#121212</color>
 
+    <!-- Find match highlight (v0.22.0) -->
+    <color name="find_highlight_bg">#66FFEB3B</color>
+
     <!-- Tab chips -->
     <color name="tab_chip_active">#FFFFFF</color>
     <color name="tab_chip_inactive">#00000000</color>

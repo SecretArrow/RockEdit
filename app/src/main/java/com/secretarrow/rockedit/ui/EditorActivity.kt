@@ -7,8 +7,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.Editable
+import android.text.Spanned
 import android.text.TextWatcher
 import android.text.method.KeyListener
+import android.text.style.BackgroundColorSpan
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.Menu
@@ -24,6 +26,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -874,11 +877,25 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
-    private fun showFindDialog() {
+    /**
+     * Marker background span for Find highlights (v0.22.0). A dedicated
+     * subclass — instead of a raw BackgroundColorSpan — means cleanup removes
+     * ONLY spans this dialog added, never other background colors the editor
+     * may carry (selection tints, future features).
+     */
+    private class MatchSpan(color: Int) : BackgroundColorSpan(color)
+
+    /** Last Find dialog created; exposed for deterministic E2E automation. */
+    internal var activeFindDialog: AlertDialog? = null
+        private set
+
+    private fun showFindDialog(): AlertDialog? {
         val view = layoutInflater.inflate(R.layout.dialog_find, null)
         val findInput = view.findViewById<EditText>(R.id.find_input)
         val replaceInput = view.findViewById<EditText>(R.id.replace_input)
         val caseBox = view.findViewById<android.widget.CheckBox>(R.id.case_sensitive)
+        val counterView = view.findViewById<TextView>(R.id.find_counter)
+        val highlightColor = ContextCompat.getColor(this, R.color.find_highlight_bg)
         val dialog =
             AlertDialog
                 .Builder(this)
@@ -889,18 +906,105 @@ class EditorActivity : AppCompatActivity() {
 
         fun options() = SearchEngine.Options(caseSensitive = caseBox.isChecked)
 
+        fun currentText(): String = binding.editor.text?.toString().orEmpty()
+
+        fun clearHighlights() {
+            val editable = binding.editor.text ?: return
+            for (span in editable.getSpans(0, editable.length, MatchSpan::class.java)) {
+                editable.removeSpan(span)
+            }
+        }
+
+        fun applyHighlights(list: SearchEngine.MatchList) {
+            clearHighlights()
+            val editable = binding.editor.text ?: return
+            val length = editable.length
+            for (r in list.ranges) {
+                // Stale-guard: the buffer can change between listing and
+                // painting (replace buttons edit it); an out-of-range span
+                // would throw IndexOutOfBoundsException — skip instead.
+                val end = r.last + 1
+                if (r.first < 0 || end > length || r.first >= end) continue
+                editable.setSpan(MatchSpan(highlightColor), r.first, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
+
+        fun updateFindUi() {
+            val query = findInput.text.toString()
+            val list =
+                if (query.isEmpty()) {
+                    SearchEngine.MatchList.EMPTY
+                } else {
+                    SearchEngine.findAllMatches(currentText(), query, options())
+                }
+            applyHighlights(list)
+            if (query.isEmpty()) {
+                counterView.visibility = View.GONE
+            } else {
+                counterView.visibility = View.VISIBLE
+                // Non-empty query with no hits renders an explicit "0" — a
+                // blank counter would look like a rendering bug. Caret sits
+                // on a match -> "k/N", otherwise the bare total ("N"/"N+").
+                counterView.text =
+                    if (list.ranges.isEmpty()) {
+                        "0"
+                    } else {
+                        SearchEngine.counterLabel(list, max(0, binding.editor.selectionStart))
+                    }
+            }
+        }
+
+        fun selectMatch(idx: Int, query: String) {
+            binding.editor.setSelection(idx, idx + query.length)
+            searchStart = idx + max(1, query.length)
+            val list = SearchEngine.findAllMatches(currentText(), query, options())
+            applyHighlights(list)
+            counterView.visibility = View.VISIBLE
+            counterView.text = SearchEngine.counterLabel(list, idx)
+        }
+
+        // Live feedback while typing; a changed query restarts the search at
+        // the caret instead of a stale searchStart left by the previous term.
+        findInput.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+                override fun afterTextChanged(s: Editable?) {
+                    searchStart = max(0, binding.editor.selectionStart)
+                    updateFindUi()
+                }
+            },
+        )
+        caseBox.setOnCheckedChangeListener { _, _ -> updateFindUi() }
+
+        view.findViewById<View>(R.id.btn_prev).setOnClickListener {
+            val text = currentText()
+            val query = findInput.text.toString()
+            val idx =
+                SearchEngine
+                    .indexOfPrev(
+                        text,
+                        query,
+                        binding.editor.selectionStart,
+                        options(),
+                        wrapAround = true,
+                    )
+            if (idx < 0 || query.isEmpty()) {
+                toast(getString(R.string.not_found))
+            } else {
+                selectMatch(idx, query)
+            }
+        }
         view.findViewById<View>(R.id.btn_next).setOnClickListener {
-            val text =
-                binding.editor.text
-                    ?.toString()
-                    .orEmpty()
+            val text = currentText()
             val query = findInput.text.toString()
             val idx = SearchEngine.indexOf(text, query, searchStart, options(), wrapAround = true)
             if (idx < 0 || query.isEmpty()) {
                 toast(getString(R.string.not_found))
             } else {
-                binding.editor.setSelection(idx, idx + query.length)
-                searchStart = idx + max(1, query.length)
+                selectMatch(idx, query)
             }
         }
         view.findViewById<View>(R.id.btn_replace).setOnClickListener {
@@ -916,32 +1020,35 @@ class EditorActivity : AppCompatActivity() {
                 editable.replace(selStart, selEnd, replacement)
                 searchStart = selStart + replacement.length
             }
-            val text =
-                binding.editor.text
-                    ?.toString()
-                    .orEmpty()
-            val idx = SearchEngine.indexOf(text, query, searchStart, options(), wrapAround = true)
+            val idx = SearchEngine.indexOf(currentText(), query, searchStart, options(), wrapAround = true)
             if (idx < 0) {
                 toast(getString(R.string.not_found))
+                // Buffer changed (replace happened) — keep highlights honest.
+                updateFindUi()
             } else {
-                binding.editor.setSelection(idx, idx + query.length)
-                searchStart = idx + max(1, query.length)
+                selectMatch(idx, query)
             }
         }
         view.findViewById<View>(R.id.btn_replace_all).setOnClickListener {
             val query = findInput.text.toString()
             val replacement = replaceInput.text.toString()
-            val text =
-                binding.editor.text
-                    ?.toString()
-                    .orEmpty()
+            val text = currentText()
             val (newText, count) = SearchEngine.replaceAll(text, query, replacement, options())
             if (count > 0) {
                 setTextPreservingHistory(newText)
             }
             toast(getString(R.string.replaced_count, count))
+            updateFindUi()
         }
+        dialog.setOnDismissListener {
+            // The editor must return exactly as it was: no leftover spans, no
+            // stale search position for the next session of the dialog.
+            searchStart = 0
+            clearHighlights()
+        }
+        activeFindDialog = dialog
         dialog.show()
+        return dialog
     }
 
     private fun setTextPreservingHistory(newText: String) {

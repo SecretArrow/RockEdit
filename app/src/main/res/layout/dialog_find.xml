@@ -31,11 +31,33 @@
         android:layout_height="wrap_content"
         android:text="@string/case_sensitive" />
 
+    <!-- v0.22.0: live match counter ("k/N", "N", "N+"); hidden while the
+         query is empty. Numeric-only label produced by SearchEngine.counterLabel. -->
+    <TextView
+        android:id="@+id/find_counter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:gravity="end"
+        android:paddingTop="4dp"
+        android:textColor="@color/gutter_text"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingBottom="8dp">
+
+        <Button
+            android:id="@+id/btn_prev"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="@string/find_prev" />
 
         <Button
             android:id="@+id/btn_next"

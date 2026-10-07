@@ -40,6 +40,7 @@
     <string name="find_hint">Find</string>
     <string name="replace_hint">Replace with</string>
     <string name="case_sensitive">Case sensitive</string>
+    <string name="find_prev">Previous</string>
     <string name="find_next">Next</string>
     <string name="replace_one">Replace</string>
     <string name="replace_all">Replace all</string>

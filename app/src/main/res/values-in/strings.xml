@@ -28,6 +28,7 @@
     <string name="find_hint">Cari</string>
     <string name="replace_hint">Ganti dengan</string>
     <string name="case_sensitive">Peka huruf besar/kecil</string>
+    <string name="find_prev">Sebelumnya</string>
     <string name="find_next">Berikutnya</string>
     <string name="replace_one">Ganti</string>
     <string name="replace_all">Ganti semua</string>

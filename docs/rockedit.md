@@ -510,7 +510,36 @@ Tes: `FileOpsTest` (36 @Test, matriks cabang penuh termasuk tepat-255/255+1 byte
 
 ---
 
-Total unit test kini 1.190+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
+### 4.21 Find & Replace Lengkap (v0.22.0 — selesai)
+
+Dialog Cari (satu-satunya bagian alur sunting paling sering dipakai yang masih dasar) dinaikkan ke standar editor desktop. Inti murni-JVM (`core/SearchEngine.kt`) menang seluruh logika; UI hanya memetakan hasil ke span dan label.
+
+**Kontrak fungsi baru (semua guard → nilai, tanpa throw):**
+
+1. `findAllMatches(text, query, options, limit = 1_000)` → `MatchList(ranges, truncated)` — kecocokan non-overlap berurutan dokumen; rentang INKLUSIF dua ujung (`idx..idx+len-1`) agar 1:1 ke aritmetika span; batas 1.000 sorotan (query pendek pada dokumen raksasa bisa menghasilkan puluhan ribu kecocokan — menyorot semuanya membekukan thread utama; kecocokan di luar batas tetap terjangkau satu-per-satu via `indexOf`/`indexOfPrev`).
+2. `matchOrdinalAt(ranges, index)` → ordinal 1-based kecocokan yang mencakup kursor (inklusif awal-akhir), 0 bila di luar — rentang terurut non-overlap sehingga pemindaian berhenti di rentang pertama setelah index.
+3. `counterLabel(list, currentIndex)` → `""` (sembunyikan), `k/N` (kursor di kecocokan), `N` (total), `N+` (terpotong). **Keputusan desain: label numerik murni** — bebas plural/locale/RTL, tidak bisa menjadi titik gagal terjemahan; query non-kosong tanpa hasil dirender eksplisit `"0"` oleh UI (penghitung kosong tampak seperti bug render).
+4. `indexOfPrev(text, query, beforeIndex, options, wrapAround)` → kecocokan terakhir yang BERAKHIR ≤ beforeIndex (mundur dari kursor); wrap = kecocokan terakhir di seluruh dokumen (dari kecocokan pertama melompat ke terakhir — konvensi desktop; dokumen satu-kecocokan memilih ulang dirinya, bukan gagal). `cap = min(beforeIndex, len) - len(query)`; `lastIndexOf(n, cap)` Java berarti "mulai ≤ cap" (kecocokan boleh melewati cap) — divalidasi mirror Python (v022_mirror.py, 40+ vektor).
+
+**Skenario UI → penanganan:**
+
+| Skenario | Penanganan |
+|---|---|
+| Mengetik di kolom cari | `afterTextChanged` → hitung ulang sorotan + penghitung sinkron (satu pass main thread) |
+| Query berubah | `searchStart` di-reset ke kursor — titik lanjut kata sebelumnya tidak lagi mewarisi posisi basi |
+| Toggle peka-huruf | Hitung ulang penuh (listener checkbox) |
+| Ganti satu / ganti semua | Buffer berubah → sorotan + penghitung dihitung ulang setelah operasi (ganti semua dengan query yang tak lagi match → penghitung "0", bukan total basi) |
+| Buffer berubah antara listing dan pewarnaan | Guard rentang (`first < 0 || end > length`) → span basi dilewati, tanpa IndexOutOfBounds |
+| Dialog ditutup | `setOnDismissListener` → hapus SEMUA span kelas `MatchSpan` (subclass khusus — pembersihan tak pernah menyentuh span fitur lain) + reset `searchStart` |
+| Kursor di atas kecocokan saat mengetik | Penghitung `k/N` (ordinal dihitung dari posisi kursor) |
+
+**Perbaikan Locale.ROOT:** seluruh pelipatan huruf (`lowercase()`) di `indexOf`/`countMatches`/`replaceAll`/`findAllMatches`/`indexOfPrev` memakai `Locale.ROOT`. Locale default dapat mengubah panjang hasil lipatan (Turki: `I` → `i̇` dua unit UTF-16) yang menggeser seluruh offset diam-diam. Regresi dikunci test dengan `Locale.setDefault(tr)` aktif.
+
+Tes: `SearchEngineTest` 22 @Test (+13) + `FindHighlightE2eTest` 3 @Test (pola dialog-window deterministik: dialog dijangkau via `EditorActivity.activeFindDialog`, poll dari test thread dengan re-entry `onActivity` singkat — poll DI DALAM `onActivity` memblokir looper; widget dialog digerakkan sinkron lewat hierarki view dialog sendiri; kursor editor di-pin sebelum tiap asersi agar label penghitung deterministik).
+
+---
+
+Total unit test kini 1.200+ (SearchEngineTest +13). Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
 
 ---
 
