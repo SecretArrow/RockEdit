@@ -12,9 +12,9 @@ import com.secretarrow.rockedit.core.FolderSort
 import com.secretarrow.rockedit.ui.FolderBrowserActivity
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -89,23 +89,31 @@ class FolderOpsE2eTest {
 
     /**
      * AlertDialog button clicks are dispatched through AlertController's
-     * ButtonHandler (a Handler): performClick() returns before the listener
-     * and the auto-dismiss run. Every dismissal assertion therefore polls
-     * with a deadline instead of checking synchronously.
+     * ButtonHandler: performClick() only QUEUES the dismiss on the main
+     * looper. onActivity{} blocks the main thread, so waiting inside it
+     * starves the looper and the dialog never closes (CI-proven failure).
+     * The poll therefore runs on the test thread and re-enters onActivity
+     * each iteration, letting the main looper process the queued dismiss
+     * between iterations.
      */
-    private fun awaitDismissed(dialog: AlertDialog) {
+    private fun awaitDismissed(
+        scenario: ActivityScenario<FolderBrowserActivity>,
+        dialog: AlertDialog,
+    ) {
         val deadline = System.currentTimeMillis() + 2500
-        var showing = true
-        while (System.currentTimeMillis() < deadline && showing) {
-            showing = dialog.isShowing
-            if (showing) Thread.sleep(50)
+        while (System.currentTimeMillis() < deadline) {
+            var showing = true
+            scenario.onActivity { showing = dialog.isShowing }
+            if (!showing) return
+            Thread.sleep(50)
         }
-        assertFalse("dialog never dismissed after positive click", showing)
+        fail("dialog never dismissed after positive click")
     }
 
     @Test
     fun createDialogValidatesNameBeforeAnyProviderCall() {
         launch().use { scenario ->
+            var fileDialog: AlertDialog? = null
             scenario.onActivity { act ->
                 val dialog = act.showCreateDialog(isFolder = false)
                 assertNotNull("create dialog must show", dialog)
@@ -119,18 +127,23 @@ class FolderOpsE2eTest {
                 // follows the app-wide goto-dialog convention (dismiss + toast).
                 input.setText("bad/name")
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
-                awaitDismissed(dialog)
+                fileDialog = dialog
+            }
+            awaitDismissed(scenario, fileDialog!!)
 
-                // Valid name: flows past validation into the (failing,
-                // unauthorized) provider call without crashing the activity.
+            // Valid name: flows past validation into the (failing,
+            // unauthorized) provider call without crashing the activity.
+            var folderDialog: AlertDialog? = null
+            scenario.onActivity { act ->
                 val second = act.showCreateDialog(isFolder = true)
                 assertNotNull("folder dialog must show", second)
                 val input2 = second!!.window!!.decorView.findViewById<EditText>(R.id.input_name)
                 assertEquals(context.getString(R.string.name_hint_folder), input2.hint.toString())
                 input2.setText("reports")
                 second.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
-                awaitDismissed(second)
+                folderDialog = second
             }
+            awaitDismissed(scenario, folderDialog!!)
         }
     }
 
