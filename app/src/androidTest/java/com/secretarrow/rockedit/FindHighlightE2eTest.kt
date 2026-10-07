@@ -81,7 +81,8 @@ class FindHighlightE2eTest {
 
             assertEquals(3, spanCount(activity))
             val starts =
-                editor.text!!.getSpans(0, editor.length(), BackgroundColorSpan::class.java)
+                editor.text!!
+                    .getSpans(0, editor.length(), BackgroundColorSpan::class.java)
                     .map { editor.text!!.getSpanStart(it) }
                     .sorted()
             assertEquals(listOf(0, 11, 23), starts)

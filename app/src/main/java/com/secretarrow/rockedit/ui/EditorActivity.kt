@@ -883,7 +883,9 @@ class EditorActivity : AppCompatActivity() {
      * ONLY spans this dialog added, never other background colors the editor
      * may carry (selection tints, future features).
      */
-    private class MatchSpan(color: Int) : BackgroundColorSpan(color)
+    private class MatchSpan(
+        color: Int,
+    ) : BackgroundColorSpan(color)
 
     /** Last Find dialog created; exposed for deterministic E2E automation. */
     internal var activeFindDialog: AlertDialog? = null
@@ -906,7 +908,10 @@ class EditorActivity : AppCompatActivity() {
 
         fun options() = SearchEngine.Options(caseSensitive = caseBox.isChecked)
 
-        fun currentText(): String = binding.editor.text?.toString().orEmpty()
+        fun currentText(): String =
+            binding.editor.text
+                ?.toString()
+                .orEmpty()
 
         fun clearHighlights() {
             val editable = binding.editor.text ?: return
@@ -954,7 +959,10 @@ class EditorActivity : AppCompatActivity() {
             }
         }
 
-        fun selectMatch(idx: Int, query: String) {
+        fun selectMatch(
+            idx: Int,
+            query: String,
+        ) {
             binding.editor.setSelection(idx, idx + query.length)
             searchStart = idx + max(1, query.length)
             val list = SearchEngine.findAllMatches(currentText(), query, options())
@@ -967,9 +975,19 @@ class EditorActivity : AppCompatActivity() {
         // the caret instead of a stale searchStart left by the previous term.
         findInput.addTextChangedListener(
             object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int,
+                ) {}
 
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun onTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    before: Int,
+                    count: Int,
+                ) {}
 
                 override fun afterTextChanged(s: Editable?) {
                     searchStart = max(0, binding.editor.selectionStart)

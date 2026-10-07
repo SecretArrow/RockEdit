@@ -1,12 +1,12 @@
 package com.secretarrow.rockedit
 
 import com.secretarrow.rockedit.core.SearchEngine
-import java.util.Locale
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Locale
 
 class SearchEngineTest {
     private val ci = SearchEngine.Options(caseSensitive = false)
