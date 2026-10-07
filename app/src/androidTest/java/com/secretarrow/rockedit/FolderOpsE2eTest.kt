@@ -57,8 +57,11 @@ class FolderOpsE2eTest {
         ActivityScenario.launch(Intent(context, FolderBrowserActivity::class.java))
 
     /**
-     * Polls on the main thread until the (async-built) toolbar menu contains
-     * both creation entries, then asserts their titles are present.
+     * Polls on the main thread until the options menu contains both creation
+     * entries, then asserts their titles are present. The menu is inflated
+     * via onCreateOptionsMenu (stable XML, editor-proven pattern); the poll
+     * only absorbs the async tree-open that precedes nothing menu-related —
+     * inflation happens at create time.
      */
     @Test
     fun toolbarMenuOffersNewFileAndNewFolder() {
@@ -66,18 +69,38 @@ class FolderOpsE2eTest {
             val deadline = System.currentTimeMillis() + 5000
             var hasNewFile = false
             var hasNewFolder = false
+            var lastTitles = ""
             while (System.currentTimeMillis() < deadline && !(hasNewFile && hasNewFolder)) {
                 scenario.onActivity { act ->
                     val menu = act.findViewById<Toolbar>(R.id.toolbar).menu
                     val titles = (0 until menu.size()).mapNotNull { menu.getItem(it).title?.toString() }
+                    lastTitles = titles.toString()
                     hasNewFile = titles.any { it == context.getString(R.string.new_file) }
                     hasNewFolder = titles.any { it == context.getString(R.string.new_folder) }
                 }
                 if (!(hasNewFile && hasNewFolder)) Thread.sleep(100)
             }
-            assertTrue("New file missing from toolbar menu", hasNewFile)
-            assertTrue("New folder missing from toolbar menu", hasNewFolder)
+            assertTrue(
+                "creation entries missing from options menu; titles seen: $lastTitles",
+                hasNewFile && hasNewFolder,
+            )
         }
+    }
+
+    /**
+     * AlertDialog button clicks are dispatched through AlertController's
+     * ButtonHandler (a Handler): performClick() returns before the listener
+     * and the auto-dismiss run. Every dismissal assertion therefore polls
+     * with a deadline instead of checking synchronously.
+     */
+    private fun awaitDismissed(dialog: AlertDialog) {
+        val deadline = System.currentTimeMillis() + 2500
+        var showing = true
+        while (System.currentTimeMillis() < deadline && showing) {
+            showing = dialog.isShowing
+            if (showing) Thread.sleep(50)
+        }
+        assertFalse("dialog never dismissed after positive click", showing)
     }
 
     @Test
@@ -96,18 +119,17 @@ class FolderOpsE2eTest {
                 // follows the app-wide goto-dialog convention (dismiss + toast).
                 input.setText("bad/name")
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
-                assertFalse(dialog.isShowing)
-                dialog.dismiss()
+                awaitDismissed(dialog)
 
                 // Valid name: flows past validation into the (failing,
                 // unauthorized) provider call without crashing the activity.
                 val second = act.showCreateDialog(isFolder = true)
-                assertNotNull(second)
+                assertNotNull("folder dialog must show", second)
                 val input2 = second!!.window!!.decorView.findViewById<EditText>(R.id.input_name)
                 assertEquals(context.getString(R.string.name_hint_folder), input2.hint.toString())
                 input2.setText("reports")
                 second.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
-                assertFalse(second.isShowing)
+                awaitDismissed(second)
             }
         }
     }

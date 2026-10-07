@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -34,10 +35,13 @@ import kotlinx.coroutines.withContext
  * the app). The picked tree URI is persisted; navigation uses [DocumentFile].
  * Tapping a file hands it to the editor, which opens it in a new tab.
  *
- * v0.21.0: full file management — toolbar "New file"/"New folder", and
- * long-press an entry for Open/Rename/Delete. All name rules live in
- * [FileOps] (pure JVM, fully unit-tested); this activity only performs the
- * SAF calls on [Dispatchers.IO] and maps each outcome to localized feedback.
+ * v0.21.0: full file management — toolbar "New file"/"New folder" (stable XML
+ * menu via onCreateOptionsMenu — the E2E-proven pattern from the editor —
+ * instead of manual toolbar.menu.add() calls, which proved flaky when the
+ * framework invalidates the options menu), and long-press an entry for
+ * Open/Rename/Delete. All name rules live in [FileOps] (pure JVM, fully
+ * unit-tested); this activity only performs the SAF calls on
+ * [Dispatchers.IO] and maps each outcome to localized feedback.
  *
  * Scenario -> handling table (defensive rule 7, full matrix in docs §4.20):
  * - null/blank/illegal/reserved/oversized name -> validation toast, no SAF call;
@@ -110,6 +114,35 @@ class FolderBrowserActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putStringArrayList(STATE_PATH, ArrayList(path))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_folder_browser, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_fb_grep -> {
+                rootTree?.let { tree ->
+                    startActivity(GrepActivity.createIntent(this, tree.uri))
+                }
+                return true
+            }
+            R.id.action_fb_new_file -> {
+                showCreateDialog(isFolder = false)
+                return true
+            }
+            R.id.action_fb_new_folder -> {
+                showCreateDialog(isFolder = true)
+                return true
+            }
+            R.id.action_fb_up -> {
+                goUp()
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -451,39 +484,9 @@ class FolderBrowserActivity : AppCompatActivity() {
             val empty = visible.isEmpty()
             binding.emptyView.visibility = if (empty) View.VISIBLE else View.GONE
             binding.entries.visibility = if (empty) View.GONE else View.VISIBLE
-            binding.toolbar.menu.clear()
-            // v0.11.0: grep the whole tree (stays available at any depth).
-            binding.toolbar.menu.add(getString(R.string.grep_in_folder)).apply {
-                setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-                setOnMenuItemClickListener {
-                    rootTree?.let { tree ->
-                        startActivity(GrepActivity.createIntent(this@FolderBrowserActivity, tree.uri))
-                    }
-                    true
-                }
-            }
-            // v0.21.0: create entries from the toolbar.
-            binding.toolbar.menu.add(getString(R.string.new_file)).apply {
-                setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-                setOnMenuItemClickListener {
-                    showCreateDialog(isFolder = false)
-                    true
-                }
-            }
-            binding.toolbar.menu.add(getString(R.string.new_folder)).apply {
-                setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-                setOnMenuItemClickListener {
-                    showCreateDialog(isFolder = true)
-                    true
-                }
-            }
-            binding.toolbar.menu.add(getString(R.string.up)).apply {
-                setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
-                setOnMenuItemClickListener {
-                    goUp()
-                    true
-                }
-            }
+            // Up only navigates below the tree root; the menu itself is the
+            // stable onCreateOptionsMenu inflation.
+            binding.toolbar.menu.findItem(R.id.action_fb_up)?.isEnabled = path.isNotEmpty()
         }
     }
 

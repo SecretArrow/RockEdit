@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v0.21.0: toolbar menu of the SAF folder browser. Inflated via
+     onCreateOptionsMenu (the pattern E2E-verified on menu_editor.xml) —
+     manual toolbar.menu.add() from refresh() proved flaky under test and
+     menu invalidation, so the items now live in a stable XML declaration.
+     Order: analysis, creation, then navigation (Up is icon-slot and is
+     disabled at the tree root by the activity). -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_fb_grep"
+        android:title="@string/grep_in_folder"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_fb_new_file"
+        android:title="@string/new_file"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_fb_new_folder"
+        android:title="@string/new_folder"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_fb_up"
+        android:title="@string/up"
+        app:showAsAction="ifRoom" />
+</menu>
