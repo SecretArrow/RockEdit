@@ -486,7 +486,9 @@ class FolderBrowserActivity : AppCompatActivity() {
             binding.entries.visibility = if (empty) View.GONE else View.VISIBLE
             // Up only navigates below the tree root; the menu itself is the
             // stable onCreateOptionsMenu inflation.
-            binding.toolbar.menu.findItem(R.id.action_fb_up)?.isEnabled = path.isNotEmpty()
+            binding.toolbar.menu
+                .findItem(R.id.action_fb_up)
+                ?.isEnabled = path.isNotEmpty()
         }
     }
 
