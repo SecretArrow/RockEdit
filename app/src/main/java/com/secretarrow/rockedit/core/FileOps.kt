@@ -78,8 +78,7 @@ object FileOps {
         return NameResult.Valid(name)
     }
 
-    private fun hasRejectedChar(name: String): Boolean =
-        name.any { it in REJECTED_CHARS || it.code < 0x20 || it.code == 0x7F }
+    private fun hasRejectedChar(name: String): Boolean = name.any { it in REJECTED_CHARS || it.code < 0x20 || it.code == 0x7F }
 
     /**
      * True when [name] already exists among [siblings]. Comparison is exact
