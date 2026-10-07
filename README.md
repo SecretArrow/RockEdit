@@ -8,8 +8,9 @@
 terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
 menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.20.0)
+## Fitur (v0.21.0)
 
+- **Manajemen file di browser folder (v0.21.0)**: buat file/folder baru dari toolbar, tekan-lama entri untuk Buka / Ganti nama / Hapus (dengan konfirmasi) — validasi nama ketat (karakter terlarang, "." / "..", batas 255 byte) dijelaskan dengan pesan, tanpa penulisan ulang diam-diam
 - **Keluar zen mode dengan satu ketukan (v0.20.0)**: tombol melayang khusus tampil hanya selama zen aktif di pojok kanan bawah; tekan Back juga langsung keluar zen (bukan menutup editor)
 - **Menu editor terkelompok per prioritas (v0.20.0)**: Berkas → Tab → Sunting & Navigasi → Alat → Tampilan → Data & Encoding → Bagikan & Ekspor → Bantuan, dengan pemisah antar kelompok
 - **Dialog About dengan kredit kreator (v0.19.0)**: "Tentang Rock Edit" menampilkan ikon, versi, tagline, kreator **Maragung**, catatan FOSS/GPL-3.0 + privasi, dan tautan kode sumber — tersedia dari menu layar utama dan menu editor

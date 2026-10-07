@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v0.21.0: single-field input dialog used by New file / New folder /
+     Rename in the SAF folder browser. Validation (empty, reserved chars,
+     dot-names, length) happens in core/FileOps.kt when the positive button
+     is tapped - never silently rewritten. -->
+<EditText
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/input_name"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="24dp"
+    android:layout_marginEnd="24dp"
+    android:imeOptions="actionDone"
+    android:importantForAutofill="no"
+    android:inputType="text"
+    android:singleLine="true" />

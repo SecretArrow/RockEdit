@@ -478,9 +478,39 @@ Tes: `ZenExitE2eTest` (2 @Test) — masuk zen via menu (pola `tapOverflowItem` y
 
 **Pelajaran automation overflow (ditemukan CI saat rilis ini)**: popup overflow adalah `MenuDropDownListView` yang hanya me-materialize baris terlihat. Setelah menu diurutkan (item populer pindah grup dalam), pola lama `onView(withText(...))` gagal `NoMatchingViewException` untuk item di bawah lipatan — bahkan pada test yang sebelumnya hijau. Solusinya helper bersama `OverflowMenu` (androidTest): buka popup → coba match view langsung (baris atas) → fallback `Espresso.onData(menuItemWithTitle) .inRoot(isPlatformPopup())` yang memaksa ListView menggulir ke barisnya (persis saran pesan error Espresso); matcher data membandingkan `MenuItemImpl.toString()` (menjadi judul item) dengan judul resource. `TextToolsE2eTest`/`DiffSnippetE2eTest`/`ZenExitE2eTest` dipindah ke helper ini.
 
+### 4.20 Manajemen File di Folder Browser (v0.21.0 — selesai)
+
+Permintaan analisis gap: browser folder hanya bisa telusuri/buka/grep — pengguna tidak dapat membuat, mengganti nama, atau menghapus entri tanpa keluar aplikasi. Fitur ini menutup celah manajemen file harian.
+
+**Arsitektur**: lapisan keputusan `core/FileOps.kt` murni-JVM (validasi nama, collision, MIME, no-op rename) + tipis UI di `FolderBrowserActivity` (dialog + panggilan DocumentFile di `Dispatchers.IO`). Semua aturan teruji JVM penuh; UI hanya menerjemahkan hasil.
+
+**Keputusan desain (asumsi didokumentasikan)**:
+- **Strict validation, bukan penulisan ulang diam** — kebalikan `FileNames.sanitize` (yang menulis ulang "untitled" internal): nama yang diketik pengguna di dialog manajemen ditolak dengan pesan eksplisit per sebab, agar nama persis di disk selalu kendali pengguna.
+- **Set karakter terlarang** = `/ \ : * ? " < > |` + karakter kontrol (U+0000–001F, U+007F) — irisan ext4 (penyimpanan utama) dan FAT (USB OTG), konsisten dengan set rewrite `FileNames.sanitize`; nama yang lolos dijamin valid di semua backend yang bisa dijangkau aplikasi.
+- **Batas panjang 255 byte UTF-8** (bukan karakter): huruf CJK 100 karakter = 300 byte → ditolak.
+- **Collision exact-match (case-sensitive)**: ext4 peka huruf, jadi "A.txt" vs "a.txt" diizinkan; pada FAT backend sendiri menolak dan jalur gagal generik menangkapnya.
+- **MIME murni-JVM** (bukan MimeTypeMap yang butuh Android framework): peta ekstensi umum + fallback `application/octet-stream` yang diterima semua DocumentsProvider.
+
+**Tabel skenario → penanganan**:
+
+| Skenario | Penanganan |
+|---|---|
+| Nama null/kosong/spasi | Toast `err_name_empty`, tanpa panggilan SAF |
+| Karakter terlarang/kontrol | Toast `err_name_chars` (menyebut setnya), tanpa panggilan SAF |
+| `.` atau `..` | Toast `err_name_dots`, tanpa panggilan SAF |
+| > 255 byte | Toast `err_name_long`, tanpa panggilan SAF |
+| Nama sudah ada di folder | Cek exact-match pra-SAF + kegagalan create oleh provider → `err_name_exists` / gagal generik |
+| Rename ke nama sama (trim) | Dialog tutup senyap (no-op, tanpa error) |
+| Entri hilang antara listing dan aksi | `findFile` null → gagal generik terlokalisasi |
+| Grant dicabut / dokumen basi (SecurityException dkk.) | Catch per operasi → `err_op_failed` — tanpa crash, tanpa catch sunyi |
+| Hapus | Dialog konfirmasi menyebut nama + peringatan permanen (SAF tanpa tempat sampah) |
+| Dialog dibuka saat activity mati | Guard `isFinishing/isDestroyed` → null; `show()` gagal → toast darurat |
+
+Tes: `FileOpsTest` (36 @Test, matriks cabang penuh termasuk tepat-255/255+1 byte, CJK, trim, MIME) + `FolderOpsE2eTest` (5 @Test, pola dialog-window deterministik: URI tree tanpa grant → browser terbuka dalam keadaan kosong yang sah; menu toolbar di-poll; dialog create/rename/ops/delete diperiksa lewat `dialog.window!!.decorView` — tanpa root-picker Espresso). Jalur hijau DocumentFile butuh grant pengguna nyata → dikategorikan verifikasi fisik (sama dengan USB OTG).
+
 ---
 
-Total unit test kini 1.150+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
+Total unit test kini 1.190+. Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
 
 ---
 

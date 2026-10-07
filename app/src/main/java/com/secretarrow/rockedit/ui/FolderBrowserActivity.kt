@@ -7,18 +7,21 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.secretarrow.rockedit.R
 import com.secretarrow.rockedit.core.App
 import com.secretarrow.rockedit.core.FileNames
+import com.secretarrow.rockedit.core.FileOps
 import com.secretarrow.rockedit.core.FolderSort
 import com.secretarrow.rockedit.databinding.ActivityFolderBrowserBinding
 import kotlinx.coroutines.Dispatchers
@@ -29,12 +32,36 @@ import kotlinx.coroutines.withContext
  * SAF folder browser (roadmap: open files from a folder tree without leaving
  * the app). The picked tree URI is persisted; navigation uses [DocumentFile].
  * Tapping a file hands it to the editor, which opens it in a new tab.
+ *
+ * v0.21.0: full file management — toolbar "New file"/"New folder", and
+ * long-press an entry for Open/Rename/Delete. All name rules live in
+ * [FileOps] (pure JVM, fully unit-tested); this activity only performs the
+ * SAF calls on [Dispatchers.IO] and maps each outcome to localized feedback.
+ *
+ * Scenario -> handling table (defensive rule 7, full matrix in docs §4.20):
+ * - null/blank/illegal/reserved/oversized name -> validation toast, no SAF call;
+ * - rename to the same name -> dialog closes silently (no-op, no error);
+ * - name already taken in this folder -> "already exists" toast;
+ * - entry vanished between listing and op (findFile null) -> generic failure;
+ * - provider throws (revoked grant, stale tree, FAT case collision) -> caught
+ *   by every op, mapped to the generic failure toast — never a crash, never a
+ *   silent failure;
+ * - dialog shown while activity is finishing -> guarded, returns null.
  */
 class FolderBrowserActivity : AppCompatActivity() {
     private lateinit var binding: ActivityFolderBrowserBinding
     private lateinit var adapter: FolderEntryAdapter
     private var rootTree: DocumentFile? = null
     private var path: List<String> = emptyList()
+
+    /** Outcome of a management op, produced on IO and mapped to UI on main. */
+    private enum class Op {
+        CREATED,
+        RENAMED,
+        DELETED,
+        COLLISION,
+        FAILED,
+    }
 
     private val pickTree =
         registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
@@ -63,6 +90,7 @@ class FolderBrowserActivity : AppCompatActivity() {
         adapter =
             FolderEntryAdapter(
                 onClick = { entry -> onEntryClicked(entry) },
+                onLongClick = { entry -> showOpsDialog(entry) },
             )
         binding.entries.layoutManager = LinearLayoutManager(this)
         binding.entries.adapter = adapter
@@ -148,6 +176,243 @@ class FolderBrowserActivity : AppCompatActivity() {
         refresh()
     }
 
+    // ---- v0.21.0: file management -----------------------------------------
+
+    /**
+     * Long-press action sheet for an entry: Open (files only), Rename,
+     * Delete. Built from resource ids (not strings) so the action mapping
+     * cannot break if a translation changes; guarded against finishing
+     * activities like every other dialog in this file.
+     */
+    internal fun showOpsDialog(entry: FolderSort.Entry): AlertDialog? {
+        if (isFinishing || isDestroyed) return null
+        val actions =
+            buildList {
+                if (!entry.isFolder) add(R.string.ops_open)
+                add(R.string.ops_rename)
+                add(R.string.ops_delete)
+            }
+        return try {
+            AlertDialog
+                .Builder(this)
+                .setTitle(entry.name)
+                .setItems(Array(actions.size) { getString(actions[it]) }) { _, which ->
+                    when (actions[which]) {
+                        R.string.ops_open -> onEntryClicked(entry)
+                        R.string.ops_rename -> showRenameDialog(entry)
+                        R.string.ops_delete -> showDeleteDialog(entry)
+                    }
+                }.setNegativeButton(R.string.cancel, null)
+                .show()
+        } catch (e: Exception) {
+            // show() throws BadTokenException when the activity dies between
+            // the guard above and the call; fall back to a toast so the
+            // failure is never silent.
+            toast(getString(R.string.err_op_failed))
+            null
+        }
+    }
+
+    /**
+     * Create-file / create-folder dialog. Returns the dialog for tests;
+     * null only when the activity is finishing or the dialog failed to show.
+     */
+    internal fun showCreateDialog(isFolder: Boolean): AlertDialog? {
+        if (isFinishing || isDestroyed) return null
+        val input = layoutInflater.inflate(R.layout.dialog_name_input, null) as EditText
+        input.setHint(if (isFolder) R.string.name_hint_folder else R.string.name_hint_file)
+        return try {
+            AlertDialog
+                .Builder(this)
+                .setTitle(getString(if (isFolder) R.string.new_folder else R.string.new_file))
+                .setView(input)
+                .setPositiveButton(R.string.create) { _, _ ->
+                    performCreate(input.text.toString(), isFolder)
+                }.setNegativeButton(R.string.cancel, null)
+                .show()
+        } catch (e: Exception) {
+            // Dialog show() failed (activity died mid-call); surface feedback.
+            toast(getString(R.string.err_op_failed))
+            null
+        }
+    }
+
+    /** Rename dialog, prefilled with the current name and cursor at the end. */
+    internal fun showRenameDialog(entry: FolderSort.Entry): AlertDialog? {
+        if (isFinishing || isDestroyed) return null
+        val input = layoutInflater.inflate(R.layout.dialog_name_input, null) as EditText
+        input.setText(entry.name)
+        input.setSelection(entry.name.length)
+        return try {
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.ops_rename)
+                .setView(input)
+                .setPositiveButton(R.string.ops_rename) { _, _ ->
+                    performRename(entry, input.text.toString())
+                }.setNegativeButton(R.string.cancel, null)
+                .show()
+        } catch (e: Exception) {
+            toast(getString(R.string.err_op_failed))
+            null
+        }
+    }
+
+    /**
+     * Delete confirmation. SAF deletion is permanent (no trash can), so the
+     * message says so explicitly before the destructive call happens.
+     */
+    internal fun showDeleteDialog(entry: FolderSort.Entry): AlertDialog? {
+        if (isFinishing || isDestroyed) return null
+        return try {
+            AlertDialog
+                .Builder(this)
+                .setTitle(R.string.delete_confirm_title)
+                .setMessage(getString(R.string.delete_confirm_msg, entry.name))
+                .setPositiveButton(R.string.ops_delete) { _, _ -> performDelete(entry) }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        } catch (e: Exception) {
+            toast(getString(R.string.err_op_failed))
+            null
+        }
+    }
+
+    private fun performCreate(
+        rawName: String,
+        isFolder: Boolean,
+    ) {
+        if (rootTree == null) {
+            // Tree was closed/revoked between listing and the tap.
+            toast(getString(R.string.err_op_failed))
+            return
+        }
+        val name =
+            when (val result = FileOps.validateName(rawName)) {
+                is FileOps.NameResult.Invalid -> {
+                    toast(nameErrorText(result.error))
+                    return
+                }
+                is FileOps.NameResult.Valid -> result.name
+            }
+        lifecycleScope.launch {
+            val op =
+                withContext(Dispatchers.IO) {
+                    val dir = currentDir() ?: return@withContext Op.FAILED
+                    try {
+                        if (FileOps.checkCollision(name, siblingNames(dir))) {
+                            return@withContext Op.COLLISION
+                        }
+                        val created =
+                            if (isFolder) {
+                                dir.createDirectory(name)
+                            } else {
+                                dir.createFile(FileOps.deriveMime(name), name)
+                            }
+                        if (created != null) Op.CREATED else Op.FAILED
+                    } catch (e: Exception) {
+                        // SecurityException (revoked grant), stale document,
+                        // provider-specific rejections: report, never crash.
+                        Op.FAILED
+                    }
+                }
+            when (op) {
+                Op.CREATED -> {
+                    toast(getString(if (isFolder) R.string.msg_folder_created else R.string.msg_file_created))
+                    refresh()
+                }
+                Op.COLLISION -> toast(getString(R.string.err_name_exists))
+                else -> toast(getString(R.string.err_op_failed))
+            }
+        }
+    }
+
+    private fun performRename(
+        entry: FolderSort.Entry,
+        rawName: String,
+    ) {
+        if (FileOps.renameIsNoOp(entry.name, rawName)) return
+        if (rootTree == null) {
+            toast(getString(R.string.err_op_failed))
+            return
+        }
+        val name =
+            when (val result = FileOps.validateName(rawName)) {
+                is FileOps.NameResult.Invalid -> {
+                    toast(nameErrorText(result.error))
+                    return
+                }
+                is FileOps.NameResult.Valid -> result.name
+            }
+        lifecycleScope.launch {
+            val op =
+                withContext(Dispatchers.IO) {
+                    val dir = currentDir() ?: return@withContext Op.FAILED
+                    try {
+                        if (FileOps.checkCollision(name, siblingNames(dir))) {
+                            return@withContext Op.COLLISION
+                        }
+                        val target = dir.findFile(entry.name) ?: return@withContext Op.FAILED
+                        if (target.renameTo(name)) Op.RENAMED else Op.FAILED
+                    } catch (e: Exception) {
+                        Op.FAILED
+                    }
+                }
+            when (op) {
+                Op.RENAMED -> {
+                    toast(getString(R.string.msg_renamed))
+                    refresh()
+                }
+                Op.COLLISION -> toast(getString(R.string.err_name_exists))
+                else -> toast(getString(R.string.err_op_failed))
+            }
+        }
+    }
+
+    private fun performDelete(entry: FolderSort.Entry) {
+        if (rootTree == null) {
+            toast(getString(R.string.err_op_failed))
+            return
+        }
+        lifecycleScope.launch {
+            val op =
+                withContext(Dispatchers.IO) {
+                    val dir = currentDir() ?: return@withContext Op.FAILED
+                    try {
+                        val target = dir.findFile(entry.name) ?: return@withContext Op.FAILED
+                        if (target.delete()) Op.DELETED else Op.FAILED
+                    } catch (e: Exception) {
+                        Op.FAILED
+                    }
+                }
+            when (op) {
+                Op.DELETED -> {
+                    toast(getString(R.string.msg_deleted))
+                    refresh()
+                }
+                else -> toast(getString(R.string.err_op_failed))
+            }
+        }
+    }
+
+    /** Names of the entries in [dir]; throws on provider errors (caller catches). */
+    private fun siblingNames(dir: DocumentFile): List<String> = dir.listFiles().mapNotNull { it.name }
+
+    /** Maps each [FileOps.NameError] to its localized message. */
+    private fun nameErrorText(error: FileOps.NameError): String =
+        getString(
+            when (error) {
+                FileOps.NameError.EMPTY -> R.string.err_name_empty
+                FileOps.NameError.INVALID_CHARS -> R.string.err_name_chars
+                FileOps.NameError.DOT_NAME -> R.string.err_name_dots
+                FileOps.NameError.TOO_LONG -> R.string.err_name_long
+            },
+        )
+
+    private fun toast(text: String) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
+    }
+
     private fun refresh() {
         val root = rootTree ?: return
         val settings = App.settings(this)
@@ -196,6 +461,21 @@ class FolderBrowserActivity : AppCompatActivity() {
                     true
                 }
             }
+            // v0.21.0: create entries from the toolbar.
+            binding.toolbar.menu.add(getString(R.string.new_file)).apply {
+                setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+                setOnMenuItemClickListener {
+                    showCreateDialog(isFolder = false)
+                    true
+                }
+            }
+            binding.toolbar.menu.add(getString(R.string.new_folder)).apply {
+                setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+                setOnMenuItemClickListener {
+                    showCreateDialog(isFolder = true)
+                    true
+                }
+            }
             binding.toolbar.menu.add(getString(R.string.up)).apply {
                 setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
                 setOnMenuItemClickListener {
@@ -214,6 +494,7 @@ class FolderBrowserActivity : AppCompatActivity() {
 /** List adapter for folder entries. */
 class FolderEntryAdapter(
     private val onClick: (FolderSort.Entry) -> Unit,
+    private val onLongClick: (FolderSort.Entry) -> Unit = {},
 ) : ListAdapter<FolderSort.Entry, FolderEntryAdapter.ViewHolder>(DIFF) {
     override fun onCreateViewHolder(
         parent: ViewGroup,
@@ -253,6 +534,10 @@ class FolderEntryAdapter(
                     if (ext.isEmpty()) size else context.getString(R.string.file_kind, ext, size)
                 }
             itemView.setOnClickListener { onClick(entry) }
+            itemView.setOnLongClickListener {
+                onLongClick(entry)
+                true
+            }
         }
 
         private fun formatSize(bytes: Long): String {

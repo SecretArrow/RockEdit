@@ -8,6 +8,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.21.0] - 2026-10-06
+
+### Added
+- **Manajemen file lengkap di Folder Browser (permintaan analisis gap)**: selama ini browser hanya bisa menelusuri, membuka, dan grep — sekarang: **New file** & **New folder** dari toolbar, dan **tekan-lama** entri untuk lembar aksi Buka / Ganti nama / Hapus (hapus wajib konfirmasi dengan nama entri + peringatan permanen; SAF tidak punya tempat sampah).
+- **Validasi nama ketat, bukan penulisan ulang diam** (`core/FileOps.kt` murni-JVM): kosong, karakter terlarang umum ext4+FAT (`/ \ : * ? " < > |` + kontrol), nama cadangan `.`/`..`, dan batas 255 **byte** UTF-8 (huruf non-Latin dihitung benar) — setiap penolakan punya pesan terlokalisasi. Kebalikan `FileNames.sanitize`: pengguna tetap pegang kendali penuh atas nama yang persis tersimpan di disk. Rename ke nama sama ditangani sebagai no-op tanpa error; tabrakan nama dicek exact-match sebelum memanggil provider (keputusan case-sensitif terdokumentasi — backend FAT yang tidak peka huruf ditangani jalur gagal generik).
+- **MIME best-effort saat membuat file** (murni-JVM, mirror MimeTypeMap untuk ekstensi umum — teks/kode, HTML/CSS/JS/JSON/XML, gambar, PDF, ZIP), fallback `application/octet-stream` yang diterima semua DocumentsProvider.
+- **Semua operasi di `Dispatchers.IO`** dengan tabel skenario lengkap: entri hilang di antara listing dan aksi, grant dicabut (SecurityException), dokumen basi, dan kegagalan provider lain tertangkap semuanya — toast terlokalisasi, tanpa crash, tanpa catch sunyi. Dialog menutup setelah aksi (konvensi konsisten dengan dialog goto), error validasi selalu menjelaskan sebab.
+
+### Tests
+- `FileOpsTest` (36 @Test): matriks cabang penuh — 3 jalur EMPTY, 4 jalur dot-name (termasuk `.hidden`/`..gitignore` yang legal), karakter terlarang satu per satu + loop FAT-only + karakter kontrol, tepat-255 vs 255+1 byte, 100 huruf CJK (300 byte) vs 100 karakter, trim spasi tepi dengan spasi dalam dipertahankan, unicode; collision exact vs varian huruf; 5 jalur rename no-op; 6 jalur MIME (termasuk `.TXT` huruf besar, tanpa ekstensi, dotfile).
+- `FolderOpsE2eTest` (5 @Test, pola deterministik dialog-window tanpa root-picker Espresso): menu toolbar menawarkan New File/New Folder (poll menu async); dialog create memvalidasi sebelum panggilan provider (nama invalid dan valid, dua hint); dialog rename terisi nama saat ini dengan kursor di ujung; lembar aksi tekan-lama adaptif (file 3 aksi, folder 2); dialog hapus menyebut nama entri persis sesuai resource terlokalisasi. Jalur hijau DocumentFile membutuhkan grant pengguna nyata — tercakup unit test + kategori "verifikasi fisik" (sama dengan USB OTG).
+
+### Documentation
+- docs/rockedit.md §4.20: tabel skenario manajemen file (validasi → pesan; kegagalan provider → penanganan) dan keputusan desain (strict-vs-silent, case-sensitivity, MIME).
+
 ## [0.20.0] - 2026-10-06
 
 ### Added

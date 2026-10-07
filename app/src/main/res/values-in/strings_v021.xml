@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v0.21.0: manajemen file di browser folder (buat/ganti nama/hapus). -->
+<resources>
+    <!-- Aksi untuk entri yang ditekan lama. -->
+    <string name="ops_open">Buka</string>
+    <string name="ops_rename">Ganti nama</string>
+    <string name="ops_delete">Hapus</string>
+
+    <!-- Aksi toolbar / dialog. -->
+    <string name="new_folder">Folder baru</string>
+    <string name="create">Buat</string>
+
+    <!-- Petunjuk input nama. -->
+    <string name="name_hint_file">Nama file (mis. catatan.txt)</string>
+    <string name="name_hint_folder">Nama folder</string>
+    <string name="name_hint_rename">Nama baru</string>
+
+    <!-- Konfirmasi hapus. %1$s adalah nama entri; dialog menjelaskan bahwa
+         penghapusan SAF bersifat permanen (tanpa tempat sampah). -->
+    <string name="delete_confirm_title">Hapus?</string>
+    <string name="delete_confirm_msg">\"%1$s\" akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.</string>
+
+    <!-- Umpan balik sukses. -->
+    <string name="msg_file_created">File dibuat</string>
+    <string name="msg_folder_created">Folder dibuat</string>
+    <string name="msg_renamed">Nama diganti</string>
+    <string name="msg_deleted">Terhapus</string>
+
+    <!-- Umpan balik gagal: satu pesan per cabang validasi plus pesan umum
+         untuk kegagalan di sisi provider (akses dicabut, tabrakan nama di
+         backend yang tidak peka huruf besar-kecil, I/O). -->
+    <string name="err_name_empty">Nama tidak boleh kosong</string>
+    <string name="err_name_chars">Nama memuat karakter yang tidak diizinkan: / \\ : * ? \" &lt; &gt; |</string>
+    <string name="err_name_dots">\".\" dan \"..\" adalah nama terlarang</string>
+    <string name="err_name_long">Nama terlalu panjang (maksimal 255 byte)</string>
+    <string name="err_name_exists">Entri dengan nama ini sudah ada</string>
+    <string name="err_op_failed">Operasi gagal — folder mungkin hanya-baca atau aksesnya dicabut</string>
+</resources>
