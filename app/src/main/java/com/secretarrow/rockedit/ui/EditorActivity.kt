@@ -245,7 +245,7 @@ class EditorActivity : AppCompatActivity() {
         highlighter = SyntaxHighlighter(binding.editor)
 
         binding.editor.addTextChangedListener(EditorWatcher())
-        binding.editor.setOnScrollChangeListener { _, _, scrollY, _ ->
+        binding.editor.setOnScrollChangeListener { _, _, scrollY, _, _ ->
             binding.gutter.scrollTo(0, scrollY)
         }
         // v0.24.0: relative/hybrid gutter labels must follow the caret even

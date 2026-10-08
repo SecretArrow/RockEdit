@@ -2,6 +2,7 @@ package com.secretarrow.rockedit
 
 import android.content.Context
 import android.content.Intent
+import android.widget.EditText
 import android.widget.TextView
 import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
@@ -91,7 +92,8 @@ class LineNumberE2eTest {
 
         waitForLoaded()
         scenario.onActivity { activity ->
-            val editor = activity.findViewById<TextView>(R.id.editor)
+            // EditText (not TextView): setSelection(int) is EditText-only.
+            val editor = activity.findViewById<EditText>(R.id.editor)
             val gutter = activity.findViewById<TextView>(R.id.gutter)
 
             editor.setSelection(line3Start)
@@ -113,7 +115,7 @@ class LineNumberE2eTest {
 
         waitForLoaded()
         scenario.onActivity { activity ->
-            val editor = activity.findViewById<TextView>(R.id.editor)
+            val editor = activity.findViewById<EditText>(R.id.editor)
             val gutter = activity.findViewById<TextView>(R.id.gutter)
 
             editor.setSelection(line3Start)
