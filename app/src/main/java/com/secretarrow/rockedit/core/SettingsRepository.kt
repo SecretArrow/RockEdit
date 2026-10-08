@@ -159,8 +159,7 @@ class SettingsRepository(
         set(value) = kv.putString(KEY_FONT_FAMILY, value)
 
     /** Resolves the stored indent style into the formatter enum. */
-    fun resolveIndentStyle(): IndentStyle =
-        if (indentStyle == INDENT_TABS) IndentStyle.TABS else IndentStyle.SPACES
+    fun resolveIndentStyle(): IndentStyle = if (indentStyle == INDENT_TABS) IndentStyle.TABS else IndentStyle.SPACES
 
     companion object {
         const val KEY_THEME = "theme"
