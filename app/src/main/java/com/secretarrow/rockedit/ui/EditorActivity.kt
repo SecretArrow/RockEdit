@@ -1653,7 +1653,17 @@ class EditorActivity : AppCompatActivity() {
         if (binding.gutter.visibility != View.VISIBLE) return
         val lines = binding.editor.lineCount
         if (lines <= 0) {
-            binding.gutter.text = "1"
+            val textLength = binding.editor.text?.length ?: 0
+            if (textLength > 0) {
+                // CI-proven race (v0.24.0): setText can leave the internal
+                // layout stale until the next layout pass, so lineCount
+                // still reads 0 on a NON-empty document. Retry once the
+                // view has measured — the gutter must never show the
+                // empty-doc fallback for a loaded file.
+                binding.editor.post { updateGutter() }
+            } else {
+                binding.gutter.text = "1"
+            }
             return
         }
         val mode = settings.resolveLineNumbering()

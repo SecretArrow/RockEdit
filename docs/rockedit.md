@@ -584,6 +584,7 @@ Permintaan pengguna: "tambah opsi penomoran baris". Toggle tampil/sembunyi gutte
 | Nilai store rusak / build lama | `modeFrom` → ABSOLUTE (perilaku historis) |
 | Kursor di luar rentang (seleksi basi, teks menyusut) | `caretLine.coerceIn(1, total)` — clamp, bukan throw |
 | Dokumen kosong / lineCount 0 | UI render fallback "1" (jalur lama dipertahankan) |
+| lineCount 0 padahal teks non-kosong (race layout CI-proven) | Self-heal: `binding.editor.post { updateGutter() }` — coba ulang setelah view terukur; gutter tak pernah menampilkan fallback "1" untuk file yang sudah termuat |
 | Kursor bergerak tanpa ubah teks (panah/ketuk/seret) | Hook `onSelectionChanged` di subclass `EditorView` → `updateGutter()` hanya bila gutter tampil DAN mode ≠ absolut |
 | Mode absolut / gutter tersembunyi | Jalur cepat: `updateGutter` early-return; hook melewati kerja sama sekali (nol biaya per gerakan kursor) |
 | Listener hook melempar | Ditangkap di `EditorView` (best-effort, terdokumentasi) — gerakan kursor tidak boleh crash editor |

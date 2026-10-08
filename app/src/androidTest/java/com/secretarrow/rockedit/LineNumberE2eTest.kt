@@ -73,6 +73,30 @@ class LineNumberE2eTest {
         assertTrue("Editor never showed the file content", found)
     }
 
+    /**
+     * Waits until the gutter has more than one row — i.e. the editor's
+     * internal layout has caught up with the loaded text. CI-proven race:
+     * updateGutter can run while lineCount still reads 0 (stale layout),
+     * leaving the empty-doc fallback "1"; polling here makes every
+     * assertion deterministic regardless of which side wins the race.
+     * Polls from the TEST thread (short onActivity re-entries) — polling
+     * inside one onActivity blocks the main looper.
+     */
+    private fun awaitGutterReady(
+        scenario: ActivityScenario<EditorActivity>,
+        timeoutMs: Long = 5000,
+    ) {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        var ready = false
+        while (System.currentTimeMillis() < deadline && !ready) {
+            scenario.onActivity { activity ->
+                ready = activity.findViewById<TextView>(R.id.gutter).text.contains('\n')
+            }
+            if (!ready) Thread.sleep(100)
+        }
+        assertTrue("Gutter never caught up with the loaded text", ready)
+    }
+
     @After
     fun resetSettings() {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -91,6 +115,7 @@ class LineNumberE2eTest {
         val scenario = ActivityScenario.launch<EditorActivity>(intent)
 
         waitForLoaded()
+        awaitGutterReady(scenario)
         scenario.onActivity { activity ->
             // EditText (not TextView): setSelection(int) is EditText-only.
             val editor = activity.findViewById<EditText>(R.id.editor)
@@ -114,6 +139,7 @@ class LineNumberE2eTest {
         val scenario = ActivityScenario.launch<EditorActivity>(intent)
 
         waitForLoaded()
+        awaitGutterReady(scenario)
         scenario.onActivity { activity ->
             val editor = activity.findViewById<EditText>(R.id.editor)
             val gutter = activity.findViewById<TextView>(R.id.gutter)
@@ -131,6 +157,7 @@ class LineNumberE2eTest {
         val scenario = ActivityScenario.launch<EditorActivity>(intent)
 
         waitForLoaded()
+        awaitGutterReady(scenario)
         scenario.onActivity { activity ->
             val gutter = activity.findViewById<TextView>(R.id.gutter)
             assertEquals("1\n2\n3\n4\n5", gutter.text.toString())
