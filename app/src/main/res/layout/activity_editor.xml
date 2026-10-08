@@ -58,7 +58,7 @@
                 android:textSize="14sp"
                 android:typeface="monospace" />
 
-            <EditText
+            <com.secretarrow.rockedit.ui.EditorView
                 android:id="@+id/editor"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"

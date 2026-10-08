@@ -8,6 +8,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.24.0] - 2026-10-08
+
+### Added
+- **Mode penomoran baris di gutter (permintaan pengguna)**: selain toggle tampil/sembunyi yang sudah ada, kini ada pilihan **mode penomoran** di Settings → Editor — **Absolut** (1, 2, 3… perilaku lama), **Relatif dari kursor** (0, 1, 2… — jarak tak bertanda dari baris kursor, konvensi Vim/VS Code untuk navigasi jangkauan seperti `5j`), dan **Hibrida** (baris kursor menunjukkan nomor absolutnya, baris lain relatif — gabungan terbaik Vim `number+relativenumber`).
+- **Gutter kini mengikuti kursor tanpa perubahan teks**: navigasi panah, ketukan, dan seret seleksi langsung memperbarui label relatif/hibrida lewat hook `onSelectionChanged` pada subclass editor baru (`EditorView`); mode absolut dan gutter tersembunyi melewati pembaruan sepenuhnya (nol biaya).
+
+### Tests
+- `LineNumberingTest` 13 @Test (murni JVM): normalisasi mode (null/kosong/rusak/kapital → absolut), render absolut/relatif/hibrida termasuk baris kursor 0 dan hibrida `2,1,3,1,2`, guard total ≤ 0 (tanpa label), kursor di luar rentang (0 dan 99 → clamp, bukan throw), dan invarian "satu baris = satu label" di semua mode.
+- `LineNumberE2eTest` 3 @Test (pola deterministik view-level): mode relatif mengikuti kursor (`2,1,0,1,2` di baris 3 lalu `0,1,2,3,4` di baris 1 tanpa mengubah teks — bukti hook seleksi bekerja), hibrida menampilkan absolut hanya di baris kursor, absolut tetap `1..5` (regresi). Kunci setting dihapus di `@After` agar test lain tidak tercemar.
+
+### Documentation
+- docs/rockedit.md §4.23: tabel skenario (mode rusak → absolut; kursor di luar rentang → clamp; mode absolut/hidden = jalur cepat; keputusan label "0" di kursor mengikuti Vim/VS Code).
+
 ## [0.23.0] - 2026-10-08
 
 ### Added

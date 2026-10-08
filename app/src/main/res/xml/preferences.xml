@@ -18,6 +18,14 @@
             android:key="line_numbers"
             android:title="@string/pref_line_numbers" />
 
+        <ListPreference
+            android:defaultValue="absolute"
+            android:entries="@array/line_numbering_entries"
+            android:entryValues="@array/line_numbering_values"
+            android:key="line_numbering"
+            android:title="@string/pref_line_numbering"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="word_wrap"

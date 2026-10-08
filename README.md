@@ -8,8 +8,9 @@
 terenkripsi dengan Android Keystore; file hanya keluar perangkat bila Anda sendiri
 menghubungkan layanan (Storage Manager / eksekusi daring).
 
-## Fitur (v0.23.0)
+## Fitur (v0.24.0)
 
+- **Mode penomoran baris (v0.24.0)**: pilih Absolut (1, 2, 3…), Relatif dari kursor (0, 1, 2… gaya Vim untuk navigasi jangkauan), atau Hibrida (baris kursor menunjukkan nomor aslinya) — label relatif/hibrida mengikuti kursor secara langsung, tanpa perlu mengubah teks
 - **Setting indentasi & jenis huruf (v0.23.0)**: pilih Spasi/Tab + lebar indentasi (1–8) sebagai dasar Code Formatter — file `.editorconfig` tetap bisa menimpanya per berkas; pilih jenis huruf editor (Monospace/Sans serif/Serif) dengan gutter selalu monospace agar nomor baris tetap sejajar; perubahan langsung terasa saat kembali dari Settings tanpa membuka ulang file
 - **Find & Replace selengkap editor desktop (v0.22.0)**: semua kecocokan tersorot langsung selagi mengetik, penghitung hasil hidup (`k/N`), tombol Sebelumnya/Berikutnya dengan wrap-around, ganti satu/semua tetap sinkron dengan sorotan; pencarian selalu mulai dari kursor dan menutup dialog tidak meninggalkan jejak
 - **Manajemen file di browser folder (v0.21.0)**: buat file/folder baru dari toolbar, tekan-lama entri untuk Buka / Ganti nama / Hapus (dengan konfirmasi) — validasi nama ketat (karakter terlarang, "." / "..", batas 255 byte) dijelaskan dengan pesan, tanpa penulisan ulang diam-diam

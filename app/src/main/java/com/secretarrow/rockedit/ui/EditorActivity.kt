@@ -60,6 +60,7 @@ import com.secretarrow.rockedit.core.ImageExportOptions
 import com.secretarrow.rockedit.core.ImageExportPlanner
 import com.secretarrow.rockedit.core.ImagePlanResult
 import com.secretarrow.rockedit.core.LineBreak
+import com.secretarrow.rockedit.core.LineNumbering
 import com.secretarrow.rockedit.core.LineOps
 import com.secretarrow.rockedit.core.PdfExportErrorCode
 import com.secretarrow.rockedit.core.PdfExportOptions
@@ -244,8 +245,18 @@ class EditorActivity : AppCompatActivity() {
         highlighter = SyntaxHighlighter(binding.editor)
 
         binding.editor.addTextChangedListener(EditorWatcher())
-        binding.editor.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+        binding.editor.setOnScrollChangeListener { _, _, scrollY, _ ->
             binding.gutter.scrollTo(0, scrollY)
+        }
+        // v0.24.0: relative/hybrid gutter labels must follow the caret even
+        // when the text is unchanged (arrows, taps, selection drags).
+        // Absolute mode and a hidden gutter skip the work entirely.
+        binding.editor.onSelectionMoved = { _, _ ->
+            if (binding.gutter.visibility == View.VISIBLE &&
+                settings.resolveLineNumbering() != LineNumbering.Mode.ABSOLUTE
+            ) {
+                updateGutter()
+            }
         }
 
         val restored = restoreState(savedInstanceState)
@@ -1316,6 +1327,9 @@ class EditorActivity : AppCompatActivity() {
         // on return, without reopening the file. Skipped during zen: the
         // zen snapshot owns the font size until exit restores it.
         applyEditorFont()
+        // v0.24.0: the numbering mode may have changed in Settings; the
+        // rebuild is idempotent and early-returns when the gutter is hidden.
+        updateGutter()
         captureClipboard()
     }
 
@@ -1629,6 +1643,12 @@ class EditorActivity : AppCompatActivity() {
         updateUiState()
     }
 
+    /**
+     * Rebuilds the gutter text. Labels come from the pure-JVM
+     * [LineNumbering] decision layer; the caret's line is only resolved
+     * for caret-dependent modes (relative/hybrid) — absolute mode stays
+     * O(lines) with no text access at all.
+     */
     private fun updateGutter() {
         if (binding.gutter.visibility != View.VISIBLE) return
         val lines = binding.editor.lineCount
@@ -1636,11 +1656,16 @@ class EditorActivity : AppCompatActivity() {
             binding.gutter.text = "1"
             return
         }
-        val sb = StringBuilder(lines * 4)
-        for (i in 1..lines) {
-            sb.append(i).append('\n')
-        }
-        binding.gutter.text = sb.toString().trimEnd('\n')
+        val mode = settings.resolveLineNumbering()
+        val caretLine =
+            if (mode == LineNumbering.Mode.ABSOLUTE) {
+                1
+            } else {
+                val text = binding.editor.text?.toString().orEmpty()
+                val offset = binding.editor.selectionStart
+                CursorNav.lineForOffset(text, if (offset < 0) 0 else offset)
+            }
+        binding.gutter.text = LineNumbering.labels(lines, caretLine, mode).joinToString("\n")
         binding.gutter.scrollTo(0, binding.editor.scrollY)
     }
 

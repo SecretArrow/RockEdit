@@ -68,4 +68,14 @@
         <item>4</item>
         <item>8</item>
     </string-array>
+    <string-array name="line_numbering_entries">
+        <item>@string/pref_line_numbering_absolute</item>
+        <item>@string/pref_line_numbering_relative</item>
+        <item>@string/pref_line_numbering_hybrid</item>
+    </string-array>
+    <string-array name="line_numbering_values">
+        <item>absolute</item>
+        <item>relative</item>
+        <item>hybrid</item>
+    </string-array>
 </resources>

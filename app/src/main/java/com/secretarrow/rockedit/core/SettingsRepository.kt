@@ -161,6 +161,19 @@ class SettingsRepository(
     /** Resolves the stored indent style into the formatter enum. */
     fun resolveIndentStyle(): IndentStyle = if (indentStyle == INDENT_TABS) IndentStyle.TABS else IndentStyle.SPACES
 
+    /**
+     * v0.24.0: gutter numbering mode — one of [NUMBERING_ABSOLUTE] /
+     * [NUMBERING_RELATIVE] / [NUMBERING_HYBRID]. Unknown stored values read
+     * back as absolute (the historical behavior), so a corrupted entry can
+     * only ever fall back to what older builds rendered.
+     */
+    var lineNumbering: String
+        get() = kv.getString(KEY_LINE_NUMBERING, NUMBERING_ABSOLUTE) ?: NUMBERING_ABSOLUTE
+        set(value) = kv.putString(KEY_LINE_NUMBERING, value)
+
+    /** Resolves the stored numbering preference into the core enum. */
+    fun resolveLineNumbering(): LineNumbering.Mode = LineNumbering.modeFrom(lineNumbering)
+
     companion object {
         const val KEY_THEME = "theme"
         const val KEY_LINE_NUMBERS = "line_numbers"
@@ -180,6 +193,7 @@ class SettingsRepository(
         const val KEY_INDENT_STYLE = "indent_style"
         const val KEY_INDENT_SIZE = "indent_size"
         const val KEY_FONT_FAMILY = "font_family"
+        const val KEY_LINE_NUMBERING = "line_numbering"
 
         const val DEFAULT_FONT_SIZE = "14"
         const val DEFAULT_INDENT_SIZE_SETTING = "4"
@@ -190,6 +204,10 @@ class SettingsRepository(
         const val FONT_MONOSPACE = "monospace"
         const val FONT_SANS = "sans"
         const val FONT_SERIF = "serif"
+
+        const val NUMBERING_ABSOLUTE = "absolute"
+        const val NUMBERING_RELATIVE = "relative"
+        const val NUMBERING_HYBRID = "hybrid"
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"

@@ -571,7 +571,33 @@ Tes: `SettingsRepositoryTest` +6 @Test (default, round-trip, clamp tulis+baca, n
 
 ---
 
-Total unit test kini 1.310+ (SettingsRepositoryTest +6). Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
+### 4.23 Mode Penomoran Baris (v0.24.0 — selesai)
+
+Permintaan pengguna: "tambah opsi penomoran baris". Toggle tampil/sembunyi gutter sudah ada (setting + menu); yang belum ada adalah **cara angka itu dihitung**. Rilis ini menambahkan tiga mode mengikuti konvensi editor desktop (Vim, VS Code): **Absolut** (perilaku lama), **Relatif dari kursor** (jarak tak bertanda; baris kursor = 0 — untuk navigasi jangkauan seperti `5j`), dan **Hibrida** (baris kursor menunjukkan nomor absolutnya, lainnya relatif).
+
+**Inti murni-JVM (`core/LineNumbering.kt`):** satu sumber kebenaran untuk seluruh label gutter — UI hanya menggabungkan dengan `\n`. `modeFrom(raw)` menormalkan nilai store (null/kosong/rusak/kapital → ABSOLUTE: nilai korup hanya boleh jatuh kembali ke perilaku historis, tidak pernah "relatif karena kebetulan"). `labels(total, caretLine, mode)` menghasilkan tepat satu label per baris; semua input di-clamp (`total <= 0` → kosong, `caretLine` di luar 1..total → clamp ke tepi) sehingga tidak ada jalur yang melempar.
+
+**Skenario → penanganan:**
+
+| Skenario | Penanganan |
+|---|---|
+| Nilai store rusak / build lama | `modeFrom` → ABSOLUTE (perilaku historis) |
+| Kursor di luar rentang (seleksi basi, teks menyusut) | `caretLine.coerceIn(1, total)` — clamp, bukan throw |
+| Dokumen kosong / lineCount 0 | UI render fallback "1" (jalur lama dipertahankan) |
+| Kursor bergerak tanpa ubah teks (panah/ketuk/seret) | Hook `onSelectionChanged` di subclass `EditorView` → `updateGutter()` hanya bila gutter tampil DAN mode ≠ absolut |
+| Mode absolut / gutter tersembunyi | Jalur cepat: `updateGutter` early-return; hook melewati kerja sama sekali (nol biaya per gerakan kursor) |
+| Listener hook melempar | Ditangkap di `EditorView` (best-effort, terdokumentasi) — gerakan kursor tidak boleh crash editor |
+| Ganti mode di Settings | `onResume` memanggil ulang `updateGutter()` (idempoten) |
+| Wrap aktif | Gutter tersembunyi sejak lama (baris visual ≠ logis) — mode tidak mengubah perilaku ini |
+| Label "0" di baris kursor (relatif) | Keputusan desain mengikuti Vim/VS Code; hibrida menampilkan absolut di baris kursor |
+
+**Subclass `EditorView` (ui/EditorView.kt):** satu-satunya cara andal menangkap pergerakan kursor tanpa perubahan teks adalah `onSelectionChanged` — pola polling per-frame (onPreDraw) ditolak karena O(baris) per frame pada file besar. Subclass mewarisi `AppCompatEditText` sehingga semua `findViewById<EditText>` lama tetap cocok; override selalu memanggil `super` lebih dulu agar penanganan seleksi platform (handle, action mode) tidak terganggu.
+
+Tes: `LineNumberingTest` 13 @Test (matriks cabang penuh lapisan keputusan) + `LineNumberE2eTest` 3 @Test (mode relatif mengikuti kursor dua posisi tanpa ubah teks — bukti hook; hibrida `2,1,3,1,2`; absolut regresi `1..5`; kunci setting dihapus `@After` sesuai pelajaran Task 16).
+
+---
+
+Total unit test kini 1.320+ (LineNumberingTest +13). Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
 
 ---
 

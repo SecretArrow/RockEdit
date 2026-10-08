@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v0.24.0: mode penomoran baris gutter (pasangan values/strings_v024.xml). -->
+<resources>
+    <!-- Pilihan mode penomoran (entri ListPreference). -->
+    <string name="pref_line_numbering">Mode penomoran</string>
+    <string name="pref_line_numbering_absolute">Absolut (1, 2, 3…)</string>
+    <string name="pref_line_numbering_relative">Relatif dari kursor (0, 1, 2…)</string>
+    <string name="pref_line_numbering_hybrid">Hibrida (kursor menunjukkan baris aslinya)</string>
+</resources>
