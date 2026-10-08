@@ -37,6 +37,7 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class LineNumberE2eTest {
     private val content = "alpha\nbravo\ncharlie\ndelta\necho"
+
     // Start offsets of every line inside [content].
     private val line3Start = "alpha\nbravo\n".length // 12
 

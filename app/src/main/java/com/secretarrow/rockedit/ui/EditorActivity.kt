@@ -1661,7 +1661,10 @@ class EditorActivity : AppCompatActivity() {
             if (mode == LineNumbering.Mode.ABSOLUTE) {
                 1
             } else {
-                val text = binding.editor.text?.toString().orEmpty()
+                val text =
+                    binding.editor.text
+                        ?.toString()
+                        .orEmpty()
                 val offset = binding.editor.selectionStart
                 CursorNav.lineForOffset(text, if (offset < 0) 0 else offset)
             }
