@@ -38,4 +38,34 @@
         <item>20</item>
         <item>24</item>
     </string-array>
+    <string-array name="font_family_entries">
+        <item>@string/pref_font_family_mono</item>
+        <item>@string/pref_font_family_sans</item>
+        <item>@string/pref_font_family_serif</item>
+    </string-array>
+    <string-array name="font_family_values">
+        <item>monospace</item>
+        <item>sans</item>
+        <item>serif</item>
+    </string-array>
+    <string-array name="indent_style_entries">
+        <item>@string/pref_indent_style_spaces</item>
+        <item>@string/pref_indent_style_tabs</item>
+    </string-array>
+    <string-array name="indent_style_values">
+        <item>spaces</item>
+        <item>tabs</item>
+    </string-array>
+    <string-array name="indent_size_entries">
+        <item>1</item>
+        <item>2</item>
+        <item>4</item>
+        <item>8</item>
+    </string-array>
+    <string-array name="indent_size_values">
+        <item>1</item>
+        <item>2</item>
+        <item>4</item>
+        <item>8</item>
+    </string-array>
 </resources>

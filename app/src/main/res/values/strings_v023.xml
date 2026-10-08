@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v0.23.0: editor indentation + font family preferences. -->
+<resources>
+    <!-- Font family choices (ListPreference entries). -->
+    <string name="pref_font_family">Font family</string>
+    <string name="pref_font_family_mono">Monospace</string>
+    <string name="pref_font_family_sans">Sans serif</string>
+    <string name="pref_font_family_serif">Serif</string>
+
+    <!-- Indentation choices for the Code Formatter. The stored value is the
+         base; a sibling .editorconfig may still override it per file. -->
+    <string name="pref_indent_style">Indentation</string>
+    <string name="pref_indent_style_spaces">Spaces</string>
+    <string name="pref_indent_style_tabs">Tabs</string>
+    <string name="pref_indent_size">Indent width</string>
+    <string name="pref_indent_size_summary">Spaces per indent level used by the formatter</string>
+</resources>

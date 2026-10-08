@@ -539,7 +539,39 @@ Tes: `SearchEngineTest` 22 @Test (+13) + `FindHighlightE2eTest` 3 @Test (pola di
 
 ---
 
-Total unit test kini 1.200+ (SearchEngineTest +13). Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
+### 4.22 Setting Indentasi & Jenis Huruf (v0.23.0 — selesai)
+
+Dua setting editor paling sering diminta pengguna desktop (jawaban analisis gap, backlog Task 15): **indentasi** sebagai dasar Code Formatter, dan **jenis huruf** untuk kenyamanan baca. Keduanya masuk kategori "preferensi yang hanya boleh berdampak, tidak pernah merusak": nilai rusak di store tidak boleh membuat formatter error atau font crash — harus jatuh ke default yang terdokumentasi.
+
+**Inti murni-JVM (`SettingsRepository`, +6 properti/konstanta):**
+
+1. `indentStyle` — `spaces`/`tabs`; getter menormalkan nilai tak dikenal → `spaces` (nilai aneh tak boleh dibaca sebagai tab: formatter tab menulis karakter `\t` permanen ke dokumen, fallback paling aman adalah mode default). `resolveIndentStyle()` memetakan ke enum `IndentStyle` formatter.
+2. `indentSize` — disimpan string desimal; **tulis** di-clamp 1..8 (rentang `FormatOptions.MIN/MAX_INDENT_SIZE`) sehingga nilai di luar rentang tak pernah mencapai store; **baca** di-clamp + fallback 4 bila tak terurai ("bogus", kosong). `FormatOptions` memvalidasi `require` di konstruktor — clamp di repository menjamin formatter tidak pernah melempar karena setting pengguna.
+3. `fontFamily` — `monospace`/`sans`/`serif`; getter menormalkan nilai tak dikenal/kosong → `monospace` (default editor kode).
+
+**Skenario → penanganan:**
+
+| Skenario | Penanganan |
+|---|---|
+| Nilai store rusak / dari build lain | Getter menormalkan → default (spaces / 4 / monospace); tanpa crash |
+| `indentSize` = 0 / 99 / "bogus" | Tulis: clamp 1..8; baca: clamp + fallback 4 |
+| `.editorconfig` milik file | Menang atas setting pengguna (merge `editorConfigOptionsFor` di atas base — perilaku lama tak berubah) |
+| Format penuh / seleksi / format-on-save | Ketiganya memakai base `FormatOptions` dari setting (3 situs disinkronkan) |
+| Zen mode aktif | `applyEditorFont()` no-op — snapshot zen yang memiliki ukuran font sampai exit memulihkannya |
+| Font proporsional (sans/serif) dipilih | Gutter TETAP monospace — nomor baris harus sejajar kolom-per-baris; keputusan terdokumentasi |
+| Ganti setting lalu kembali ke editor | `onResume` memanggil `applyEditorFont()` — berlaku tanpa membuka ulang file (memperbaiki bug laten: ukuran font dulu hanya dibaca di `onCreate`) |
+| Rotasi saat zen aktif lalu kembali | Guard `zenActive != null` mencegah onResume menimpa ukuran zen |
+| Backup / restore | 3 kunci baru terdaftar STRING di `BackupRestore.defaultKeys()` |
+
+**Wiring formatter:** tiga situs konstruksi `FormatOptions` di `EditorActivity` (format penuh, format seleksi `lenient`, format-on-save) kini membawa `indentStyle`/`indentSize` dari setting — sebelumnya selalu default `SPACES/4` implisit. Prettier menerima `tabWidth` = `indentSize`, `useTabs` = (`indentStyle == TABS`) lewat kontrak `WasmFormatterContract` yang sudah ada (tanpa perubahan kontrak).
+
+**UI:** 3 `ListPreference` baru di `preferences.xml` (Jenis huruf, Indentasi, Lebar indentasi) dengan ringkasan otomatis (`useSimpleSummaryProvider`); array EN/ID di `arrays.xml` (nilai numerik locale-free, label lewat string ref per-locale); string v0.23 pasangan EN/ID di `strings_v023.xml`.
+
+Tes: `SettingsRepositoryTest` +6 @Test (default, round-trip, clamp tulis+baca, nilai tak dikenal, isolasi antar-kunci, fallback kosong) + `IndentSettingsE2eTest` 3 @Test — format JSON dengan `tabs` menghasilkan output ber-karakter tab nyata, `spaces`+lebar 2 menghasilkan 2 spasi (bukti setting benar-benar sampai ke prettier, bukan hanya tersimpan), dan font sans diterapkan ke editor sementara gutter tetap `Typeface.MONOSPACE` (assert langsung pada view via `onActivity` — pola deterministik tanpa window-focus). Semua test E2E menghapus kuncinya di `@After` agar `FormatterE2eTest` yang mengunci default 4 spasi tidak pecah oleh kebocoran state antar test.
+
+---
+
+Total unit test kini 1.310+ (SettingsRepositoryTest +6). Backlog roadmap §4.12/§4.14/§4.15/§4.16 LENGKAP; tersisa hanya verifikasi fisik USB OTG (manual pra-rilis, butuh perangkat keras).
 
 ---
 

@@ -147,6 +147,9 @@ class BackupRestore(
                     SettingsRepository.KEY_THEME,
                     SettingsRepository.KEY_LINE_BREAK,
                     SettingsRepository.KEY_FONT_SIZE,
+                    SettingsRepository.KEY_FONT_FAMILY,
+                    SettingsRepository.KEY_INDENT_STYLE,
+                    SettingsRepository.KEY_INDENT_SIZE,
                     SettingsRepository.KEY_LAST_FOLDER_URI,
                 )) {
                     add(BackupKey(key, BackupKey.EntryType.STRING))

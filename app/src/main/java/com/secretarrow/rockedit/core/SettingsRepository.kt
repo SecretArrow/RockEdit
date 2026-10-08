@@ -106,6 +106,62 @@ class SettingsRepository(
         get() = kv.getBoolean(KEY_FORMAT_ON_SAVE, false)
         set(value) = kv.putBoolean(KEY_FORMAT_ON_SAVE, value)
 
+    // ---- Indentation & font family (v0.23.0) -------------------------------
+    //
+    // The stored strings map onto ListPreference entry values. Read paths are
+    // defensive: a value written by a future/older build (or corrupted data)
+    // must never crash or produce an out-of-range formatter request, so every
+    // getter falls back to the shipped default documented in the KDoc.
+
+    /**
+     * Base indent style for the Code Formatter: one of [INDENT_SPACES] /
+     * [INDENT_TABS]. Unknown stored values read back as [INDENT_SPACES] so a
+     * malformed entry can never be mistaken for tabs. Per-file .editorconfig
+     * still wins: the activity merges it on top of this base.
+     */
+    var indentStyle: String
+        get() {
+            val raw = kv.getString(KEY_INDENT_STYLE, INDENT_SPACES) ?: INDENT_SPACES
+            return if (raw == INDENT_TABS) INDENT_TABS else INDENT_SPACES
+        }
+        set(value) = kv.putString(KEY_INDENT_STYLE, value)
+
+    /**
+     * Spaces per indent level for the Code Formatter, stored as a decimal
+     * string. Reads clamp into the formatter's accepted range
+     * (FormatOptions MIN/MAX) and fall back to [FormatOptions.DEFAULT_INDENT_SIZE]
+     * when unparseable; writes are clamped so an out-of-range value can never
+     * reach the store.
+     */
+    var indentSize: Int
+        get() {
+            val raw =
+                kv.getString(KEY_INDENT_SIZE, DEFAULT_INDENT_SIZE_SETTING)
+                    ?: DEFAULT_INDENT_SIZE_SETTING
+            val parsed = raw.toIntOrNull() ?: return FormatOptions.DEFAULT_INDENT_SIZE
+            return parsed.coerceIn(FormatOptions.MIN_INDENT_SIZE, FormatOptions.MAX_INDENT_SIZE)
+        }
+        set(value) {
+            val safe = value.coerceIn(FormatOptions.MIN_INDENT_SIZE, FormatOptions.MAX_INDENT_SIZE)
+            kv.putString(KEY_INDENT_SIZE, safe.toString())
+        }
+
+    /**
+     * Editor text font family: one of [FONT_MONOSPACE] / [FONT_SANS] /
+     * [FONT_SERIF]. Unknown stored values read back as [FONT_MONOSPACE]. The
+     * gutter is always monospace regardless of this setting (alignment).
+     */
+    var fontFamily: String
+        get() {
+            val raw = kv.getString(KEY_FONT_FAMILY, FONT_MONOSPACE) ?: FONT_MONOSPACE
+            return if (raw == FONT_SANS || raw == FONT_SERIF) raw else FONT_MONOSPACE
+        }
+        set(value) = kv.putString(KEY_FONT_FAMILY, value)
+
+    /** Resolves the stored indent style into the formatter enum. */
+    fun resolveIndentStyle(): IndentStyle =
+        if (indentStyle == INDENT_TABS) IndentStyle.TABS else IndentStyle.SPACES
+
     companion object {
         const val KEY_THEME = "theme"
         const val KEY_LINE_NUMBERS = "line_numbers"
@@ -122,8 +178,19 @@ class SettingsRepository(
         const val KEY_ONLINE_EXECUTION = "online_execution"
         const val KEY_FORMAT_ON_SAVE = "format_on_save"
         const val KEY_BRACKET_PAIR_COLORS = "bracket_pair_colors"
+        const val KEY_INDENT_STYLE = "indent_style"
+        const val KEY_INDENT_SIZE = "indent_size"
+        const val KEY_FONT_FAMILY = "font_family"
 
         const val DEFAULT_FONT_SIZE = "14"
+        const val DEFAULT_INDENT_SIZE_SETTING = "4"
+
+        const val INDENT_SPACES = "spaces"
+        const val INDENT_TABS = "tabs"
+
+        const val FONT_MONOSPACE = "monospace"
+        const val FONT_SANS = "sans"
+        const val FONT_SERIF = "serif"
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"

@@ -55,6 +55,31 @@
             android:title="@string/pref_font_size"
             app:useSimpleSummaryProvider="true" />
 
+        <ListPreference
+            android:defaultValue="monospace"
+            android:entries="@array/font_family_entries"
+            android:entryValues="@array/font_family_values"
+            android:key="font_family"
+            android:title="@string/pref_font_family"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:defaultValue="spaces"
+            android:entries="@array/indent_style_entries"
+            android:entryValues="@array/indent_style_values"
+            android:key="indent_style"
+            android:title="@string/pref_indent_style"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:defaultValue="4"
+            android:entries="@array/indent_size_entries"
+            android:entryValues="@array/indent_size_values"
+            android:key="indent_size"
+            android:summary="@string/pref_indent_size_summary"
+            android:title="@string/pref_indent_size"
+            app:useSimpleSummaryProvider="true" />
+
         <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="auto_save"

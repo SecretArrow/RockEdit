@@ -8,6 +8,22 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ### Planned
 - Fisik-verifikasi USB OTG pada perangkat nyata (unit + browser path sudah tercakup CI)
 
+## [0.23.0] - 2026-10-08
+
+### Added
+- **Setting indentasi untuk Code Formatter (permintaan analisis gap)**: kini bisa memilih **Spasi atau Tab** sebagai gaya indentasi dan **lebar indentasi** (1–8, default 4) dari Settings → Editor — selama ini formatter selalu memakai 4 spasi diam-diam. Ketiga jalur format (format penuh, format seleksi, format-on-save) memakai setting ini sebagai dasar, dan file `.editorconfig` milik berkas tetap bisa menimpanya per proyek seperti sebelumnya.
+- **Jenis huruf editor**: pilih **Monospace / Sans serif / Serif** untuk teks editor. Gutter nomor baris tetap monospace apa pun pilihan (nomor baris harus sejajar kolom-per-baris — keputusan terdokumentasi), dan perubahan diterapkan begitu kembali dari Settings tanpa membuka ulang file.
+
+### Fixed
+- **Ukuran font dari Settings kini langsung berlaku saat kembali ke editor**: sebelumnya hanya dibaca di `onCreate`, sehingga mengubah ukuran font butuh membuka ulang file agar terasa. Kini font (ukuran + jenis) diterapkan ulang di `onResume`, dengan guard: saat zen mode aktif snapshot zen yang memiliki ukuran font (rotasi saat zen tetap aman).
+
+### Tests
+- `SettingsRepositoryTest` +6 @Test (total 17): default (spaces/4/monospace), round-trip, clamp tulis (0→1, 99→8) dan baca ("bogus"→4), nilai gaya tak dikenal dibaca sebagai spaces (nilai aneh tidak boleh dibaca sebagai tab karena formatter tab menulis `\t` permanen ke dokumen), isolasi antar-kunci, fallback string kosong → monospace.
+- `IndentSettingsE2eTest` (3 @Test, pola deterministik tanpa window-focus): setting `tabs` + lebar 2 → format JSON menghasilkan output ber-karakter tab nyata (`{\n\t"b": 1...}` — bukti setting sampai ke prettier, bukan sekadar tersimpan); setting `spaces` + lebar 2 → 2 spasi per tingkat (bukan default 4); font sans diterapkan ke editor sementara gutter tetap `Typeface.MONOSPACE`. Ketiganya menghapus kuncinya di `@After` agar `FormatterE2eTest` yang mengunci default 4 spasi tidak pecah oleh kebocoran state antar test.
+
+### Documentation
+- docs/rockedit.md §4.22: tabel skenario setting (nilai rusak → default terdokumentasi; prioritas `.editorconfig`; guard zen; gutter monospace) dan wiring tiga situs FormatOptions.
+
 ## [0.22.0] - 2026-10-07
 
 ### Added

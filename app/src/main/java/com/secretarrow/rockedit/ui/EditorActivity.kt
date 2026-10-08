@@ -3,6 +3,7 @@ package com.secretarrow.rockedit.ui
 import android.content.ClipboardManager
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
@@ -257,9 +258,7 @@ class EditorActivity : AppCompatActivity() {
         highlighter.setEnabled(syntaxOn)
         highlighter.setBracketColors(settings.bracketPairColors)
         applyWordWrap(settings.wordWrap)
-        val fontSp = settings.fontSizeSp
-        binding.editor.textSize = fontSp.toFloat()
-        binding.gutter.textSize = fontSp.toFloat()
+        applyEditorFont()
         if (settings.lineNumbers) {
             updateGutter()
         } else {
@@ -1313,7 +1312,34 @@ class EditorActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // v0.23.0: re-apply font settings so changes made in Settings apply
+        // on return, without reopening the file. Skipped during zen: the
+        // zen snapshot owns the font size until exit restores it.
+        applyEditorFont()
         captureClipboard()
+    }
+
+    /**
+     * v0.23.0: applies the stored font size + family to the editor.
+     *
+     * The gutter ALWAYS stays monospace: its numerals must keep aligning
+     * column-per-line regardless of the text face, so a proportional font
+     * for the editor must never leak into the gutter. Invalid stored family
+     * values are normalized by [SettingsRepository.fontFamily] (monospace
+     * fallback), so the when below has no dead path.
+     */
+    private fun applyEditorFont() {
+        if (zenActive != null) return
+        val fontSp = settings.fontSizeSp
+        binding.editor.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSp.toFloat())
+        binding.editor.typeface =
+            when (settings.fontFamily) {
+                SettingsRepository.FONT_SANS -> Typeface.SANS_SERIF
+                SettingsRepository.FONT_SERIF -> Typeface.SERIF
+                else -> Typeface.MONOSPACE
+            }
+        binding.gutter.setTextSize(TypedValue.COMPLEX_UNIT_SP, fontSp.toFloat())
+        binding.gutter.typeface = Typeface.MONOSPACE
     }
 
     /**
@@ -1850,8 +1876,14 @@ class EditorActivity : AppCompatActivity() {
         val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id ?: "txt"
         toast(getString(R.string.format_running))
         lifecycleScope.launch {
-            // Keep the file's own line break style (detected once, up front).
-            val options = FormatOptions(lineBreak = LineBreak.detect(text, fallback = LineBreak.LF))
+            // Keep the file's own line break style; indentation comes from
+            // the user's settings (v0.23.0) — .editorconfig merges on top.
+            val options =
+                FormatOptions(
+                    indentStyle = settings.resolveIndentStyle(),
+                    indentSize = settings.indentSize,
+                    lineBreak = LineBreak.detect(text, fallback = LineBreak.LF),
+                )
             val result =
                 withContext(Dispatchers.Default) {
                     formatterRegistry().format(FormatRequest(text, languageId, options))
@@ -2297,6 +2329,8 @@ class EditorActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val baseOptions =
                 FormatOptions(
+                    indentStyle = settings.resolveIndentStyle(),
+                    indentSize = settings.indentSize,
                     lineBreak = LineBreak.detect(fragment, fallback = LineBreak.LF),
                     lenient = true,
                     // A selection never gains a final newline of its own.
@@ -2975,7 +3009,12 @@ class EditorActivity : AppCompatActivity() {
         if (text.isBlank()) return
         try {
             val languageId = SyntaxRegistry.languageForFileName(tab.name)?.id ?: "txt"
-            val baseOptions = FormatOptions(lineBreak = LineBreak.detect(text, fallback = LineBreak.LF))
+            val baseOptions =
+                FormatOptions(
+                    indentStyle = settings.resolveIndentStyle(),
+                    indentSize = settings.indentSize,
+                    lineBreak = LineBreak.detect(text, fallback = LineBreak.LF),
+                )
             val options = editorConfigOptionsFor(tab, baseOptions)
             val result =
                 withContext(Dispatchers.Default) {
